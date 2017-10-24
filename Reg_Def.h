@@ -26,14 +26,21 @@ struct IDEX
     unsigned char Ctrl_EX_ALUOp;
     unsigned char Ctrl_EX_RegDst;
 
-	unsigned char Ctrl_M_Branch;
     unsigned char Ctrl_M_MemWrite;
     unsigned char Ctrl_M_MemRead;
 
     unsigned char Ctrl_WB_RegWrite;
     unsigned char Ctrl_WB_MemtoReg;
 
+	unsigned char Ctrl_UP_Branch;
+
 } ID_EX, ID_EX_old;
+
+
+#define EXTOP_NOP 0
+#define EXTOP_12 1
+#define EXTOP_6 2
+
 
 #define ALUOP_NOP 0x0
 #define ALUOP_ADD 0x1
@@ -48,15 +55,18 @@ struct IDEX
 #define ALUOP_AND 0xa
 #define ALUOP_OR 0xb
 #define ALUOP_XOR 0xc
-#define ALUOP_CLT 0xd
-#define ALUOP_CEQ 0xe
-#define ALUOP_CNE 0xf
-#define ALUOP_CGE 0x10
+#define ALUOP_SLT 0xd
+#define ALUOP_BEQ 0xe
+#define ALUOP_BNE 0xf
+#define ALUOP_BLT 0x10
+#define ALUOP_BGE 0x11
+#define ALUOP_ADDIW 0x12
 
 #define ALUSRC_NONE 0
 #define ALUSRC_RS_RT 1
 #define ALUSRC_RS_IMM 2
-
+#define ALUSRC_RS_RT_IMM 3
+#define ALUSRC_PC_IMM 4
 
 #define BRANCH_NO 0
 #define BRANCH_YES 1
@@ -71,10 +81,12 @@ struct IDEX
 #define MEMWRITE_BYTE 1
 #define MEMWRITE_HWORD 2
 #define MEMWRITE_WORD 3
-#define MEMWRITE_DOWRD 4
+#define MEMWRITE_DWORD 4
 
 #define REGWRITE_NO 0
-#define REGWRITE_YES 1
+#define REGWRITE_VALE 1
+#define REGWRITE_VALP 2
+#define REGWRITE_VALM 3
 
 #define MEMTOREG_NO 0
 #define MEMTOREG_YES 1
@@ -87,17 +99,19 @@ struct EXMEM
     unsigned int Zero;
     REG Reg_Rt;
 
-    unsigned char Ctrl_M_Branch;
     unsigned char Ctrl_M_MemWrite;
     unsigned char Ctrl_M_MemRead;
 
     unsigned char Ctrl_WB_RegWrite;
     unsigned char Ctrl_WB_MemtoReg;
 
+	unsigned char Ctrl_UP_Branch;
+
 } EX_MEM, EX_MEM_old;
 
 struct MEMWB
 {
+    ULL PC;
     unsigned int Mem_read;
     REG ALU_out;
     unsigned int Reg_dst;
@@ -105,7 +119,16 @@ struct MEMWB
     unsigned char Ctrl_WB_RegWrite;
     unsigned char Ctrl_WB_MemtoReg;
 
+	unsigned char Ctrl_UP_Branch;
+
 } MEM_WB, MEM_WB_old;
+
+struct WBUP
+{
+    ULL PC;
+    REG ALU_out;
+	unsigned char Ctrl_UP_Branch;
+}
 
 #define OP_ARIT_REG 0x33
 #define OP_LOAD 0x3

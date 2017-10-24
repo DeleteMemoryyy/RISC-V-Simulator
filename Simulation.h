@@ -19,8 +19,10 @@
 #define P_TO_V(add) ((add) + cvadr - MEM_ST)
 #define V_TO_I(add) (V_TO_P(add) >> 3)
 #define P_TO_I(add) ((add) >> 3)
-#define GET_BIT(i,s,e) ((((unsigned int)i) << (31 - (s))) >> (31 - (s) + (e)))
-#define EXT_SIGNED(src,bit) ((((int)(src)) << (31 - (bit))) >> (31 - (bit)))
+#define GET_BITS(i,s,e) ((((unsigned int)i) << (31 - (s))) >> (31 - (s) + (e)))
+#define GET_BIT(i,b) ((i) & (1<<(b)))
+#define EXT_SIGNED_WORD(src,bit) ((((int)(src)) << (31 - (bit))) >> (31 - (bit)))
+#define EXT_SIGNED_DWORD(src,bit) ((((long long int)(src)) << (63 - (bit))) >> (63 - (bit)))
 #define READ_BYTE(idx) (*((unsigned char *)((ULL)memory + (idx))))
 #define READ_HWORD(idx) (*((unsigned short *)((ULL)memory + (idx))))
 #define READ_WORD(idx) (*((unsigned int *)((ULL)memory + (idx))))
@@ -43,11 +45,12 @@ unsigned int opcode = 0;
 unsigned int funct3 = 0, funct7 = 0;
 unsigned int shamt = 0;
 unsigned int rs1 = 0, rs2 = 0, rd = 0;
-unsigned int imm12 = 0;
-unsigned int imm20 = 0;
+unsigned int imm0_11 = 0;
+unsigned int imm12_31 = 0;
 unsigned int imm6_11 = 0;
-unsigned int imm7 = 0;
-unsigned int imm5 = 0;
+unsigned int imm5_11 = 0;
+unsigned int imm0_5 = 0;
+unsigned int imm0_4 = 0;
 
 
 //加载内存
