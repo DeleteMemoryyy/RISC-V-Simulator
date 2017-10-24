@@ -79,6 +79,10 @@ void simulate()
         }
 }
 
+void ERROR()
+{
+    
+}
 
 //取指令
 void IF()
@@ -89,12 +93,10 @@ void IF()
     if (inst & 0x3 != 0x3)
         {
             IF_ID_old.Ctrl_ID_InstSize = INSTSIZE_16;
-            PC = PC + 2;
         }
     else
         {
             IF_ID_old.Ctrl_ID_InstSize = INSTSIZE_32;
-            PC = PC + 4;
         }
 
     IF_ID_old.inst = inst;
@@ -107,15 +109,14 @@ void ID()
     // Read IF_ID
     unsigned int inst = IF_ID.inst;
     int EXTop = 0;
-    unsigned int EXTsrc = 0;
+    unsigned int EXTSrc = 0;
 
-    unsigned char RegDst = 0, ALUop = 0, ALUSrc = 0;
-    unsigned char Branch = 0, MemRead = 0, MemWrite = 0;
-    unsigned char RegWrite = 0, MemtoReg = 0;
+    unsigned char RegDst = R_zero, ALUOp = ALUOP_NOP, ALUSrc = ALUSRC_NONE;
+    unsigned char Branch = BRANCH_NO, MemRead = MEMREAD_NO, MemWrite = MEMWRITE_NO;
+    unsigned char RegWrite = REGWRITE_NO, MemtoReg = MEMTOREG_NO;
 
     if (IF_ID.Ctrl_ID_InstSize == INSTSIZE_16)
         {
-
         }
     else if (IF_ID.Ctrl_ID_InstSize == INSTSIZE_32)
         {
@@ -125,6 +126,12 @@ void ID()
                     case OP_ARIT_REG:
                         {
                             funct3 = GET_BIT(inst, 12, 14);
+                            rd = GET_BIT(inst, 7, 11);
+                            rs1 = GET_BIT(inst, 15, 19);
+                            rs2 = GET_BIT(inst, 7, 11);
+                            RegDst = rd;
+                            ALUSrc = ALUSRC_RS_RT;
+                            RegWrite = REGWRITE_YES;
                             switch (funct3)
                                 {
                                     case F3_ADD:
@@ -134,17 +141,21 @@ void ID()
                                                 {
                                                     case F7_ADD:
                                                         {
+                                                            ALUOp = ALUOP_ADD;
                                                         }
                                                         break;
                                                     case F7_MUL:
                                                         {
+                                                            ALUOp = ALUOP_MUL;
                                                         }
                                                         break;
                                                     case F7_SUB:
                                                         {
+                                                            ALUOp = ALUOP_SUB;
                                                         }
                                                         break;
                                                     default:
+                                                        ERROR();
                                                         break;
                                                 }
                                         }
@@ -156,13 +167,16 @@ void ID()
                                                 {
                                                     case F7_SLL:
                                                         {
+                                                            ALUOp = ALUOP_SLL;
                                                         }
                                                         break;
                                                     case F7_MULH:
                                                         {
+                                                            ALUOp = ALUOP_MULH;
                                                         }
                                                         break;
                                                     default:
+                                                        ERROR();
                                                         break;
                                                 }
                                         }
@@ -172,9 +186,11 @@ void ID()
                                             funct7 = GET_BIT(inst, 25, 31);
                                             if (funct7 == F7_SLT)
                                                 {
+                                                    ALUOp = ALUOP_CLT;
                                                 }
                                             else
                                                 {
+                                                    ERROR();
                                                 }
                                         }
                                         break;
@@ -185,13 +201,16 @@ void ID()
                                                 {
                                                     case F7_XOR:
                                                         {
+                                                            ALUOp = ALUOP_XOR;
                                                         }
                                                         break;
                                                     case F7_DIV:
                                                         {
+                                                            ALUOp = ALUOP_DIV;
                                                         }
                                                         break;
                                                     default:
+                                                        ERROR();
                                                         break;
                                                 }
                                         }
@@ -203,13 +222,16 @@ void ID()
                                                 {
                                                     case F7_SRL:
                                                         {
+                                                            ALUOp = ALUOP_SRL;
                                                         }
                                                         break;
                                                     case F7_SRA:
                                                         {
+                                                            ALUOp = ALUOP_SRA;
                                                         }
                                                         break;
                                                     default:
+                                                        ERROR();
                                                         break;
                                                 }
                                         }
@@ -221,13 +243,16 @@ void ID()
                                                 {
                                                     case F7_OR:
                                                         {
+                                                            ALUOp = ALUOP_OR;
                                                         }
                                                         break;
                                                     case F7_REM:
                                                         {
+                                                            ALUOp = ALUOP_REM;
                                                         }
                                                         break;
                                                     default:
+                                                        ERROR();
                                                         break;
                                                 }
                                         }
@@ -237,13 +262,16 @@ void ID()
                                             funct7 = GET_BIT(inst, 25, 31);
                                             if (funct7 == F7_AND)
                                                 {
+                                                    ALUOp = ALUOP_AND;
                                                 }
                                             else
                                                 {
+                                                    ERROR();
                                                 }
                                         }
                                         break;
                                     default:
+                                        ERROR();
                                         break;
                                 }
                         }
@@ -251,6 +279,9 @@ void ID()
                     case OP_LOAD:
                         {
                             funct3 = GET_BIT(inst, 12, 14);
+                            rd = GET_BIT(inst, 7, 11);
+                            rs1 = GET_BIT(inst, 15, 19);
+                            
                             switch (funct3)
                                 {
                                     case F3_BYTE:
@@ -285,8 +316,8 @@ void ID()
                                         break;
                                     case F3_SLL:
                                         {
-                                            funct7 = GET_BIT(inst, 25, 31);
-                                            if (funct7 == F7_SLL)
+                                            imm6_11 = GET_BIT(inst, 26, 31);
+                                            if (imm6_11 == IMM6_11_SLLI)
                                                 {
                                                 }
                                             else
@@ -304,14 +335,14 @@ void ID()
                                         break;
                                     case F3_SRL:
                                         {
-                                            funct7 = GET_BIT(inst, 25, 31);
-                                            switch (funct7)
+                                            imm6_11 = GET_BIT(inst, 26, 31);
+                                            switch (imm6_11)
                                                 {
-                                                    case F7_SRL:
+                                                    case IMM6_11_SRLI:
                                                         {
                                                         }
                                                         break;
-                                                    case F7_SRA:
+                                                    case IMM6_11_SRAI:
                                                         {
                                                         }
                                                         break;
@@ -361,7 +392,7 @@ void ID()
                             if (funct3 == F3_ECALL)
                                 {
                                     funct7 = GET_BIT(inst, 25, 31);
-                                    if (funct7 == F7_SLL)
+                                    if (funct7 == F7_ECALL)
                                         {
                                         }
                                     else
@@ -441,67 +472,6 @@ void ID()
                         break;
                 }
         }
-    //     if (OP == OP_R)
-    //         {
-    //             if (fuc3 == F3_ADD && fuc7 == F7_ADD)
-    //                 {
-    //                     EXTop = 0;
-    //                     RegDst = 0;
-    //                     ALUop = 0;
-    //                     ALUSrc = 0;
-    //                     Branch = 0;
-    //                     MemRead = 0;
-    //                     MemWrite = 0;
-    //                     RegWrite = 0;
-    //                     MemtoReg = 0;
-    //                 }
-    //             else
-    //                 {
-    //                 }
-    //         }
-    //     else if (OP == OP_I)
-    //         {
-    //             if (fuc3 == F3_ADDI)
-    //                 {
-    //                 }
-    //             else
-    //                 {
-    //                 }
-    //         }
-    //     else if (OP == OP_SW)
-    //         {
-    //             if (fuc3 == F3_SB)
-    //                 {
-    //                 }
-    //             else
-    //                 {
-    //                 }
-    //         }
-    //     else if (OP == OP_LW)
-    //         {
-    //             if (fuc3 == F3_LB)
-    //                 {
-    //                 }
-    //             else
-    //                 {
-    //                 }
-    //         }
-    //     else if (OP == OP_BEQ)
-    //         {
-    //             if (fuc3 == F3_BEQ)
-    //                 {
-    //                 }
-    //             else
-    //                 {
-    //                 }
-    //         }
-    //     else if (OP == OP_JAL)
-    //         {
-    //         }
-    //     else
-    //         {
-    //         }
-    // }
 
     // write ID_EX_old
     ID_EX_old.Rd = rd;

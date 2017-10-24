@@ -42,9 +42,10 @@ ULL PC = 0;
 unsigned int opcode = 0;
 unsigned int funct3 = 0, funct7 = 0;
 unsigned int shamt = 0;
-unsigned int rs = 0, rt = 0, rd = 0;
+unsigned int rs1 = 0, rs2 = 0, rd = 0;
 unsigned int imm12 = 0;
 unsigned int imm20 = 0;
+unsigned int imm6_11 = 0;
 unsigned int imm7 = 0;
 unsigned int imm5 = 0;
 
@@ -53,6 +54,8 @@ unsigned int imm5 = 0;
 void load_memory();
 
 void simulate();
+
+void ERROR();
 
 void IF();
 

@@ -11,6 +11,9 @@ struct IFID
     unsigned char Ctrl_ID_InstSize;
 } IF_ID, IF_ID_old;
 
+#define INSTSIZE_16 0
+#define INSTSIZE_32 1
+
 
 struct IDEX
 {
@@ -31,6 +34,50 @@ struct IDEX
     unsigned char Ctrl_WB_MemtoReg;
 
 } ID_EX, ID_EX_old;
+
+#define ALUOP_NOP 0x0
+#define ALUOP_ADD 0x1
+#define ALUOP_SUB 0x2
+#define ALUOP_MUL 0x3
+#define ALUOP_MULH 0x4
+#define ALUOP_DIV 0x5
+#define ALUOP_REM 0x6
+#define ALUOP_SLL 0x7
+#define ALUOP_SRL 0x8
+#define ALUOP_SRA 0x9
+#define ALUOP_AND 0xa
+#define ALUOP_OR 0xb
+#define ALUOP_XOR 0xc
+#define ALUOP_CLT 0xd
+#define ALUOP_CEQ 0xe
+#define ALUOP_CNE 0xf
+#define ALUOP_CGE 0x10
+
+#define ALUSRC_NONE 0
+#define ALUSRC_RS_RT 1
+#define ALUSRC_RS_IMM 2
+
+
+#define BRANCH_NO 0
+#define BRANCH_YES 1
+
+#define MEMREAD_NO 0
+#define MEMREAD_BYTE 1
+#define MEMREAD_HWORD 2
+#define MEMREAD_WORD 3
+#define MEMREAD_DWORD 4
+
+#define MEMWRITE_NO 0
+#define MEMWRITE_BYTE 1
+#define MEMWRITE_HWORD 2
+#define MEMWRITE_WORD 3
+#define MEMWRITE_DOWRD 4
+
+#define REGWRITE_NO 0
+#define REGWRITE_YES 1
+
+#define MEMTOREG_NO 0
+#define MEMTOREG_YES 1
 
 struct EXMEM
 {
@@ -59,10 +106,6 @@ struct MEMWB
     unsigned char Ctrl_WB_MemtoReg;
 
 } MEM_WB, MEM_WB_old;
-
-
-#define INSTSIZE_16 0
-#define INSTSIZE_32 1
 
 #define OP_ARIT_REG 0x33
 #define OP_LOAD 0x3
@@ -115,6 +158,10 @@ struct MEMWB
 #define F7_REM 0x1
 #define F7_AND 0x0
 #define F7_ECALL 0x0
+
+#define IMM6_11_SLLI 0x0
+#define IMM6_11_SRLI 0x0
+#define IMM6_11_SRAI 0x10
 
 
 // #define OP_JAL 111
