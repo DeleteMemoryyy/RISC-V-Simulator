@@ -112,10 +112,11 @@ void ID()
     int EXTop = EXTOP_NOP;
     unsigned int EXTSrc = 0;
 
-    unsigned char RegDst = R_zero, ALUOp = ALUOP_NOP, ALUSrc = ALUSRC_NONE;
-    unsigned char Branch = BRANCH_NO, MemRead = MEMREAD_NO, MemWrite = MEMWRITE_NO;
+    unsigned char RegDst = R_zero, ALUOp = ALUOP_NOP, ALUSrc = ALUSRC_NONE,
+                  BranchCmp = BRANCHCMP_NOP;
+    unsigned char MemRead = MEMREAD_NO, MemWrite = MEMWRITE_NO;
     unsigned char RegWrite = REGWRITE_NO, MemtoReg = MEMTOREG_NO;
-
+    unsigned char Branch = BRANCH_NO;
     if (IF_ID.Ctrl_ID_InstSize == INSTSIZE_16)
         {
         }
@@ -474,7 +475,7 @@ void ID()
                             imm5_11 = GET_BITS(inst, 25, 31);
                             EXTSrc = (imm5_11 << 5) & imm0_4;
                             EXTop = EXTOP_12;
-                            ALUSrc = ALUSRC_RS_RT_IMM;
+                            ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
 
                             switch (funct3)
@@ -514,27 +515,28 @@ void ID()
                                      (GET_BITS(inst, 25, 30) << 5) & (GET_BITS(inst, 8, 11) << 1);
                             EXTop = EXTOP_12;
                             ALUSrc = ALUSRC_RS_RT_IMM;
+                            ALUOp = ALUOP_ADD;
 
                             switch (funct3)
                                 {
                                     case F3_EQ:
                                         {
-                                            ALUOp = ALUOP_BEQ;
+                                            BranchCmp = BRANCHCMP_EQ;
                                         }
                                         break;
                                     case F3_NE:
                                         {
-                                            ALUOp = ALUOP_BNE;
+                                            BranchCmp = BRANCHCMP_NE;
                                         }
                                         break;
                                     case F3_LT:
                                         {
-                                            ALUOp = ALUOP_BLT;
+                                            BranchCmp = BRANCHCMP_LT;
                                         }
                                         break;
                                     case F3_GE:
                                         {
-                                            ALUOp = ALUOP_BGE;
+                                            BranchCmp = BRANCHCMP_GE;
                                         }
                                         break;
                                     default:
@@ -605,11 +607,10 @@ void ID()
 
     ID_EX_old.Reg_Rs = reg[rs1];
     ID_EX_old.Reg_Rt = reg[rs2];
-    //...
 
+    ID_EX_old.Ctrl_EX_BranchCmp = BranchCmp;
     ID_EX_old.Ctrl_EX_ALUSrc = ALUSrc;
     ID_EX_old.Ctrl_EX_ALUOp = ALUOp;
-    ID_EX_old.Ctrl_EX_RegDst = RegDst;
 
     ID_EX_old.Ctrl_M_MemWrite = MemWrite;
     ID_EX_old.Ctrl_M_MemRead = MemRead;
@@ -618,22 +619,25 @@ void ID()
     ID_EX_old.Ctrl_WB_MemtoReg = MemtoReg;
 
     ID_EX_old.Ctrl_UP_Branch = Branch;
-    //....
 }
 
 //执行
 void EX()
 {
     // read ID_EX
-    int temp_PC = ID_EX.PC;
-    char RegDst = ID_EX.Ctrl_EX_RegDst;
-    char ALUOp = ID_EX.Ctrl_EX_ALUOp;
+    unsigned char BranchCmp = ID_EX.Ctrl_EX_BranchCmp;
+    unsigned char ALUSrc = ID_EX.Ctrl_EX_ALUSrc;
+    unsigned char ALUOp = ID_EX.Ctrl_EX_ALUOp;
 
-    // Branch PC calulate
-    //...
+    unsigned char Branch = BRANCH_NO;
+
+    REG VA = 0, VB = 0;
+    REG ALU_out = 0 ;
+
+    if (BranchCmp)
+
 
     // choose ALU input number
-    //...
 
     // alu calculate
     int Zero;
@@ -654,7 +658,7 @@ void EX()
 
     // write EX_MEM_old
     EX_MEM_old.ALU_out = ALUout;
-    EX_MEM_old.PC = temp_PC;
+    EX_MEM_old.PC = ID_EX.PC;
     //.....
 }
 

@@ -22,9 +22,9 @@ struct IDEX
     int Imm;
     REG Reg_Rs, Reg_Rt;
 
+    unsigned char Ctrl_EX_BranchCmp;
     unsigned char Ctrl_EX_ALUSrc;
     unsigned char Ctrl_EX_ALUOp;
-    unsigned char Ctrl_EX_RegDst;
 
     unsigned char Ctrl_M_MemWrite;
     unsigned char Ctrl_M_MemRead;
@@ -40,6 +40,12 @@ struct IDEX
 #define EXTOP_NOP 0
 #define EXTOP_12 1
 #define EXTOP_6 2
+
+#define BRANCHCMP_NOP 0
+#define BRANCHCMP_EQ 1
+#define BRANCHCMP_NE 2
+#define BRANCHCMP_LT 3
+#define BRANCHCMP_GE 4
 
 
 #define ALUOP_NOP 0x0
@@ -96,7 +102,6 @@ struct EXMEM
     ULL PC;
     unsigned int Reg_dst;
     REG ALU_out;
-    unsigned int Zero;
     REG Reg_Rt;
 
     unsigned char Ctrl_M_MemWrite;
@@ -128,7 +133,7 @@ struct WBUP
     ULL PC;
     REG ALU_out;
 	unsigned char Ctrl_UP_Branch;
-}
+};
 
 #define OP_ARIT_REG 0x33
 #define OP_LOAD 0x3
@@ -252,5 +257,6 @@ struct WBUP
 #define R_t4 29
 #define R_t5 30
 #define R_t6 31
+#define R_pc 32
 
 #endif
