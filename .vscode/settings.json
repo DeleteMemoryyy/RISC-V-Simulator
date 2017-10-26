@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-        "*.disam": "makefile",
-        "fstream": "cpp"
-    }
-}
