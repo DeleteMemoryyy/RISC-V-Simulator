@@ -255,6 +255,5 @@ struct WBUP
 #define R_t4 29
 #define R_t5 30
 #define R_t6 31
-#define R_pc 32
 
 #endif
