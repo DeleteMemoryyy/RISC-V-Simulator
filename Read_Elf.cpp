@@ -1,8 +1,45 @@
 #include "Read_Elf.h"
 
+FILE *file = NULL;
 FILE *elf = NULL;
 Elf64_Ehdr elf64_hdr;
 
+char *shsttab = NULL;  // 段名表
+char *strtab = NULL;   // 字符串表
+char *symtab = NULL;   // 符号表
+
+//代码段在解释文件中的偏移地址
+ULL coffset = 0;
+
+//代码段的长度
+ULL csize = 0;
+
+//代码段在内存中的虚拟地址
+ULL cvadr = 0;
+
+//全局数据段在解释文件中的偏移地址
+ULL doffset = 0;
+
+//全局数据段的长度
+ULL dsize = 0;
+
+//全局数据段在内存中的虚拟地址
+ULL dvadr = 0;
+
+//.text节的长度
+ULL tsize = 0;
+
+//gp段在内存中的虚拟地址
+ULL gp = 0;
+
+// main函数在内存中地址
+ULL madr = 0;
+
+//程序结束时的PC
+ULL endPC = 0;
+
+//程序的入口地址
+ULL entry = 0;
 
 // Program headers
 ULL padr = 0;
@@ -447,7 +484,6 @@ void read_elf_phdr()
                             csize = (ULL)elf64_phdr.p_filesz;
                             cvadr = (ULL)elf64_phdr.p_vaddr;
                         }
-                        
                         break;
                     case 6:
                         fprintf(elf, "RW");
@@ -560,10 +596,4 @@ void read_elf_symtable()
 
             fprintf(elf, "\n");
         }
-}
-
-int main()
-{
-    read_elf();
-    return 0;
 }

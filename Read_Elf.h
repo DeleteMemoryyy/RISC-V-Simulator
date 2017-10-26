@@ -1,9 +1,10 @@
 #ifndef READ_ELF_H_
 #define READ_ELF_H_
 
-#include <stdio.h>
-#include <string.h>
-#include "Reg_Def.h"
+#include <cstdio>
+#include <cstring>
+
+typedef unsigned long long ULL;
 
 typedef struct
 {
@@ -144,44 +145,44 @@ void read_elf_strtab();
 void read_elf_phdr();
 void read_elf_symtable();
 
-char *shsttab = NULL;  // 段名表
-char *strtab = NULL;   // 字符串表
-char *symtab = NULL;   // 符号表
+extern char *shsttab;  // 段名表
+extern char *strtab;   // 字符串表
+extern char *symtab;   // 符号表
 
 
 //代码段在解释文件中的偏移地址
-ULL coffset = 0;
+extern ULL coffset;
 
 //代码段的长度
-ULL csize = 0;
+extern ULL csize;
 
 //代码段在内存中的虚拟地址
-ULL cvadr = 0;
+extern ULL cvadr;
 
 //全局数据段在解释文件中的偏移地址
-ULL doffset = 0;
+extern ULL doffset;
 
 //全局数据段的长度
-ULL dsize = 0;
+extern ULL dsize;
 
 //全局数据段在内存中的虚拟地址
-ULL dvadr = 0;
+extern ULL dvadr;
 
 //.text节的长度
-ULL tsize = 0;
+extern ULL tsize;
 
 //gp段在内存中的虚拟地址
-ULL gp = 0;
+extern ULL gp;
 
 // main函数在内存中地址
-ULL madr = 0;
+extern ULL madr;
 
 //程序结束时的PC
-ULL endPC = 0;
+extern ULL endPC;
 
 //程序的入口地址
-ULL entry = 0;
+extern ULL entry;
 
-FILE *file = NULL;
+extern FILE *file;
 
 #endif

@@ -1,50 +1,60 @@
 #include "Simulation.h"
 using namespace std;
 
-extern ULL cadr;
-extern ULL csize;
-extern ULL vadr;
-extern ULL gp;
-extern ULL madr;
-extern ULL endPC;
-extern ULL entry;
-extern FILE *file;
+// memory
+unsigned char memory[MEM_SIZE] = {0};
+// regisiter set
+REG reg[32] = {0};
+// PC
+ULL PC = 0;
 
+IFID IF_ID, IF_ID_old;
+IDEX ID_EX, ID_EX_old;
+EXMEM EX_MEM, EX_MEM_old;
+MEMWB MEM_WB, MEM_WB_old;
+WBUP WB_UP, WB_UP_old;
 
-//指令运行数
+// instruction sections
+unsigned int opcode = 0;
+unsigned int funct3 = 0, funct7 = 0;
+unsigned int shamt = 0;
+unsigned int rs1 = 0, rs2 = 0, rd = 0;
+unsigned int imm0_11 = 0;
+unsigned int imm12_31 = 0;
+unsigned int imm6_11 = 0;
+unsigned int imm5_11 = 0;
+unsigned int imm0_5 = 0;
+unsigned int imm0_4 = 0;
+
+// instruction running number
 ULL inst_num = 0;
 
-//系统调用退出指示
 int exit_flag = 0;
 
-//加载代码段
-//初始化PC
+
+// load code and data
 void load_memory()
 {
-    memset(memory, 0, sizeof(int) * MEM_SIZE);
+    memset(memory, 0, sizeof(char) * MEM_SIZE);
     fseek(file, coffset, SEEK_SET);
-    fread(&memory[V_TO_I(cvadr)], 1, csize, file);
+    fread(&memory[V_TO_P(cvadr)], 1, csize, file);
     fseek(file, doffset, SEEK_SET);
-    fread(&memory[V_TO_I(dvadr)], 1, dsize, file);
+    fread(&memory[V_TO_P(dvadr)], 1, dsize, file);
 
     fclose(file);
 }
 
 int main()
 {
-    //解析elf文件
     read_elf();
 
-    //加载内存
     load_memory();
 
-    //设置入口地址
-    PC = V_TO_I(entry);
+    PC = entry;
 
-    //设置全局数据段地址寄存器
-    reg[R_gp] = gp;  //
+    reg[R_gp] = gp;
 
-    reg[R_sp] = P_TO_I(MEM_ED);  //栈基址 （sp寄存器）
+    reg[R_sp] = P_TO_V(MEM_ED);
 
     simulate();
 
@@ -55,32 +65,34 @@ int main()
 
 void simulate()
 {
-    //结束PC的设置
-    int end = (int)endPC / 4 - 1;
+    ULL end = entry + tsize;
     while (PC != end)
         {
-            //运行
+            // run
             IF();
-            ID();
-            EX();
-            MEM();
-            WB();
-
-            //更新中间寄存器
             IF_ID = IF_ID_old;
+            ID();
             ID_EX = ID_EX_old;
+            EX();
             EX_MEM = EX_MEM_old;
+            MEM();
             MEM_WB = MEM_WB_old;
+            WB();
+            WB_UP = WB_UP_old;
+            UP();
+
+            // update register
 
             if (exit_flag == 1)
                 break;
 
-            reg[0] = 0;  //一直为零
+            reg[0] = 0;  // register zero should alwarys be 0
         }
 }
 
-void ERROR()
+void ERROR(int line)
 {
+    printf("ERROR!: %d\n", line);
 }
 
 //取指令
@@ -89,7 +101,7 @@ void IF()
     // write IF_ID_old
     unsigned int inst = READ_WORD(PC);
     ULL NextPC;
-    if (inst & 0x3 != 0x3)
+    if ((inst & 0x3) != 0x3)
         {
             IF_ID_old.Ctrl_ID_InstSize = INSTSIZE_16;
             NextPC = PC + 2;
@@ -108,17 +120,340 @@ void IF()
 void ID()
 {
     // Read IF_ID
+    ULL NextPC = IF_ID.PC;
     unsigned int inst = IF_ID.inst;
-    int EXTop = EXTOP_NOP;
+    unsigned int EXTOp = 0;
     unsigned int EXTSrc = 0;
-
-    unsigned char RegDst = R_zero, ALUOp = ALUOP_NOP, ALUSrc = ALUSRC_NONE,
-                  BranchCmp = BRANCHCMP_NOP;
+    unsigned int RegDst = R_zero;
+    unsigned char ALUOp = ALUOP_NOP, ALUSrc = ALUSRC_NONE, BranchCmp = BRANCHCMP_NOP;
     unsigned char MemRead = MEMREAD_NO, MemWrite = MEMWRITE_NO;
-    unsigned char RegWrite = REGWRITE_NO, MemtoReg = MEMTOREG_NO;
+    unsigned char RegWrite = REGWRITE_NO;
     unsigned char Branch = BRANCH_NO;
     if (IF_ID.Ctrl_ID_InstSize == INSTSIZE_16)
         {
+            opcode = GET_BITS(inst, 0, 1);
+            funct3 = GET_BITS(inst, 13, 15);
+            switch (opcode)
+                {
+                    case OPC_00:
+                        {
+                            rs1 = RVC_TO_R(GET_BITS(inst, 7, 9));
+                            switch (funct3)
+                                {
+                                    case F3C_ADDI4SPN:
+                                        {
+                                            rd = RVC_TO_R(GET_BITS(inst, 2, 4));
+                                            rs1 = R_sp;
+                                            EXTSrc = (GET_BITS(inst, 7, 11) << 6) &
+                                                     (GET_BITS(inst, 11, 12) << 4) &
+                                                     (GET_BIT(inst, 5) << 3) &
+                                                     (GET_BIT(inst, 6) << 2);
+                                            EXTOp = 10;
+                                            RegDst = rd;
+                                            ALUOp = ALUOP_ADD;
+                                            ALUSrc = ALUSRC_RS_IMM;
+                                            RegWrite = REGWRITE_VALE;
+                                        }
+                                        break;
+                                    case F3C_LW:
+                                        {
+                                            rd = RVC_TO_R(GET_BITS(inst, 2, 4));
+                                            EXTSrc = (GET_BIT(inst, 5) << 6) &
+                                                     (GET_BITS(inst, 10, 12) << 3) &
+                                                     (GET_BIT(inst, 6) << 2);
+                                            EXTOp = 7;
+                                            RegDst = rd;
+                                            ALUOp = ALUOP_ADD;
+                                            ALUSrc = ALUSRC_RS_IMM;
+                                            MemRead = MEMREAD_WORD;
+                                            RegWrite = REGWRITE_VALM;
+                                        }
+                                        break;
+                                    case F3C_LD:
+                                        {
+                                            rd = RVC_TO_R(GET_BITS(inst, 2, 4));
+                                            EXTSrc = (GET_BITS(inst, 5, 6) << 6) &
+                                                     (GET_BITS(inst, 10, 12) << 3);
+                                            EXTOp = 8;
+                                            RegDst = rd;
+                                            ALUSrc = ALUSRC_RS_IMM;
+                                            MemRead = MEMREAD_DWORD;
+                                            RegWrite = REGWRITE_VALM;
+                                        }
+                                        break;
+                                    case F3C_SW:
+                                        {
+                                            rs2 = RVC_TO_R(GET_BITS(inst, 2, 4));
+                                            EXTSrc = (GET_BIT(inst, 5) << 6) &
+                                                     (GET_BITS(inst, 10, 12) << 3) &
+                                                     (GET_BIT(inst, 6) << 2);
+                                            EXTOp = 7;
+                                            ALUOp = ALUOP_ADD;
+                                            ALUSrc = ALUSRC_RS_IMM;
+                                            MemWrite = MEMWRITE_WORD;
+                                        }
+                                        break;
+                                    case F3C_SD:
+                                        {
+                                            rs2 = RVC_TO_R(GET_BITS(inst, 2, 4));
+                                            EXTSrc = (GET_BITS(inst, 5, 6) << 6) &
+                                                     (GET_BITS(inst, 10, 12) << 3);
+                                            EXTOp = 8;
+                                            ALUOp = ALUOP_ADD;
+                                            ALUSrc = ALUSRC_RS_IMM;
+                                            MemWrite = MEMWRITE_WORD;
+                                        }
+                                        break;
+                                    default:
+                                        ERROR();
+                                }
+                        }
+                        break;
+                    case OPC_01:
+                        {
+                            switch (funct3)
+                                {
+                                    case F3C_ADDI:
+                                        {
+                                            rd = GET_BITS(inst, 7, 11);
+                                            rs1 = rd;
+                                            EXTSrc =
+                                                (GET_BIT(inst, 12) << 5) & (GET_BITS(inst, 2, 6));
+                                            EXTOp = 6;
+                                            RegDst = rd;
+                                            ALUOp = ALUOP_ADD;
+                                            ALUSrc = ALUSRC_RS_IMM;
+                                            RegWrite = REGWRITE_VALE;
+                                        }
+                                        break;
+                                    case F3C_ADDIW:
+                                        {
+                                            rd = GET_BITS(inst, 7, 11);
+                                            rs1 = rd;
+                                            EXTSrc =
+                                                (GET_BIT(inst, 12) << 5) & (GET_BITS(inst, 2, 6));
+                                            EXTOp = 6;
+                                            RegDst = rd;
+                                            ALUOp = ALUOP_ADDW;
+                                            ALUSrc = ALUSRC_RS_IMM;
+                                            RegWrite = REGWRITE_VALE;
+                                        }
+                                    case F3C_LI:
+                                        {
+                                            rd = GET_BITS(inst, 7, 11);
+                                            HINT(rd == 0);
+                                            rs1 = R_zero;
+                                            EXTSrc =
+                                                (GET_BIT(inst, 12) << 5) & (GET_BITS(inst, 2, 6));
+                                            EXTOp = 6;
+                                            RegDst = rd;
+                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUOp = ALUOP_ADD;
+                                            RegWrite = REGWRITE_VALE;
+                                        }
+                                        break;
+                                    case F3C_LUI:
+                                        {
+                                            rd = GET_BITS(inst, 7, 11);
+                                            HINT(rd == 0);
+                                            if (rd != R_sp)
+                                                {
+                                                    rs1 = R_zero;
+                                                    EXTSrc = (GET_BIT(inst, 12) << 17) &
+                                                             (GET_BITS(inst, 2, 6) << 12);
+                                                    EXTOp = 18;
+                                                    RegDst = rd;
+                                                    ALUSrc = ALUSRC_RS_IMM;
+                                                    ALUOp = ALUOP_ADD;
+                                                    RegWrite = REGWRITE_VALE;
+                                                }
+                                            else
+                                                {
+                                                    rs1 = rd;
+                                                    EXTSrc = (GET_BIT(inst, 12) << 9) &
+                                                             (GET_BITS(inst, 3, 4) << 7) &
+                                                             (GET_BIT(inst, 5) << 6) &
+                                                             (GET_BIT(inst, 2) << 5) &
+                                                             (GET_BIT(inst, 6) << 4);
+                                                    EXTOp = 10;
+                                                    RegDst = rd;
+                                                    ALUOp = ALUOP_ADD;
+                                                    ALUSrc = ALUSRC_RS_IMM;
+                                                    RegWrite = REGWRITE_VALE;
+                                                }
+                                        }
+                                        break;
+                                    case F3C_ARIT:
+                                        {
+                                            unsigned int funct2_1 = GET_BITS(inst, 10, 11);
+                                            switch (funct2_1)
+                                                {
+                                                    case F2C_1_SRLI:
+                                                        {
+                                                            rd = RVC_TO_R(GET_BITS(inst, 10, 11));
+                                                            rs1 = rd;
+                                                            EXTSrc = (GET_BIT(inst, 12) << 5) &
+                                                                     (GET_BITS(inst, 2, 6));
+                                                            EXTOp = 6;
+                                                            RegDst = rd;
+                                                            ALUOp = ALUOP_SRL;
+                                                            ALUSrc = ALUSRC_RS_IMM;
+                                                            RegWrite = REGWRITE_VALE;
+                                                        }
+                                                        break;
+                                                    case F2C_1_SRAI:
+                                                        {
+                                                            rd = RVC_TO_R(GET_BITS(inst, 10, 11));
+                                                            rs1 = rd;
+                                                            EXTSrc = (GET_BIT(inst, 12) << 5) &
+                                                                     (GET_BITS(inst, 2, 6));
+                                                            EXTOp = 6;
+                                                            RegDst = rd;
+                                                            ALUOp = ALUOP_SRA;
+                                                            ALUSrc = ALUSRC_RS_IMM;
+                                                            RegWrite = REGWRITE_VALE;
+                                                        }
+                                                        break;
+                                                    case F2C_1_ANDI:
+                                                        {
+                                                            rd = RVC_TO_R(GET_BITS(inst, 10, 11));
+                                                            rs1 = rd;
+                                                            EXTSrc = (GET_BIT(inst, 12) << 5) &
+                                                                     (GET_BITS(inst, 2, 6));
+                                                            EXTOp = 6;
+                                                            RegDst = rd;
+                                                            ALUOp = ALUOP_AND;
+                                                            ALUSrc = ALUSRC_RS_IMM;
+                                                            RegWrite = REGWRITE_VALE;
+                                                        }
+                                                        break;
+                                                    case F2C_1_REG:
+                                                        {
+                                                            unsigned int funct1 = GET_BIT(inst, 12);
+                                                            unsigned int funct2_2 =
+                                                                GET_BITS(inst, 10, 11);
+
+                                                            rd = RVC_TO_R(GET_BITS(inst, 10, 11));
+                                                            rs1 = rd;
+                                                            rs2 = RVC_TO_R(GET_BIT(inst, 2, 4));
+                                                            RegDst = rd;
+                                                            ALUSrc = ALUSRC_RS_RT;
+                                                            RegWrite = REGWRITE_VALE;
+                                                            switch (funct1)
+                                                                {
+                                                                    case F1C_D:
+                                                                        {
+                                                                            switch (funct2_2)
+                                                                                {
+                                                                                    case F2C_2_SUB:
+                                                                                        {
+                                                                                            ALUOp =
+                                                                                                ALUOP_SUB;
+                                                                                        }
+                                                                                        break;
+                                                                                    case F2C_2_XOR:
+                                                                                        {
+                                                                                            ALUOp =
+                                                                                                ALUOP_XOR;
+                                                                                        }
+                                                                                        break;
+                                                                                    case F2C_2_OR:
+                                                                                        {
+                                                                                            ALUOp =
+                                                                                                ALUOP_OR;
+                                                                                        }
+                                                                                        break;
+                                                                                    case F2C_2_AND:
+                                                                                        {
+                                                                                            ALUOp =
+                                                                                                ALUOP_AND;
+                                                                                        }
+                                                                                        break;
+                                                                                    default:
+                                                                                        ERROR(
+                                                                                            __LINE__);
+                                                                                }
+                                                                        }
+                                                                        break;
+                                                                    case F1C_W:
+                                                                        {
+                                                                            switch (funct2_2)
+                                                                                {
+                                                                                    case F2C_2_SUBW:
+                                                                                        {
+                                                                                            ALUOp =
+                                                                                                ALUOP_SUBW;
+                                                                                        }
+                                                                                        break;
+                                                                                    case F2C_2_ADDW:
+                                                                                        {
+                                                                                            ALUOp =
+                                                                                                ALUOP_ADDW;
+                                                                                        }
+                                                                                        break;
+                                                                                    default:
+                                                                                        ERROR(
+                                                                                            __LINE__);
+                                                                                }
+                                                                        }
+                                                                        break;
+                                                                    default:
+                                                                        ERROR(__LINE__);
+                                                                }
+                                                        }
+                                                        break;
+                                                    default:
+                                                        ERROR(__LINE__);
+                                                }
+                                        }
+                                        break;
+                                    default:
+                                        ERROR(__LINE__);
+                                }
+                        }
+                        break;
+                    case OPC_10:
+                        {
+                            switch(funct3)
+                            {
+                                case F3C_SLLI:
+                                {
+
+                                }
+                                break;
+                                case F3C_LWSP:
+                                {
+
+                                }
+                                break;
+                                case F3C_LDSP:
+                                {
+
+                                }
+                                break;
+                                case F3C_JR:
+                                {
+
+                                }
+                                break;
+                                case F3C_SWSP:
+                                {
+
+                                }
+                                break;
+                                case F3C_SDSP:
+                                {
+
+                                }
+                                break;
+                                default:
+                                    ERROR(__LINE__);
+                            }
+                        }
+                        break;
+                    default:
+                        ERROR(__LINE__);
+                }
         }
     else if (IF_ID.Ctrl_ID_InstSize == INSTSIZE_32)
         {
@@ -157,7 +492,7 @@ void ID()
                                                         }
                                                         break;
                                                     default:
-                                                        ERROR();
+                                                        ERROR(__LINE__);
                                                         break;
                                                 }
                                         }
@@ -178,7 +513,7 @@ void ID()
                                                         }
                                                         break;
                                                     default:
-                                                        ERROR();
+                                                        ERROR(__LINE__);
                                                         break;
                                                 }
                                         }
@@ -192,7 +527,7 @@ void ID()
                                                 }
                                             else
                                                 {
-                                                    ERROR();
+                                                    ERROR(__LINE__);
                                                 }
                                         }
                                         break;
@@ -212,7 +547,7 @@ void ID()
                                                         }
                                                         break;
                                                     default:
-                                                        ERROR();
+                                                        ERROR(__LINE__);
                                                         break;
                                                 }
                                         }
@@ -233,7 +568,7 @@ void ID()
                                                         }
                                                         break;
                                                     default:
-                                                        ERROR();
+                                                        ERROR(__LINE__);
                                                         break;
                                                 }
                                         }
@@ -254,7 +589,7 @@ void ID()
                                                         }
                                                         break;
                                                     default:
-                                                        ERROR();
+                                                        ERROR(__LINE__);
                                                         break;
                                                 }
                                         }
@@ -268,12 +603,12 @@ void ID()
                                                 }
                                             else
                                                 {
-                                                    ERROR();
+                                                    ERROR(__LINE__);
                                                 }
                                         }
                                         break;
                                     default:
-                                        ERROR();
+                                        ERROR(__LINE__);
                                         break;
                                 }
                         }
@@ -286,11 +621,10 @@ void ID()
                             imm0_11 = GET_BITS(inst, 20, 31);
                             RegDst = rd;
                             EXTSrc = imm0_11;
-                            EXTop = EXTOP_12;
+                            EXTOp = 12;
                             ALUOp = ALUOP_ADD;
                             ALUSrc = ALUSRC_RS_IMM;
                             RegWrite = REGWRITE_VALM;
-                            MemtoReg = MEMTOREG_YES;
                             switch (funct3)
                                 {
                                     case F3_BYTE:
@@ -314,7 +648,7 @@ void ID()
                                         }
                                         break;
                                     default:
-                                        ERROR();
+                                        ERROR(__LINE__);
                                         break;
                                 }
                         }
@@ -333,7 +667,7 @@ void ID()
                                         {
                                             imm0_11 = GET_BITS(inst, 20, 31);
                                             EXTSrc = imm0_11;
-                                            EXTop = EXTOP_12;
+                                            EXTOp = 12;
                                             ALUOp = ALUOP_ADD;
                                         }
                                         break;
@@ -344,12 +678,12 @@ void ID()
                                                 {
                                                     imm0_5 = GET_BITS(inst, 20, 25);
                                                     EXTSrc = imm0_5;
-                                                    EXTop = EXTOP_6;
+                                                    EXTOp = 6;
                                                     ALUOp = ALUOP_SLL;
                                                 }
                                             else
                                                 {
-                                                    ERROR();
+                                                    ERROR(__LINE__);
                                                 }
                                         }
                                         break;
@@ -357,7 +691,7 @@ void ID()
                                         {
                                             imm0_11 = GET_BITS(inst, 20, 31);
                                             EXTSrc = imm0_11;
-                                            EXTop = EXTOP_12;
+                                            EXTOp = 12;
                                             ALUOp = ALUOP_SLT;
                                         }
                                         break;
@@ -365,7 +699,7 @@ void ID()
                                         {
                                             imm0_11 = GET_BITS(inst, 20, 31);
                                             EXTSrc = imm0_11;
-                                            EXTop = EXTOP_12;
+                                            EXTOp = 12;
                                             ALUOp = ALUOP_XOR;
                                         }
                                         break;
@@ -378,7 +712,7 @@ void ID()
                                                         {
                                                             imm0_5 = GET_BITS(inst, 20, 25);
                                                             EXTSrc = imm0_5;
-                                                            EXTop = EXTOP_6;
+                                                            EXTOp = 6;
                                                             ALUOp = ALUOP_SRL;
                                                         }
                                                         break;
@@ -386,12 +720,12 @@ void ID()
                                                         {
                                                             imm0_5 = GET_BITS(inst, 20, 25);
                                                             EXTSrc = imm0_5;
-                                                            EXTop = EXTOP_6;
+                                                            EXTOp = 6;
                                                             ALUOp = ALUOP_SRA;
                                                         }
                                                         break;
                                                     default:
-                                                        ERROR();
+                                                        ERROR(__LINE__);
                                                         break;
                                                 }
                                         }
@@ -400,7 +734,7 @@ void ID()
                                         {
                                             imm0_11 = GET_BITS(inst, 20, 31);
                                             EXTSrc = imm0_11;
-                                            EXTop = EXTOP_12;
+                                            EXTOp = 12;
                                             ALUOp = ALUOP_OR;
                                         }
                                         break;
@@ -408,12 +742,12 @@ void ID()
                                         {
                                             imm0_11 = GET_BITS(inst, 20, 31);
                                             EXTSrc = imm0_11;
-                                            EXTop = EXTOP_12;
+                                            EXTOp = 12;
                                             ALUOp = ALUOP_AND;
                                         }
                                         break;
                                     default:
-                                        ERROR();
+                                        ERROR(__LINE__);
                                         break;
                                 }
                         }
@@ -427,15 +761,15 @@ void ID()
                                     rs1 = GET_BITS(inst, 15, 19);
                                     imm0_11 = GET_BITS(inst, 20, 31);
                                     EXTSrc = imm0_11;
-                                    EXTop = EXTOP_12;
+                                    EXTOp = 12;
                                     RegDst = rd;
                                     ALUSrc = ALUSRC_RS_IMM;
-                                    ALUOp = ALUOP_ADDIW;
+                                    ALUOp = ALUOP_ADDW;
                                     RegWrite = REGWRITE_VALE;
                                 }
                             else
                                 {
-                                    ERROR();
+                                    ERROR(__LINE__);
                                 }
                         }
                         break;
@@ -448,7 +782,7 @@ void ID()
                                     rs1 = GET_BITS(inst, 15, 19);
                                     imm0_11 = GET_BITS(inst, 20, 31);
                                     EXTSrc = imm0_11;
-                                    EXTop = EXTOP_12;
+                                    EXTOp = 12;
                                     RegDst = rd;
                                     ALUSrc = ALUSRC_RS_IMM;
                                     ALUOp = ALUOP_ADD;
@@ -457,13 +791,13 @@ void ID()
                                 }
                             else
                                 {
-                                    ERROR();
+                                    ERROR(__LINE__);
                                 }
                         }
                         break;
                     case OP_ECALL:
                         {
-                            ERROR();
+                            ERROR(__LINE__);
                         }
                         break;
                     case OP_STORE:
@@ -474,7 +808,7 @@ void ID()
                             imm0_4 = GET_BITS(inst, 7, 11);
                             imm5_11 = GET_BITS(inst, 25, 31);
                             EXTSrc = (imm5_11 << 5) & imm0_4;
-                            EXTop = EXTOP_12;
+                            EXTOp = 12;
                             ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
 
@@ -501,7 +835,7 @@ void ID()
                                         }
                                         break;
                                     default:
-                                        ERROR();
+                                        ERROR(__LINE__);
                                         break;
                                 }
                         }
@@ -513,8 +847,8 @@ void ID()
                             rs2 = GET_BITS(inst, 20, 24);
                             EXTSrc = (GET_BIT(inst, 31) << 12) & (GET_BIT(inst, 7) << 11) &
                                      (GET_BITS(inst, 25, 30) << 5) & (GET_BITS(inst, 8, 11) << 1);
-                            EXTop = EXTOP_12;
-                            ALUSrc = ALUSRC_RS_RT_IMM;
+                            EXTOp = 12;
+                            ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
 
                             switch (funct3)
@@ -540,8 +874,7 @@ void ID()
                                         }
                                         break;
                                     default:
-                                        ERROR();
-                                        break;
+                                        ERROR(__LINE__);
                                 }
                         }
                         break;
@@ -560,7 +893,7 @@ void ID()
                             rd = GET_BITS(inst, 7, 11);
                             rs1 = R_zero;
                             imm12_31 = GET_BITS(inst, 12, 31);
-                            EXTSrc = (imm12_31) << 12;
+                            EXTSrc = ((imm12_31) << 12);
                             RegDst = rd;
                             ALUSrc = ALUSRC_RS_IMM;
                             ALUOp = ALUOP_ADD;
@@ -580,44 +913,31 @@ void ID()
                         }
                         break;
                     default:
-                        ERROR();
+                        ERROR(__LINE__);
                         break;
                 }
         }
 
     // write ID_EX_old
-    ID_EX_old.Rd = RegDst;
-    ID_EX_old.Rt = rs2;
+    ID_EX_old.rd = RegDst;
     ID_EX_old.PC = IF_ID.PC;
 
-    switch (EXTop)
-        {
-            case EXTOP_NOP:
-                ID_EX_old.Imm = EXTSrc;
-                break;
-            case EXTOP_12:
-                ID_EX_old.Imm = EXT_SIGNED_WORD(EXTSrc, 12);
-                break;
-            case EXTOP_6:
-                ID_EX_old.Imm = EXT_SIGNED_WORD(EXTSrc, 6);
-                break;
-            default:
-                break;
-        }
+    if (EXTOp != 0)
+        ID_EX_old.Imm = EXT_SIGNED_DWORD(EXTSrc, EXTOp);
+    else
+        ID_EX_old.Imm = EXTSrc;
 
-    ID_EX_old.Reg_Rs = reg[rs1];
-    ID_EX_old.Reg_Rt = reg[rs2];
+    ID_EX_old.PC = NextPC;
+
+    ID_EX_old.Reg_rs = reg[rs1];
+    ID_EX_old.Reg_rt = reg[rs2];
 
     ID_EX_old.Ctrl_EX_BranchCmp = BranchCmp;
     ID_EX_old.Ctrl_EX_ALUSrc = ALUSrc;
     ID_EX_old.Ctrl_EX_ALUOp = ALUOp;
-
     ID_EX_old.Ctrl_M_MemWrite = MemWrite;
     ID_EX_old.Ctrl_M_MemRead = MemRead;
-
     ID_EX_old.Ctrl_WB_RegWrite = RegWrite;
-    ID_EX_old.Ctrl_WB_MemtoReg = MemtoReg;
-
     ID_EX_old.Ctrl_UP_Branch = Branch;
 }
 
@@ -625,53 +945,278 @@ void ID()
 void EX()
 {
     // read ID_EX
+    unsigned int RegDst = ID_EX.rd;
+    ULL NextPC = ID_EX.PC;
+    REG RegRs = ID_EX.Reg_rs;
+    REG RegRt = ID_EX.Reg_rt;
+    long long Imm = ID_EX.Imm;
+    ULL VA = 0, VB = 0;
+    REG ALUOut = 0;
+
     unsigned char BranchCmp = ID_EX.Ctrl_EX_BranchCmp;
     unsigned char ALUSrc = ID_EX.Ctrl_EX_ALUSrc;
     unsigned char ALUOp = ID_EX.Ctrl_EX_ALUOp;
 
     unsigned char Branch = BRANCH_NO;
 
-    REG VA = 0, VB = 0;
-    REG ALU_out = 0 ;
-
-    if (BranchCmp)
+    switch (BranchCmp)
+        {
+            case BRANCHCMP_NOP:
+                break;
+            case BRANCHCMP_EQ:
+                {
+                    if (RegRs == RegRt)
+                        {
+                            Branch = BRANCH_YES;
+                        }
+                }
+                break;
+            case BRANCHCMP_NE:
+                {
+                    if (RegRs != RegRt)
+                        {
+                            Branch = BRANCH_YES;
+                        }
+                }
+                break;
+            case BRANCHCMP_LT:
+                {
+                    if (RegRs < RegRt)
+                        {
+                            Branch = BRANCH_YES;
+                        }
+                }
+                break;
+            case BRANCHCMP_GE:
+                {
+                    if (RegRs >= RegRt)
+                        {
+                            Branch = BRANCH_YES;
+                        }
+                }
+                break;
+            default:
+                ERROR(__LINE__);
+        }
 
 
     // choose ALU input number
+    switch (ALUSrc)
+        {
+            case ALUSRC_NONE:
+                break;
+            case ALUSRC_RS_RT:
+                {
+                    VA = RegRs;
+                    VB = RegRt;
+                }
+                break;
+            case ALUSRC_RS_IMM:
+                {
+                    VA = RegRs;
+                    VB = (ULL)Imm;
+                }
+                break;
+            case ALUSRC_PC_IMM:
+                {
+                    VA = PC;
+                    VB = (ULL)Imm;
+                }
+                break;
+            default:
+                ERROR(__LINE__);
+        }
 
     // alu calculate
-    int Zero;
-    REG ALUout;
     switch (ALUOp)
         {
-            default:;
-        }
-
-    // choose reg dst address
-    int Reg_Dst;
-    if (RegDst)
-        {
-        }
-    else
-        {
+            case ALUOP_NOP:
+                break;
+            case ALUOP_ADD:
+                {
+                    ALUOut = VA + VB;
+                }
+                break;
+            case ALUOP_SUB:
+                {
+                    ALUOut = VA - VB;
+                }
+                break;
+            case ALUOP_MUL:
+                {
+                    ALUOut = VA * VB;
+                }
+                break;
+            case ALUOP_MULH:
+                {
+                    long long VA_H = (((long long)VA & MASK_H) >> 32),
+                              VA_L = ((long long)VA & MASK_L),
+                              VB_H = (((long long)VB & MASK_H) >> 32),
+                              VB_L = ((long long)VB & MASK_L);
+                    ALUOut = VA_H * VB_H + ((VA_H * VB_L) >> 32) + ((VA_L * VB_H) >> 32);
+                }
+                break;
+            case ALUOP_DIV:
+                {
+                    if (VB != 0)
+                        ALUOut = (long long)VA / (long long)VB;
+                    else
+                        {
+                            ERROR(__LINE__);
+                        }
+                }
+                break;
+            case ALUOP_REM:
+                {
+                    ALUOut = (long long)VA % (long long)VB;
+                }
+                break;
+            case ALUOP_SLL:
+                {
+                    ALUOut = VA << (VB & 0x3f);
+                }
+                break;
+            case ALUOP_SRL:
+                {
+                    ALUOut = VA >> (VB & 0x3f);
+                }
+                break;
+            case ALUOP_SRA:
+                {
+                    ALUOut = (REG)((long long)VA >> (VB & 0x3f));
+                }
+                break;
+            case ALUOP_AND:
+                {
+                    ALUOut = VA & VB;
+                }
+                break;
+            case ALUOP_OR:
+                {
+                    ALUOut = VA | VB;
+                }
+                break;
+            case ALUOP_XOR:
+                {
+                    ALUOut = VA ^ VB;
+                }
+                break;
+            case ALUOP_SLT:
+                {
+                    ALUOut = (VA < VB) ? 1 : 0;
+                }
+                break;
+            case ALUOP_ADDW:
+                {
+                    ALUOut = EXT_SIGNED_DWORD((int)VA + (int)VB, 32);
+                }
+                break;
+            case ALUOP_SUBW:
+                {
+                    ALUOut = EXT_SIGNED_DWORD((int)VA - (int)VB, 32);
+                }
+                break;
+            default:
+                ERROR(__LINE__);
         }
 
     // write EX_MEM_old
-    EX_MEM_old.ALU_out = ALUout;
-    EX_MEM_old.PC = ID_EX.PC;
-    //.....
+    EX_MEM_old.PC = NextPC;
+    EX_MEM_old.ALU_out = ALUOut;
+    EX_MEM_old.rd = RegDst;
+    EX_MEM_old.Reg_rt = RegRt;
+
+    EX_MEM_old.Ctrl_M_MemWrite = ID_EX.Ctrl_M_MemWrite;
+    EX_MEM_old.Ctrl_M_MemRead = ID_EX.Ctrl_M_MemRead;
+    EX_MEM_old.Ctrl_WB_RegWrite = ID_EX.Ctrl_WB_RegWrite;
+    EX_MEM_old.Ctrl_UP_Branch = Branch;
 }
 
 //访问存储器
 void MEM()
 {
     // read EX_MEM
+    ULL NextPC = EX_MEM.PC;
+    REG RegRt = EX_MEM.Reg_rt;
+    REG ALUOut = EX_MEM.ALU_out;
+    unsigned int RegDst = EX_MEM.rd;
 
-    // complete Branch instruction PC change
+    unsigned char MemWrite = EX_MEM.Ctrl_M_MemWrite;
+    unsigned char MemRead = EX_MEM.Ctrl_M_MemRead;
+
+    REG VMemRead = 0;
 
     // read / write memory
+    switch (MemWrite)
+        {
+            case MEMWRITE_NO:
+                break;
+            case MEMWRITE_BYTE:
+                {
+                    unsigned char vWriteByte = (unsigned char)RegRt;
+                    WRITE_BYTE(ALUOut, vWriteByte);
+                }
+                break;
+            case MEMWRITE_HWORD:
+                {
+                    unsigned short vWriteHword = (unsigned short)RegRt;
+                    WRITE_HWORD(ALUOut, vWriteHword);
+                }
+                break;
+            case MEMWRITE_WORD:
+                {
+                    unsigned int vWriteWord = (unsigned int)RegRt;
+                    WRITE_WORD(ALUOut, vWriteWord);
+                }
+                break;
+            case MEMWRITE_DWORD:
+                {
+                    WRITE_DWORD(ALUOut, RegRt);
+                }
+                break;
+            default:
+                ERROR(__LINE__);
+        }
+
+    switch (MemRead)
+        {
+            case MEMREAD_NO:
+                break;
+            case MEMREAD_BYTE:
+                {
+                    unsigned char vReadByte = READ_BYTE(ALUOut);
+                    VMemRead = EXT_SIGNED_DWORD(vReadByte, 8);
+                }
+                break;
+            case MEMREAD_HWORD:
+                {
+                    unsigned short vReadHword = READ_HWORD(ALUOut);
+                    VMemRead = EXT_SIGNED_DWORD(vReadHword, 16);
+                }
+                break;
+            case MEMREAD_WORD:
+                {
+                    unsigned char vReadWord = READ_WORD(ALUOut);
+                    VMemRead = EXT_SIGNED_DWORD(vReadWord, 32);
+                }
+                break;
+            case MEMREAD_DWORD:
+                {
+                    VMemRead = READ_DWORD(ALUOut);
+                }
+                break;
+            default:
+                ERROR(__LINE__);
+        }
 
     // write MEM_WB_old
+    MEM_WB_old.PC = NextPC;
+    MEM_WB_old.rd = RegDst;
+    MEM_WB_old.Mem_read = VMemRead;
+    MEM_WB_old.ALU_out = ALUOut;
+
+    MEM_WB_old.Ctrl_WB_RegWrite = EX_MEM.Ctrl_WB_RegWrite;
+    MEM_WB_old.Ctrl_UP_Branch = EX_MEM.Ctrl_UP_Branch;
 }
 
 
@@ -679,11 +1224,66 @@ void MEM()
 void WB()
 {
     // read MEM_WB
+    ULL NextPC = MEM_WB.PC;
+    REG VMemRead = MEM_WB.Mem_read;
+    REG ALUOut = MEM_WB.ALU_out;
+    unsigned int RegDst = MEM_WB_old.rd;
+
+    unsigned char RegWrite = MEM_WB.Ctrl_WB_RegWrite;
 
     // write reg
+    switch (RegWrite)
+        {
+            case REGWRITE_NO:
+                break;
+            case REGWRITE_VALE:
+                {
+                    reg[RegDst] = ALUOut;
+                }
+                break;
+            case REGWRITE_VALP:
+                {
+                    reg[RegDst] = NextPC;
+                }
+                break;
+            case REGWRITE_VALM:
+                {
+                    reg[RegDst] = VMemRead;
+                }
+                break;
+            default:
+                ERROR(__LINE__);
+        }
+
+    // write WB_UP_old
+    WB_UP_old.PC = NextPC;
+    WB_UP_old.ALU_out = ALUOut;
+
+    WB_UP_old.Ctrl_UP_Branch = MEM_WB.Ctrl_UP_Branch;
 }
 
 //更新PC
 void UP()
 {
+    ULL NextPC = WB_UP.PC;
+    REG ALUOut = WB_UP.ALU_out;
+
+    unsigned char Branch = WB_UP.Ctrl_UP_Branch;
+
+    // update PC
+    switch (Branch)
+        {
+            case BRANCH_NO:
+                {
+                    PC = NextPC;
+                }
+                break;
+            case BRANCH_YES:
+                {
+                    PC = ALUOut;
+                }
+                break;
+            default:
+                ERROR(__LINE__);
+        }
 }

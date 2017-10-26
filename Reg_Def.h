@@ -2,25 +2,21 @@
 #define REG_DEF_H_
 
 typedef unsigned long long REG;
-typedef unsigned long long ULL;
 
 struct IFID
 {
     unsigned int inst;
-    ULL PC;
+    REG PC;
     unsigned char Ctrl_ID_InstSize;
-} IF_ID, IF_ID_old;
-
-#define INSTSIZE_16 0
-#define INSTSIZE_32 1
+};
 
 
 struct IDEX
 {
-    unsigned int Rd, Rt;
-    ULL PC;
-    int Imm;
-    REG Reg_Rs, Reg_Rt;
+    unsigned int rd;
+    REG PC;
+    long long Imm;
+    REG Reg_rs, Reg_rt;
 
     unsigned char Ctrl_EX_BranchCmp;
     unsigned char Ctrl_EX_ALUSrc;
@@ -30,23 +26,56 @@ struct IDEX
     unsigned char Ctrl_M_MemRead;
 
     unsigned char Ctrl_WB_RegWrite;
-    unsigned char Ctrl_WB_MemtoReg;
 
 	unsigned char Ctrl_UP_Branch;
 
-} ID_EX, ID_EX_old;
+} ;
+
+struct EXMEM
+{
+    REG PC;
+    unsigned int rd;
+    REG ALU_out;
+    REG Reg_rt;
+
+    unsigned char Ctrl_M_MemWrite;
+    unsigned char Ctrl_M_MemRead;
+
+    unsigned char Ctrl_WB_RegWrite;
+
+	unsigned char Ctrl_UP_Branch;
+
+} ;
+
+struct MEMWB
+{
+    REG PC;
+    unsigned int rd;
+    REG Mem_read;
+    REG ALU_out;
+
+    unsigned char Ctrl_WB_RegWrite;
+
+	unsigned char Ctrl_UP_Branch;
+
+} ;
+
+struct WBUP
+{
+    REG PC;
+    REG ALU_out;
+	unsigned char Ctrl_UP_Branch;
+};
 
 
-#define EXTOP_NOP 0
-#define EXTOP_12 1
-#define EXTOP_6 2
+#define INSTSIZE_16 0
+#define INSTSIZE_32 1
 
 #define BRANCHCMP_NOP 0
 #define BRANCHCMP_EQ 1
 #define BRANCHCMP_NE 2
 #define BRANCHCMP_LT 3
 #define BRANCHCMP_GE 4
-
 
 #define ALUOP_NOP 0x0
 #define ALUOP_ADD 0x1
@@ -62,17 +91,14 @@ struct IDEX
 #define ALUOP_OR 0xb
 #define ALUOP_XOR 0xc
 #define ALUOP_SLT 0xd
-#define ALUOP_BEQ 0xe
-#define ALUOP_BNE 0xf
-#define ALUOP_BLT 0x10
-#define ALUOP_BGE 0x11
-#define ALUOP_ADDIW 0x12
+#define ALUOP_ADDW 0xe
+#define ALUOP_SUBW 0xf
+
 
 #define ALUSRC_NONE 0
 #define ALUSRC_RS_RT 1
 #define ALUSRC_RS_IMM 2
-#define ALUSRC_RS_RT_IMM 3
-#define ALUSRC_PC_IMM 4
+#define ALUSRC_PC_IMM 3
 
 #define BRANCH_NO 0
 #define BRANCH_YES 1
@@ -93,47 +119,6 @@ struct IDEX
 #define REGWRITE_VALE 1
 #define REGWRITE_VALP 2
 #define REGWRITE_VALM 3
-
-#define MEMTOREG_NO 0
-#define MEMTOREG_YES 1
-
-struct EXMEM
-{
-    ULL PC;
-    unsigned int Reg_dst;
-    REG ALU_out;
-    REG Reg_Rt;
-
-    unsigned char Ctrl_M_MemWrite;
-    unsigned char Ctrl_M_MemRead;
-
-    unsigned char Ctrl_WB_RegWrite;
-    unsigned char Ctrl_WB_MemtoReg;
-
-	unsigned char Ctrl_UP_Branch;
-
-} EX_MEM, EX_MEM_old;
-
-struct MEMWB
-{
-    ULL PC;
-    unsigned int Mem_read;
-    REG ALU_out;
-    unsigned int Reg_dst;
-
-    unsigned char Ctrl_WB_RegWrite;
-    unsigned char Ctrl_WB_MemtoReg;
-
-	unsigned char Ctrl_UP_Branch;
-
-} MEM_WB, MEM_WB_old;
-
-struct WBUP
-{
-    ULL PC;
-    REG ALU_out;
-	unsigned char Ctrl_UP_Branch;
-};
 
 #define OP_ARIT_REG 0x33
 #define OP_LOAD 0x3
@@ -191,39 +176,46 @@ struct WBUP
 #define IMM6_11_SRLI 0x0
 #define IMM6_11_SRAI 0x10
 
+#define OPC_00 0
+#define OPC_01 1
+#define OPC_10 2
 
-// #define OP_JAL 111
-// #define OP_R 51
+#define F3C_ADDI4SPN 0
+#define F3C_LW 2
+#define F3C_LD 3
+#define F3C_SW 6
+#define F3C_SD 7
 
-// #define F3_ADD 0
-// #define F3_MUL 0
+#define F3C_ADDI 0
+#define F3C_ADDIW 1
+#define F3C_LI 2
+#define F3C_LUI 3
+#define F3C_ARIT 4
+#define F3C_J 5
+#define F3C_BEQZ 6
+#define F3C_BENZ 7
 
-// #define F7_MSE 1
-// #define F7_ADD 0
+#define F3C_SLLI 0
+#define F3C_LWSP 2
+#define F3C_LDSP 3
+#define F3C_JR 4
+#define F3C_SWSP 6
+#define F3C_SDSP 7
 
-// #define OP_I 19
-// #define F3_ADDI 0
+#define F2C_1_SRLI 0
+#define F2C_1_SRAI 1
+#define F2C_1_ANDI 2
+#define F2C_1_REG 3
 
-// #define OP_SW 35
-// #define F3_SB 0
+#define F1C_D 0
+#define F1C_W 1
 
-// #define OP_LW 3
-// #define F3_LB 0
-
-// #define OP_BEQ 99
-// #define F3_BEQ 0
-
-// #define OP_IW 27
-// #define F3_ADDIW 0
-
-// #define OP_RW 59
-// #define F3_ADDW 0
-// #define F7_ADDW 0
-
-
-// #define OP_SCALL 115
-// #define F3_SCALL 0
-// #define F7_SCALL 0
+#define F2C_2_SUB 0
+#define F2C_2_XOR 1
+#define F2C_2_OR 2
+#define F2C_2_AND 3
+#define F2C_2_SUBW 0
+#define F2C_2_ADDW 1
 
 #define R_zero 0
 #define R_ra 1
