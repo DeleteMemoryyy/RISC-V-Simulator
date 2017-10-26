@@ -22,11 +22,11 @@
             break;                                                                                 \
     }
 #define GET_BITS(i, s, e) ((((unsigned int)i) << (31 - (e))) >> (31 - (e) + (s)))
-#define GET_BIT(i, b) ((i) & (1 << (b)))
-#define EXT_SIGNED_WORD(src, bit) ((((int)(src)) << (31 - (bit))) >> (31 - (bit)))
-#define EXT_SIGNED_DWORD(src, bit) ((((long long int)(src)) << (63 - (bit))) >> (63 - (bit)))
-#define EXT_UNSIGNED_WORD(src, bit) ((((unsigned int)(src)) << (31 - (bit))) >> (31 - (bit)))
-#define EXT_UNSIGNED_DWORD(src, bit) ((((ULL)(src)) << (63 - (bit))) >> (63 - (bit)))
+#define GET_BIT(i, b) (((i) & (1 << (b)))>>(b))
+#define EXT_SIGNED_WORD(src, bit) ((((int)(src)) << (32 - (bit))) >> (32 - (bit)))
+#define EXT_SIGNED_DWORD(src, bit) ((((long long int)(src)) << (64 - (bit))) >> (64 - (bit)))
+#define EXT_UNSIGNED_WORD(src, bit) ((((unsigned int)(src)) << (32 - (bit))) >> (32 - (bit)))
+#define EXT_UNSIGNED_DWORD(src, bit) ((((ULL)(src)) << (64 - (bit))) >> (64 - (bit)))
 #define READ_BYTE(vaddr) (*((unsigned char *)(memory + V_TO_P((vaddr)))))
 #define READ_HWORD(vaddr) (*((unsigned short *)(memory + V_TO_P((vaddr)))))
 #define READ_WORD(vaddr) (*((unsigned int *)(memory + V_TO_P((vaddr)))))

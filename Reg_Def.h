@@ -79,6 +79,8 @@ struct WBUP
 #define BRANCHCMP_NE 2
 #define BRANCHCMP_LT 3
 #define BRANCHCMP_GE 4
+#define BRANCHCMP_LTU 5
+#define BRANCHCMP_GEU 6
 
 #define ALUOP_NOP 0x0
 #define ALUOP_ADD 0x1
@@ -94,8 +96,9 @@ struct WBUP
 #define ALUOP_OR 0xb
 #define ALUOP_XOR 0xc
 #define ALUOP_SLT 0xd
-#define ALUOP_ADDW 0xe
-#define ALUOP_SUBW 0xf
+#define ALUOP_SLTU 0xe
+#define ALUOP_ADDW 0xf
+#define ALUOP_SUBW 0x10
 
 
 #define ALUSRC_NONE 0
@@ -111,6 +114,9 @@ struct WBUP
 #define MEMREAD_HWORD 2
 #define MEMREAD_WORD 3
 #define MEMREAD_DWORD 4
+#define MEMREAD_BYTEU 5
+#define MEMREAD_HWORDU 6
+#define MEMREAD_WORDU 7
 
 #define MEMWRITE_NO 0
 #define MEMWRITE_BYTE 1
@@ -141,6 +147,7 @@ struct WBUP
 #define F3_SLL 0x1
 #define F3_MULH 0x1
 #define F3_SLT 0x2
+#define F3_SLTU 0x3
 #define F3_XOR 0x4
 #define F3_DIV 0x4
 #define F3_SRL 0x5
@@ -152,6 +159,9 @@ struct WBUP
 #define F3_HWORD 0x1
 #define F3_WORD 0x2
 #define F3_DWORD 0x3
+#define F3_BYTEU 0x4
+#define F3_HWORDU 0x5
+#define F3_WORDU 0x6
 #define F3_ADDIW 0x0
 #define F3_JALR 0x0
 #define F3_ECALL 0x0
@@ -159,6 +169,8 @@ struct WBUP
 #define F3_NE 0x1
 #define F3_LT 0x4
 #define F3_GE 0x5
+#define F3_LTU 0x6
+#define F3_GEU 0x7
 
 #define F7_ADD 0x0
 #define F7_MUL 0x1
@@ -166,6 +178,7 @@ struct WBUP
 #define F7_SLL 0x0
 #define F7_MULH 0x1
 #define F7_SLT 0x0
+#define F7_SLTU 0x0
 #define F7_XOR 0x0
 #define F7_DIV 0x1
 #define F7_SRL 0x0

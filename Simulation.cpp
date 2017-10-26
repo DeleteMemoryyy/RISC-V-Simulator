@@ -8,6 +8,10 @@ REG reg[32] = {0};
 // PC
 ULL PC = 0;
 
+//
+char InstBuf[100] = "";
+
+
 IFID IF_ID, IF_ID_old;
 IDEX ID_EX, ID_EX_old;
 EXMEM EX_MEM, EX_MEM_old;
@@ -145,9 +149,9 @@ void ID()
                                         {
                                             rd = RVC_TO_R(GET_BITS(inst, 2, 4));
                                             rs1 = R_sp;
-                                            EXTSrc = (GET_BITS(inst, 7, 11) << 6) &
-                                                     (GET_BITS(inst, 11, 12) << 4) &
-                                                     (GET_BIT(inst, 5) << 3) &
+                                            EXTSrc = (GET_BITS(inst, 7, 11) << 6) |
+                                                     (GET_BITS(inst, 11, 12) << 4) |
+                                                     (GET_BIT(inst, 5) << 3) |
                                                      (GET_BIT(inst, 6) << 2);
                                             EXTBit = 10;
                                             EXTOp = EXTOP_UNSIGED;
@@ -155,13 +159,17 @@ void ID()
                                             ALUOp = ALUOP_ADD;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             RegWrite = REGWRITE_VALE;
+
+                                            sprintf(InstBuf, "addi  %s, %s, %lld", R_NAME[rd],
+                                                    R_NAME[rs1],
+                                                    EXT_UNSIGNED_DWORD(EXTSrc, EXTBit));
                                         }
                                         break;
                                     case F3C_LW:
                                         {
                                             rd = RVC_TO_R(GET_BITS(inst, 2, 4));
-                                            EXTSrc = (GET_BIT(inst, 5) << 6) &
-                                                     (GET_BITS(inst, 10, 12) << 3) &
+                                            EXTSrc = (GET_BIT(inst, 5) << 6) |
+                                                     (GET_BITS(inst, 10, 12) << 3) |
                                                      (GET_BIT(inst, 6) << 2);
                                             EXTBit = 7;
                                             EXTOp = EXTOP_UNSIGED;
@@ -170,12 +178,16 @@ void ID()
                                             ALUSrc = ALUSRC_RS_IMM;
                                             MemRead = MEMREAD_WORD;
                                             RegWrite = REGWRITE_VALM;
+
+                                            sprintf(InstBuf, "lw  %s, %lld(%s)", R_NAME[rd],
+                                                    EXT_UNSIGNED_DWORD(EXTSrc, EXTBit),
+                                                    R_NAME[rs1]);
                                         }
                                         break;
                                     case F3C_LD:
                                         {
                                             rd = RVC_TO_R(GET_BITS(inst, 2, 4));
-                                            EXTSrc = (GET_BITS(inst, 5, 6) << 6) &
+                                            EXTSrc = (GET_BITS(inst, 5, 6) << 6) |
                                                      (GET_BITS(inst, 10, 12) << 3);
                                             EXTBit = 8;
                                             EXTOp = EXTOP_UNSIGED;
@@ -183,35 +195,47 @@ void ID()
                                             ALUSrc = ALUSRC_RS_IMM;
                                             MemRead = MEMREAD_DWORD;
                                             RegWrite = REGWRITE_VALM;
+
+                                            sprintf(InstBuf, "ld  %s, %lld(%s)", R_NAME[rd],
+                                                    EXT_UNSIGNED_DWORD(EXTSrc, EXTBit),
+                                                    R_NAME[rs1]);
                                         }
                                         break;
                                     case F3C_SW:
                                         {
                                             rs2 = RVC_TO_R(GET_BITS(inst, 2, 4));
-                                            EXTSrc = (GET_BIT(inst, 5) << 6) &
-                                                     (GET_BITS(inst, 10, 12) << 3) &
+                                            EXTSrc = (GET_BIT(inst, 5) << 6) |
+                                                     (GET_BITS(inst, 10, 12) << 3) |
                                                      (GET_BIT(inst, 6) << 2);
                                             EXTBit = 7;
                                             EXTOp = EXTOP_UNSIGED;
                                             ALUOp = ALUOP_ADD;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             MemWrite = MEMWRITE_WORD;
+
+                                            sprintf(InstBuf, "sw  %s, %lld(%s)", R_NAME[rs2],
+                                                    EXT_UNSIGNED_DWORD(EXTSrc, EXTBit),
+                                                    R_NAME[rs1]);
                                         }
                                         break;
                                     case F3C_SD:
                                         {
                                             rs2 = RVC_TO_R(GET_BITS(inst, 2, 4));
-                                            EXTSrc = (GET_BITS(inst, 5, 6) << 6) &
+                                            EXTSrc = (GET_BITS(inst, 5, 6) << 6) |
                                                      (GET_BITS(inst, 10, 12) << 3);
                                             EXTBit = 8;
                                             EXTOp = EXTOP_UNSIGED;
                                             ALUOp = ALUOP_ADD;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             MemWrite = MEMWRITE_WORD;
+
+                                            sprintf(InstBuf, "sw  %s, %lld(%s)", R_NAME[rs2],
+                                                    EXT_UNSIGNED_DWORD(EXTSrc, EXTBit),
+                                                    R_NAME[rs1]);
                                         }
                                         break;
                                     default:
-                                        ERROR();
+                                        ERROR(__LINE__);
                                 }
                         }
                         break;
@@ -224,12 +248,15 @@ void ID()
                                             rd = GET_BITS(inst, 7, 11);
                                             rs1 = rd;
                                             EXTSrc =
-                                                (GET_BIT(inst, 12) << 5) & (GET_BITS(inst, 2, 6));
+                                                (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
                                             EXTBit = 6;
                                             RegDst = rd;
                                             ALUOp = ALUOP_ADD;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             RegWrite = REGWRITE_VALE;
+
+                                            sprintf(InstBuf, "addi  %s, %s, %lld", R_NAME[rd],
+                                                    R_NAME[rd], EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                         }
                                         break;
                                     case F3C_ADDIW:
@@ -237,12 +264,15 @@ void ID()
                                             rd = GET_BITS(inst, 7, 11);
                                             rs1 = rd;
                                             EXTSrc =
-                                                (GET_BIT(inst, 12) << 5) & (GET_BITS(inst, 2, 6));
+                                                (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
                                             EXTBit = 6;
                                             RegDst = rd;
                                             ALUOp = ALUOP_ADDW;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             RegWrite = REGWRITE_VALE;
+
+                                            sprintf(InstBuf, "addiw  %s, %s, %lld", R_NAME[rd],
+                                                    R_NAME[rd], EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                         }
                                     case F3C_LI:
                                         {
@@ -250,12 +280,15 @@ void ID()
                                             HINT(rd == 0);
                                             rs1 = R_zero;
                                             EXTSrc =
-                                                (GET_BIT(inst, 12) << 5) & (GET_BITS(inst, 2, 6));
+                                                (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
                                             EXTBit = 6;
                                             RegDst = rd;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             ALUOp = ALUOP_ADD;
                                             RegWrite = REGWRITE_VALE;
+
+                                            sprintf(InstBuf, "li  %s, %lld", R_NAME[rd],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                         }
                                         break;
                                     case F3C_LUI:
@@ -265,27 +298,35 @@ void ID()
                                             if (rd != R_sp)  // C.LUI
                                                 {
                                                     rs1 = R_zero;
-                                                    EXTSrc = (GET_BIT(inst, 12) << 17) &
+                                                    EXTSrc = (GET_BIT(inst, 12) << 17) |
                                                              (GET_BITS(inst, 2, 6) << 12);
                                                     EXTBit = 18;
                                                     RegDst = rd;
                                                     ALUSrc = ALUSRC_RS_IMM;
                                                     ALUOp = ALUOP_ADD;
                                                     RegWrite = REGWRITE_VALE;
+
+                                                    sprintf(
+                                                        InstBuf, "lui  %s, %lld", R_NAME[rd],
+                                                        (EXT_SIGNED_DWORD(EXTSrc, EXTBit) >> 12));
                                                 }
                                             else  // C.ADDI16SPN
                                                 {
                                                     rs1 = rd;
-                                                    EXTSrc = (GET_BIT(inst, 12) << 9) &
-                                                             (GET_BITS(inst, 3, 4) << 7) &
-                                                             (GET_BIT(inst, 5) << 6) &
-                                                             (GET_BIT(inst, 2) << 5) &
+                                                    EXTSrc = (GET_BIT(inst, 12) << 9) |
+                                                             (GET_BITS(inst, 3, 4) << 7) |
+                                                             (GET_BIT(inst, 5) << 6) |
+                                                             (GET_BIT(inst, 2) << 5) |
                                                              (GET_BIT(inst, 6) << 4);
                                                     EXTBit = 10;
                                                     RegDst = rd;
                                                     ALUOp = ALUOP_ADD;
                                                     ALUSrc = ALUSRC_RS_IMM;
                                                     RegWrite = REGWRITE_VALE;
+
+                                                    sprintf(InstBuf, "addi  %s, %s, %lld",
+                                                            R_NAME[rd], R_NAME[rd],
+                                                            EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                                 }
                                         }
                                         break;
@@ -296,52 +337,67 @@ void ID()
                                                 {
                                                     case F2C_1_SRLI:
                                                         {
-                                                            rd = RVC_TO_R(GET_BITS(inst, 10, 11));
+                                                            rd = RVC_TO_R(GET_BITS(inst, 7, 9));
                                                             rs1 = rd;
-                                                            EXTSrc = (GET_BIT(inst, 12) << 5) &
+                                                            EXTSrc = (GET_BIT(inst, 12) << 5) |
                                                                      (GET_BITS(inst, 2, 6));
                                                             EXTBit = 6;
                                                             RegDst = rd;
                                                             ALUOp = ALUOP_SRL;
                                                             ALUSrc = ALUSRC_RS_IMM;
                                                             RegWrite = REGWRITE_VALE;
+
+                                                            sprintf(
+                                                                InstBuf, "srli  %s, %s, %lld",
+                                                                R_NAME[rd], R_NAME[rd],
+                                                                EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                                         }
                                                         break;
                                                     case F2C_1_SRAI:
                                                         {
-                                                            rd = RVC_TO_R(GET_BITS(inst, 10, 11));
+                                                            rd = RVC_TO_R(GET_BITS(inst, 7, 9));
                                                             rs1 = rd;
-                                                            EXTSrc = (GET_BIT(inst, 12) << 5) &
+                                                            EXTSrc = (GET_BIT(inst, 12) << 5) |
                                                                      (GET_BITS(inst, 2, 6));
                                                             EXTBit = 6;
                                                             RegDst = rd;
                                                             ALUOp = ALUOP_SRA;
                                                             ALUSrc = ALUSRC_RS_IMM;
                                                             RegWrite = REGWRITE_VALE;
+
+                                                            sprintf(
+                                                                InstBuf, "srai  %s, %s, %lld",
+                                                                R_NAME[rd], R_NAME[rd],
+                                                                EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                                         }
                                                         break;
                                                     case F2C_1_ANDI:
                                                         {
-                                                            rd = RVC_TO_R(GET_BITS(inst, 10, 11));
+                                                            rd = RVC_TO_R(GET_BITS(inst, 7, 9));
                                                             rs1 = rd;
-                                                            EXTSrc = (GET_BIT(inst, 12) << 5) &
+                                                            EXTSrc = (GET_BIT(inst, 12) << 5) |
                                                                      (GET_BITS(inst, 2, 6));
                                                             EXTBit = 6;
                                                             RegDst = rd;
                                                             ALUOp = ALUOP_AND;
                                                             ALUSrc = ALUSRC_RS_IMM;
                                                             RegWrite = REGWRITE_VALE;
+
+                                                            sprintf(
+                                                                InstBuf, "andi  %s, %s, %lld",
+                                                                R_NAME[rd], R_NAME[rd],
+                                                                EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                                         }
                                                         break;
                                                     case F2C_1_REG:
                                                         {
                                                             unsigned int funct1 = GET_BIT(inst, 12);
                                                             unsigned int funct2_2 =
-                                                                GET_BITS(inst, 10, 11);
+                                                                GET_BITS(inst, 5, 6);
 
-                                                            rd = RVC_TO_R(GET_BITS(inst, 10, 11));
+                                                            rd = RVC_TO_R(GET_BITS(inst, 7, 9));
                                                             rs1 = rd;
-                                                            rs2 = RVC_TO_R(GET_BIT(inst, 2, 4));
+                                                            rs2 = RVC_TO_R(GET_BITS(inst, 2, 4));
                                                             RegDst = rd;
                                                             ALUSrc = ALUSRC_RS_RT;
                                                             RegWrite = REGWRITE_VALE;
@@ -355,24 +411,93 @@ void ID()
                                                                                         {
                                                                                             ALUOp =
                                                                                                 ALUOP_SUB;
+
+                                                                                            sprintf(
+                                                                                                InstBuf,
+                                                                                                "su"
+                                                                                                "b"
+                                                                                                "  "
+                                                                                                "%s"
+                                                                                                ", "
+                                                                                                "%s"
+                                                                                                ", "
+                                                                                                "%"
+                                                                                                "s",
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rs2]);
                                                                                         }
                                                                                         break;
                                                                                     case F2C_2_XOR:
                                                                                         {
                                                                                             ALUOp =
                                                                                                 ALUOP_XOR;
+
+                                                                                            sprintf(
+                                                                                                InstBuf,
+                                                                                                "xo"
+                                                                                                "r "
+                                                                                                " %"
+                                                                                                "s,"
+                                                                                                " %"
+                                                                                                "s,"
+                                                                                                " %"
+                                                                                                "s",
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rs2]);
                                                                                         }
                                                                                         break;
                                                                                     case F2C_2_OR:
                                                                                         {
                                                                                             ALUOp =
                                                                                                 ALUOP_OR;
+
+                                                                                            sprintf(
+                                                                                                InstBuf,
+                                                                                                "or"
+                                                                                                "  "
+                                                                                                "%s"
+                                                                                                ", "
+                                                                                                "%s"
+                                                                                                ", "
+                                                                                                "%"
+                                                                                                "s",
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rs2]);
                                                                                         }
                                                                                         break;
                                                                                     case F2C_2_AND:
                                                                                         {
                                                                                             ALUOp =
                                                                                                 ALUOP_AND;
+
+                                                                                            sprintf(
+                                                                                                InstBuf,
+                                                                                                "an"
+                                                                                                "d "
+                                                                                                " %"
+                                                                                                "s,"
+                                                                                                " %"
+                                                                                                "s,"
+                                                                                                " %"
+                                                                                                "s",
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rs2]);
                                                                                         }
                                                                                         break;
                                                                                     default:
@@ -389,12 +514,48 @@ void ID()
                                                                                         {
                                                                                             ALUOp =
                                                                                                 ALUOP_SUBW;
+
+                                                                                            sprintf(
+                                                                                                InstBuf,
+                                                                                                "su"
+                                                                                                "bw"
+                                                                                                "  "
+                                                                                                "%s"
+                                                                                                ", "
+                                                                                                "%s"
+                                                                                                ", "
+                                                                                                "%"
+                                                                                                "s",
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rs2]);
                                                                                         }
                                                                                         break;
                                                                                     case F2C_2_ADDW:
                                                                                         {
                                                                                             ALUOp =
                                                                                                 ALUOP_ADDW;
+
+                                                                                            sprintf(
+                                                                                                InstBuf,
+                                                                                                "ad"
+                                                                                                "dw"
+                                                                                                "  "
+                                                                                                "%s"
+                                                                                                ", "
+                                                                                                "%s"
+                                                                                                ", "
+                                                                                                "%"
+                                                                                                "s",
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rd],
+                                                                                                R_NAME
+                                                                                                    [rs2]);
                                                                                         }
                                                                                         break;
                                                                                     default:
@@ -416,46 +577,55 @@ void ID()
                                     case F3C_J:
                                         {
                                             EXTSrc =
-                                                (GET_BIT(inst, 12) << 11) &
-                                                (GET_BIT(inst, 8) << 10) &
-                                                (GET_BITS(inst, 9, 10) << 8) &
-                                                (GET_BIT(inst, 6) << 7) & (GET_BIT(inst, 7) << 6) &
-                                                (GET_BIT(inst, 2) << 5) & (GET_BIT(inst, 11) << 4) &
-                                                (GET_BITS(3, 5) << 1);
+                                                (GET_BIT(inst, 12) << 11) |
+                                                (GET_BIT(inst, 8) << 10) |
+                                                (GET_BITS(inst, 9, 10) << 8) |
+                                                (GET_BIT(inst, 6) << 7) | (GET_BIT(inst, 7) << 6) |
+                                                (GET_BIT(inst, 2) << 5) | (GET_BIT(inst, 11) << 4) |
+                                                (GET_BITS(inst, 3, 5) << 1);
                                             EXTBit = 12;
                                             ALUSrc = ALUSRC_PC_IMM;
                                             ALUOp = ALUOP_ADD;
                                             Branch = BRANCH_YES;
+
+                                            sprintf(InstBuf, "jal  %s, 0x%llx", R_NAME[R_zero],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit) + PC);
                                         }
                                         break;
                                     case F3C_BEQZ:
                                         {
                                             rs1 = RVC_TO_R(GET_BITS(inst, 7, 9));
                                             rs2 = R_zero;
-                                            EXTSrc = (GET_BIT(inst, 12) << 8) &
-                                                     (GET_BITS(inst, 5, 6) << 6) &
-                                                     (GET_BIT(inst, 2) << 5) &
-                                                     (GET_BIT(inst, 10, 11) << 3) &
+                                            EXTSrc = (GET_BIT(inst, 12) << 8) |
+                                                     (GET_BITS(inst, 5, 6) << 6) |
+                                                     (GET_BIT(inst, 2) << 5) |
+                                                     (GET_BITS(inst, 10, 11) << 3) |
                                                      (GET_BITS(inst, 3, 4) << 1);
                                             EXTBit = 9;
                                             BranchCmp = BRANCHCMP_EQ;
                                             ALUSrc = ALUSRC_PC_IMM;
                                             ALUOp = ALUOP_ADD;
+
+                                            sprintf(InstBuf, "beqz  %s, %s, 0x%llx", R_NAME[rs1],
+                                                    R_NAME[rs2], EXT_SIGNED_DWORD(EXTSrc, EXTBit)+PC);
                                         }
                                         break;
-                                    case f3c_BENZ:
+                                    case F3C_BENZ:
                                         {
                                             rs1 = RVC_TO_R(GET_BITS(inst, 7, 9));
                                             rs2 = R_zero;
-                                            EXTSrc = (GET_BIT(inst, 12) << 8) &
-                                                     (GET_BITS(inst, 5, 6) << 6) &
-                                                     (GET_BIT(inst, 2) << 5) &
-                                                     (GET_BIT(inst, 10, 11) << 3) &
+                                            EXTSrc = (GET_BIT(inst, 12) << 8) |
+                                                     (GET_BITS(inst, 5, 6) << 6) |
+                                                     (GET_BIT(inst, 2) << 5) |
+                                                     (GET_BITS(inst, 10, 11) << 3) |
                                                      (GET_BITS(inst, 3, 4) << 1);
                                             EXTBit = 9;
                                             BranchCmp = BRANCHCMP_NE;
                                             ALUSrc = ALUSRC_PC_IMM;
                                             ALUOp = ALUOP_ADD;
+
+                                            sprintf(InstBuf, "bnez  %s, %s, 0x%llx", R_NAME[rs1],
+                                                    R_NAME[rs2], EXT_SIGNED_DWORD(EXTSrc, EXTBit)+PC);
                                         }
                                         break;
                                     default:
@@ -472,20 +642,23 @@ void ID()
                                             rd = GET_BITS(inst, 7, 11);
                                             rs1 = rd;
                                             EXTSrc =
-                                                (GET_BIT(inst, 12) << 5) & (GET_BITS(inst, 2, 6));
+                                                (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
                                             EXTBit = 6;
                                             RegDst = rd;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             ALUOp = ALUOP_SLL;
                                             RegWrite = REGWRITE_VALE;
+
+                                            sprintf(InstBuf, "slli  %s, %s, %lld", R_NAME[rd],
+                                                    R_NAME[rd], EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                         }
                                         break;
                                     case F3C_LWSP:
                                         {
                                             rd = GET_BITS(inst, 7, 11);
-                                            r1 = R_sp;
-                                            EXTSrc = (GET_BITS(inst, 2, 3) << 6) &
-                                                     (GET_BIT(inst, 12) << 5) &
+                                            rs1 = R_sp;
+                                            EXTSrc = (GET_BITS(inst, 2, 3) << 6) |
+                                                     (GET_BIT(inst, 12) << 5) |
                                                      (GET_BITS(inst, 4, 6) << 2);
                                             EXTBit = 8;
                                             EXTOp = EXTOP_UNSIGED;
@@ -494,13 +667,18 @@ void ID()
                                             ALUOp = ALUOP_ADD;
                                             MemRead = MEMREAD_WORD;
                                             RegWrite = REGWRITE_VALM;
+
+                                            sprintf(InstBuf, "lw  %s, %lld(%s)", R_NAME[rd],
+                                                    EXT_UNSIGNED_DWORD(EXTSrc, EXTBit),
+                                                    R_NAME[rs1]);
                                         }
                                         break;
                                     case F3C_LDSP:
                                         {
-                                            r1 = R_sp;
-                                            EXTSrc = (GET_BITS(inst, 2, 4) << 6) &
-                                                     (GET_BIT(inst, 12) << 5) &
+                                            rd = GET_BITS(inst, 7, 11);
+                                            rs1 = R_sp;
+                                            EXTSrc = (GET_BITS(inst, 2, 4) << 6) |
+                                                     (GET_BIT(inst, 12) << 5) |
                                                      (GET_BITS(inst, 5, 6) << 3);
                                             EXTBit = 9;
                                             EXTOp = EXTOP_UNSIGED;
@@ -509,6 +687,10 @@ void ID()
                                             ALUOp = ALUOP_ADD;
                                             MemRead = MEMREAD_DWORD;
                                             RegWrite = REGWRITE_VALM;
+
+                                            sprintf(InstBuf, "ld  %s, %lld(%s)", R_NAME[rd],
+                                                    EXT_UNSIGNED_DWORD(EXTSrc, EXTBit),
+                                                    R_NAME[rs1]);
                                         }
                                         break;
                                     case F3C_JR:
@@ -519,14 +701,19 @@ void ID()
                                                 {
                                                     case F1C_JRMV:
                                                         {
-                                                            if (rs2 == 0)   // C.JR
+                                                            if (rs2 == 0)  // C.JR
                                                                 {
                                                                     rs1 = GET_BITS(inst, 7, 11);
                                                                     ALUSrc = ALUSRC_RS_IMM;
                                                                     ALUOp = ALUOP_ADD;
                                                                     Branch = BRANCH_YES;
+
+                                                                    sprintf(InstBuf,
+                                                                            "jalr  %s, %s, 0x%x",
+                                                                            R_NAME[R_zero],
+                                                                            R_NAME[rs1], 0);
                                                                 }
-                                                            else    // C.MV
+                                                            else  // C.MV
                                                                 {
                                                                     rd = GET_BITS(inst, 7, 11);
                                                                     rs1 = R_zero;
@@ -534,32 +721,48 @@ void ID()
                                                                     ALUSrc = ALUSRC_RS_RT;
                                                                     ALUOp = ALUOP_ADD;
                                                                     RegWrite = REGWRITE_VALE;
+
+                                                                    sprintf(InstBuf, "mv  %s, %s",
+                                                                            R_NAME[rd],
+                                                                            R_NAME[rs2]);
                                                                 }
                                                         }
                                                         break;
                                                     case F1C_JALRADD:
                                                         {
-                                                            if(rs ==0)  // C.JALR
-                                                            {
-                                                                rs1 = GET_BITS(inst, 7, 11);
-                                                                ALUSrc = ALUSRC_RS_IMM;
-                                                                ALUOp = ALUOP_ADD;
-                                                                RegWrite = REGWRITE_VALP;
-                                                                Branch = BRANCH_YES;
-                                                            }
-                                                            else    // C.ADD
-                                                            {
-                                                                rd = GET_BITS(inst, 7, 11);
-                                                                rs1 = rd;
-                                                                RegDst = rd;
-                                                                ALUSrc = ALUSRC_RS_RT;
-                                                                ALUOp = ALUOP_ADD;
-                                                                RegWrite = REGWRITE_VALE;
-                                                            }
+                                                            if (rs2 == 0)  // C.JALR
+                                                                {
+                                                                    rd = R_ra;
+                                                                    rs1 = GET_BITS(inst, 7, 11);
+                                                                    RegDst = rd;
+                                                                    ALUSrc = ALUSRC_RS_IMM;
+                                                                    ALUOp = ALUOP_ADD;
+                                                                    RegWrite = REGWRITE_VALP;
+                                                                    Branch = BRANCH_YES;
+
+                                                                    sprintf(InstBuf,
+                                                                            "jalr  %s, %s, 0x%x",
+                                                                            R_NAME[rd], R_NAME[rs1],
+                                                                            0);
+                                                                }
+                                                            else  // C.ADD
+                                                                {
+                                                                    rd = GET_BITS(inst, 7, 11);
+                                                                    rs1 = rd;
+                                                                    RegDst = rd;
+                                                                    ALUSrc = ALUSRC_RS_RT;
+                                                                    ALUOp = ALUOP_ADD;
+                                                                    RegWrite = REGWRITE_VALE;
+
+                                                                    sprintf(InstBuf,
+                                                                            "add  %s, %s, %s",
+                                                                            R_NAME[rd], R_NAME[rs1],
+                                                                            R_NAME[rs2]);
+                                                                }
                                                         }
                                                         break;
                                                     default:
-                                                        ERROR();
+                                                        ERROR(__LINE__);
                                                 }
                                         }
                                         break;
@@ -567,26 +770,34 @@ void ID()
                                         {
                                             rs1 = R_sp;
                                             rs2 = GET_BITS(inst, 2, 6);
-                                            EXTSrc = (GET_BITS(inst, 7, 8) << 6) &
-                                                     (GET_BITS(9, 12) << 2);
+                                            EXTSrc = (GET_BITS(inst, 7, 8) << 6) |
+                                                     (GET_BITS(inst, 9, 12) << 2);
                                             EXTBit = 8;
                                             EXTOp = EXTOP_UNSIGED;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             ALUOp = ALUOP_ADD;
                                             MemWrite = MEMWRITE_WORD;
+
+                                            sprintf(InstBuf, "sw  %s, %lld(%s)", R_NAME[rs2],
+                                                    EXT_UNSIGNED_DWORD(EXTSrc, EXTBit),
+                                                    R_NAME[rs1]);
                                         }
                                         break;
                                     case F3C_SDSP:
                                         {
                                             rs1 = R_sp;
                                             rs2 = GET_BITS(inst, 2, 6);
-                                            EXTSrc = (GET_BITS(inst, 7, 9) << 6) &
-                                                     (GET_BITS(10, 12) << 3);
+                                            EXTSrc = (GET_BITS(inst, 7, 9) << 6) |
+                                                     (GET_BITS(inst, 10, 12) << 3);
                                             EXTBit = 9;
                                             EXTOp = EXTOP_UNSIGED;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             ALUOp = ALUOP_ADD;
                                             MemWrite = MEMWRITE_DWORD;
+
+                                            sprintf(InstBuf, "sd  %s, %lld(%s)", R_NAME[rs2],
+                                                    EXT_UNSIGNED_DWORD(EXTSrc, EXTBit),
+                                                    R_NAME[rs1]);
                                         }
                                         break;
                                     default:
@@ -622,16 +833,28 @@ void ID()
                                                     case F7_ADD:
                                                         {
                                                             ALUOp = ALUOP_ADD;
+
+                                                            sprintf(InstBuf, "add  %s, %s, %s",
+                                                                    R_NAME[rd], R_NAME[rs1],
+                                                                    R_NAME[rs2]);
                                                         }
                                                         break;
                                                     case F7_MUL:
                                                         {
                                                             ALUOp = ALUOP_MUL;
+
+                                                            sprintf(InstBuf, "mul  %s, %s, %s",
+                                                                    R_NAME[rd], R_NAME[rs1],
+                                                                    R_NAME[rs2]);
                                                         }
                                                         break;
                                                     case F7_SUB:
                                                         {
                                                             ALUOp = ALUOP_SUB;
+
+                                                            sprintf(InstBuf, "sub  %s, %s, %s",
+                                                                    R_NAME[rd], R_NAME[rs1],
+                                                                    R_NAME[rs2]);
                                                         }
                                                         break;
                                                     default:
@@ -648,11 +871,19 @@ void ID()
                                                     case F7_SLL:
                                                         {
                                                             ALUOp = ALUOP_SLL;
+
+                                                            sprintf(InstBuf, "sll  %s, %s, %s",
+                                                                    R_NAME[rd], R_NAME[rs1],
+                                                                    R_NAME[rs2]);
                                                         }
                                                         break;
                                                     case F7_MULH:
                                                         {
                                                             ALUOp = ALUOP_MULH;
+
+                                                            sprintf(InstBuf, "mulh  %s, %s, %s",
+                                                                    R_NAME[rd], R_NAME[rs1],
+                                                                    R_NAME[rs2]);
                                                         }
                                                         break;
                                                     default:
@@ -667,6 +898,25 @@ void ID()
                                             if (funct7 == F7_SLT)
                                                 {
                                                     ALUOp = ALUOP_SLT;
+
+                                                    sprintf(InstBuf, "slt  %s, %s, %s", R_NAME[rd],
+                                                            R_NAME[rs1], R_NAME[rs2]);
+                                                }
+                                            else
+                                                {
+                                                    ERROR(__LINE__);
+                                                }
+                                        }
+                                        break;
+                                        case F3_SLTU:
+                                        {
+                                            funct7 = GET_BITS(inst, 25, 31);
+                                            if (funct7 == F7_SLTU)
+                                                {
+                                                    ALUOp = ALUOP_SLTU;
+
+                                                    sprintf(InstBuf, "sltu  %s, %s, %s", R_NAME[rd],
+                                                            R_NAME[rs1], R_NAME[rs2]);
                                                 }
                                             else
                                                 {
@@ -682,11 +932,19 @@ void ID()
                                                     case F7_XOR:
                                                         {
                                                             ALUOp = ALUOP_XOR;
+
+                                                            sprintf(InstBuf, "xor  %s, %s, %s",
+                                                                    R_NAME[rd], R_NAME[rs1],
+                                                                    R_NAME[rs2]);
                                                         }
                                                         break;
                                                     case F7_DIV:
                                                         {
                                                             ALUOp = ALUOP_DIV;
+
+                                                            sprintf(InstBuf, "div  %s, %s, %s",
+                                                                    R_NAME[rd], R_NAME[rs1],
+                                                                    R_NAME[rs2]);
                                                         }
                                                         break;
                                                     default:
@@ -703,11 +961,19 @@ void ID()
                                                     case F7_SRL:
                                                         {
                                                             ALUOp = ALUOP_SRL;
+
+                                                            sprintf(InstBuf, "srl  %s, %s, %s",
+                                                                    R_NAME[rd], R_NAME[rs1],
+                                                                    R_NAME[rs2]);
                                                         }
                                                         break;
                                                     case F7_SRA:
                                                         {
                                                             ALUOp = ALUOP_SRA;
+
+                                                            sprintf(InstBuf, "sra  %s, %s, %s",
+                                                                    R_NAME[rd], R_NAME[rs1],
+                                                                    R_NAME[rs2]);
                                                         }
                                                         break;
                                                     default:
@@ -724,11 +990,19 @@ void ID()
                                                     case F7_OR:
                                                         {
                                                             ALUOp = ALUOP_OR;
+
+                                                            sprintf(InstBuf, "or  %s, %s, %s",
+                                                                    R_NAME[rd], R_NAME[rs1],
+                                                                    R_NAME[rs2]);
                                                         }
                                                         break;
                                                     case F7_REM:
                                                         {
                                                             ALUOp = ALUOP_REM;
+
+                                                            sprintf(InstBuf, "rem  %s, %s, %s",
+                                                                    R_NAME[rd], R_NAME[rs1],
+                                                                    R_NAME[rs2]);
                                                         }
                                                         break;
                                                     default:
@@ -743,6 +1017,9 @@ void ID()
                                             if (funct7 == F7_AND)
                                                 {
                                                     ALUOp = ALUOP_AND;
+
+                                                    sprintf(InstBuf, "and  %s, %s, %s", R_NAME[rd],
+                                                            R_NAME[rs1], R_NAME[rs2]);
                                                 }
                                             else
                                                 {
@@ -773,21 +1050,49 @@ void ID()
                                     case F3_BYTE:
                                         {
                                             MemRead = MEMREAD_BYTE;
+
+                                            sprintf(InstBuf, "lb  %s, %lld(%s)", R_NAME[rd],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
                                         }
                                         break;
                                     case F3_HWORD:
                                         {
                                             MemRead = MEMREAD_HWORD;
+
+                                            sprintf(InstBuf, "lh  %s, %lld(%s)", R_NAME[rd],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
                                         }
                                         break;
                                     case F3_WORD:
                                         {
                                             MemRead = MEMREAD_WORD;
+
+                                            sprintf(InstBuf, "lw  %s, %lld(%s)", R_NAME[rd],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
                                         }
                                         break;
                                     case F3_DWORD:
                                         {
                                             MemRead = MEMREAD_DWORD;
+
+                                            sprintf(InstBuf, "ldu  %s, %lld(%s)", R_NAME[rd],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
+                                        }
+                                        break;
+                                        case F3_HWORDU:
+                                        {
+                                            MemRead = MEMREAD_HWORDU;
+
+                                            sprintf(InstBuf, "lhu  %s, %lld(%s)", R_NAME[rd],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
+                                        }
+                                        break;
+                                    case F3_WORDU:
+                                        {
+                                            MemRead = MEMREAD_WORDU;
+
+                                            sprintf(InstBuf, "lwu  %s, %lld(%s)", R_NAME[rd],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
                                         }
                                         break;
                                     default:
@@ -812,6 +1117,9 @@ void ID()
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_ADD;
+
+                                            sprintf(InstBuf, "addi  %s, %s, %lld", R_NAME[rd],
+                                                    R_NAME[rs1], EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                         }
                                         break;
                                     case F3_SLL:
@@ -823,6 +1131,10 @@ void ID()
                                                     EXTSrc = imm0_5;
                                                     EXTBit = 6;
                                                     ALUOp = ALUOP_SLL;
+
+                                                    sprintf(InstBuf, "slli  %s, %s, %lld",
+                                                            R_NAME[rd], R_NAME[rs1],
+                                                            EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                                 }
                                             else
                                                 {
@@ -836,6 +1148,20 @@ void ID()
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_SLT;
+
+                                            sprintf(InstBuf, "slti  %s, %s, %lld", R_NAME[rd],
+                                                    R_NAME[rs1], EXT_SIGNED_DWORD(EXTSrc, EXTBit));
+                                        }
+                                        break;
+                                        case F3_SLTU:
+                                        {
+                                            imm0_11 = GET_BITS(inst, 20, 31);
+                                            EXTSrc = imm0_11;
+                                            EXTBit = 12;
+                                            ALUOp = ALUOP_SLTU;
+
+                                            sprintf(InstBuf, "sltiu  %s, %s, %lld", R_NAME[rd],
+                                                    R_NAME[rs1], EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                         }
                                         break;
                                     case F3_XOR:
@@ -844,6 +1170,9 @@ void ID()
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_XOR;
+
+                                            sprintf(InstBuf, "xori  %s, %s, %lld", R_NAME[rd],
+                                                    R_NAME[rs1], EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                         }
                                         break;
                                     case F3_SRL:
@@ -857,6 +1186,11 @@ void ID()
                                                             EXTSrc = imm0_5;
                                                             EXTBit = 6;
                                                             ALUOp = ALUOP_SRL;
+
+                                                            sprintf(
+                                                                InstBuf, "srli  %s, %s, %lld",
+                                                                R_NAME[rd], R_NAME[rs1],
+                                                                EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                                         }
                                                         break;
                                                     case IMM6_11_SRAI:
@@ -865,6 +1199,11 @@ void ID()
                                                             EXTSrc = imm0_5;
                                                             EXTBit = 6;
                                                             ALUOp = ALUOP_SRA;
+
+                                                            sprintf(
+                                                                InstBuf, "srai  %s, %s, %lld",
+                                                                R_NAME[rd], R_NAME[rs1],
+                                                                EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                                         }
                                                         break;
                                                     default:
@@ -879,6 +1218,9 @@ void ID()
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_OR;
+
+                                            sprintf(InstBuf, "ori  %s, %s, %lld", R_NAME[rd],
+                                                    R_NAME[rs1], EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                         }
                                         break;
                                     case F3_AND:
@@ -887,6 +1229,9 @@ void ID()
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_AND;
+
+                                            sprintf(InstBuf, "andi  %s, %s, %lld", R_NAME[rd],
+                                                    R_NAME[rs1], EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                         }
                                         break;
                                     default:
@@ -909,6 +1254,9 @@ void ID()
                                     ALUSrc = ALUSRC_RS_IMM;
                                     ALUOp = ALUOP_ADDW;
                                     RegWrite = REGWRITE_VALE;
+
+                                    sprintf(InstBuf, "addiw  %s, %s, %lld", R_NAME[rd], R_NAME[rs1],
+                                            EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                 }
                             else
                                 {
@@ -931,6 +1279,9 @@ void ID()
                                     ALUOp = ALUOP_ADD;
                                     Branch = BRANCH_YES;
                                     RegWrite = REGWRITE_VALP;
+
+                                    sprintf(InstBuf, "jalr  %s, %s, %lld", R_NAME[rd], R_NAME[rs1],
+                                            EXT_SIGNED_DWORD(EXTSrc, EXTBit));
                                 }
                             else
                                 {
@@ -950,7 +1301,7 @@ void ID()
                             rs2 = GET_BITS(inst, 20, 24);
                             imm0_4 = GET_BITS(inst, 7, 11);
                             imm5_11 = GET_BITS(inst, 25, 31);
-                            EXTSrc = (imm5_11 << 5) & imm0_4;
+                            EXTSrc = (imm5_11 << 5) | imm0_4;
                             EXTBit = 12;
                             ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
@@ -960,21 +1311,33 @@ void ID()
                                     case F3_BYTE:
                                         {
                                             MemWrite = MEMWRITE_BYTE;
+
+                                            sprintf(InstBuf, "sb  %s, %lld(%s)", R_NAME[rs2],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
                                         }
                                         break;
                                     case F3_HWORD:
                                         {
                                             MemWrite = MEMWRITE_HWORD;
+
+                                            sprintf(InstBuf, "sh  %s, %lld(%s)", R_NAME[rs2],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
                                         }
                                         break;
                                     case F3_WORD:
                                         {
                                             MemWrite = MEMWRITE_WORD;
+
+                                            sprintf(InstBuf, "sw  %s, %lld(%s)", R_NAME[rs2],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
                                         }
                                         break;
                                     case F3_DWORD:
                                         {
                                             MemWrite = MEMWRITE_DWORD;
+
+                                            sprintf(InstBuf, "sd  %s, %lld(%s)", R_NAME[rs2],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
                                         }
                                         break;
                                     default:
@@ -988,8 +1351,8 @@ void ID()
                             funct3 = GET_BITS(inst, 12, 14);
                             rs1 = GET_BITS(inst, 15, 19);
                             rs2 = GET_BITS(inst, 20, 24);
-                            EXTSrc = (GET_BIT(inst, 31) << 12) & (GET_BIT(inst, 7) << 11) &
-                                     (GET_BITS(inst, 25, 30) << 5) & (GET_BITS(inst, 8, 11) << 1);
+                            EXTSrc = (GET_BIT(inst, 31) << 12) | (GET_BIT(inst, 7) << 11) |
+                                     (GET_BITS(inst, 25, 30) << 5) | (GET_BITS(inst, 8, 11) << 1);
                             EXTBit = 12;
                             ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
@@ -999,21 +1362,49 @@ void ID()
                                     case F3_EQ:
                                         {
                                             BranchCmp = BRANCHCMP_EQ;
+
+                                            sprintf(InstBuf, "beq  %s, %s, 0x%llx", R_NAME[rs1],
+                                                    R_NAME[rs2], EXT_SIGNED_DWORD(EXTSrc, EXTBit)+PC);
                                         }
                                         break;
                                     case F3_NE:
                                         {
                                             BranchCmp = BRANCHCMP_NE;
+
+                                            sprintf(InstBuf, "bne  %s, %s, 0x%llx", R_NAME[rs1],
+                                                    R_NAME[rs2], EXT_SIGNED_DWORD(EXTSrc, EXTBit)+PC);
                                         }
                                         break;
                                     case F3_LT:
                                         {
                                             BranchCmp = BRANCHCMP_LT;
+
+                                            sprintf(InstBuf, "blt  %s, %s, 0x%llx", R_NAME[rs1],
+                                                    R_NAME[rs2], EXT_SIGNED_DWORD(EXTSrc, EXTBit)+PC);
                                         }
                                         break;
                                     case F3_GE:
                                         {
                                             BranchCmp = BRANCHCMP_GE;
+
+                                            sprintf(InstBuf, "bge  %s, %s, 0x%llx", R_NAME[rs1],
+                                                    R_NAME[rs2], EXT_SIGNED_DWORD(EXTSrc, EXTBit)+PC);
+                                        }
+                                        break;
+                                    case F3_LTU:
+                                        {
+                                            BranchCmp = BRANCHCMP_LTU;
+
+                                            sprintf(InstBuf, "bltu  %s, %s, 0x%llx", R_NAME[rs1],
+                                                    R_NAME[rs2], EXT_SIGNED_DWORD(EXTSrc, EXTBit)+PC);
+                                        }
+                                        break;
+                                    case F3_GEU:
+                                        {
+                                            BranchCmp = BRANCHCMP_GEU;
+
+                                            sprintf(InstBuf, "bgeu  %s, %s, 0x%llx", R_NAME[rs1],
+                                                    R_NAME[rs2], EXT_SIGNED_DWORD(EXTSrc, EXTBit)+PC);
                                         }
                                         break;
                                     default:
@@ -1029,6 +1420,8 @@ void ID()
                             ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
                             RegWrite = REGWRITE_VALE;
+
+                            sprintf(InstBuf, "auipc  %s, 0x%x", R_NAME[rd], imm12_31);
                         }
                         break;
                     case OP_LUI:
@@ -1041,18 +1434,23 @@ void ID()
                             ALUSrc = ALUSRC_RS_IMM;
                             ALUOp = ALUOP_ADD;
                             RegWrite = REGWRITE_VALE;
+
+                            sprintf(InstBuf, "lui  %s, 0x%x", R_NAME[rd], imm12_31);
                         }
                         break;
                     case OP_JAL:
                         {
                             rd = GET_BITS(inst, 7, 11);
-                            EXTSrc = (GET_BIT(inst, 31) << 20) & (GET_BITS(inst, 12, 19) << 12) &
-                                     (GET_BIT(inst, 20) << 11) & (GET_BITS(inst, 21, 30) << 1);
+                            EXTSrc = (GET_BIT(inst, 31) << 20) | (GET_BITS(inst, 12, 19) << 12) |
+                                     (GET_BIT(inst, 20) << 11) | (GET_BITS(inst, 21, 30) << 1);
                             RegDst = rd;
                             ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
                             RegWrite = REGWRITE_VALP;
                             Branch = BRANCH_YES;
+
+                            sprintf(InstBuf, "jal  %s, 0x%llx", R_NAME[rd],
+                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit) + PC);
                         }
                         break;
                     default:
@@ -1080,7 +1478,7 @@ void ID()
                         }
                         break;
                     default:
-                        ERROT(__LINE__);
+                        ERROR(__LINE__);
                 }
         }
     else
@@ -1116,7 +1514,7 @@ void EX()
     unsigned char ALUSrc = ID_EX.Ctrl_EX_ALUSrc;
     unsigned char ALUOp = ID_EX.Ctrl_EX_ALUOp;
 
-    unsigned char Branch = BRANCH_NO;
+    unsigned char Branch = ID_EX.Ctrl_UP_Branch;
 
     switch (BranchCmp)
         {
@@ -1140,13 +1538,29 @@ void EX()
                 break;
             case BRANCHCMP_LT:
                 {
-                    if (RegRs < RegRt)
+                    if ((long long)RegRs < (long long)RegRt)
                         {
                             Branch = BRANCH_YES;
                         }
                 }
                 break;
             case BRANCHCMP_GE:
+                {
+                    if ((long long)RegRs >= (long long)RegRt)
+                        {
+                            Branch = BRANCH_YES;
+                        }
+                }
+                break;
+            case BRANCHCMP_LTU:
+                {
+                    if (RegRs < RegRt)
+                        {
+                            Branch = BRANCH_YES;
+                        }
+                }
+                break;
+            case BRANCHCMP_GEU:
                 {
                     if (RegRs >= RegRt)
                         {
@@ -1212,7 +1626,12 @@ void EX()
                               VA_L = ((long long)VA & MASK_L),
                               VB_H = (((long long)VB & MASK_H) >> 32),
                               VB_L = ((long long)VB & MASK_L);
-                    ALUOut = VA_H * VB_H + ((VA_H * VB_L) >> 32) + ((VA_L * VB_H) >> 32);
+                    long long VT_1 = VA_H * VB_L, VT_2 = VA_L * VB_H, VT_3 = VA_H * VB_H;
+                    if (VT_1 < 0 && VT_2 < 0 && (VT_1 + VT_2) >= 0)
+                        {
+                            VT_3 += 1;
+                        }
+                    ALUOut = VT_3 + ((VT_1 + VT_2) >> 32);
                 }
                 break;
             case ALUOP_DIV:
@@ -1232,22 +1651,22 @@ void EX()
                 break;
             case ALUOP_SLL:
                 {
-                    ALUOut = VA << (VB & 0x3f);
+                    ALUOut = VA << (VB | 0x3f);
                 }
                 break;
             case ALUOP_SRL:
                 {
-                    ALUOut = VA >> (VB & 0x3f);
+                    ALUOut = VA >> (VB | 0x3f);
                 }
                 break;
             case ALUOP_SRA:
                 {
-                    ALUOut = (REG)((long long)VA >> (VB & 0x3f));
+                    ALUOut = (REG)((long long)VA >> (VB | 0x3f));
                 }
                 break;
             case ALUOP_AND:
                 {
-                    ALUOut = VA & VB;
+                    ALUOut = VA | VB;
                 }
                 break;
             case ALUOP_OR:
@@ -1261,6 +1680,11 @@ void EX()
                 }
                 break;
             case ALUOP_SLT:
+                {
+                    ALUOut = ((long long)VA < (long long)VB) ? 1 : 0;
+                }
+                break;
+            case ALUOP_SLTU:
                 {
                     ALUOut = (VA < VB) ? 1 : 0;
                 }
@@ -1362,6 +1786,24 @@ void MEM()
             case MEMREAD_DWORD:
                 {
                     VMemRead = READ_DWORD(ALUOut);
+                }
+                break;
+            case MEMREAD_BYTEU:
+                {
+                    unsigned char vReadByte = READ_BYTE(ALUOut);
+                    VMemRead = EXT_UNSIGNED_DWORD(vReadByte, 8);
+                }
+                break;
+            case MEMREAD_HWORDU:
+                {
+                    unsigned short vReadHword = READ_HWORD(ALUOut);
+                    VMemRead = EXT_UNSIGNED_DWORD(vReadHword, 16);
+                }
+                break;
+            case MEMREAD_WORDU:
+                {
+                    unsigned char vReadWord = READ_WORD(ALUOut);
+                    VMemRead = EXT_UNSIGNED_DWORD(vReadWord, 32);
                 }
                 break;
             default:

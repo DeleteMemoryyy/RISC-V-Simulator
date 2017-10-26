@@ -4,6 +4,8 @@ FILE *file = NULL;
 FILE *elf = NULL;
 Elf64_Ehdr elf64_hdr;
 
+const char FileName[50] = "test";
+
 char *shsttab = NULL;  // 段名表
 char *strtab = NULL;   // 字符串表
 char *symtab = NULL;   // 符号表
@@ -65,7 +67,7 @@ unsigned int stradr = 0;
 
 bool open_file()
 {
-    file = fopen("benchmark", "r");
+    file = fopen(FileName, "r");
     elf = fopen("elf.log", "w");
     if (file == NULL || elf == NULL)
         return false;
