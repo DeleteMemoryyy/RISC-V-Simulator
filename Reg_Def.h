@@ -71,6 +71,9 @@ struct WBUP
 #define INSTSIZE_16 0
 #define INSTSIZE_32 1
 
+#define EXTOP_SIGNED 0
+#define EXTOP_UNSIGED 1
+
 #define BRANCHCMP_NOP 0
 #define BRANCHCMP_EQ 1
 #define BRANCHCMP_NE 2
@@ -207,15 +210,18 @@ struct WBUP
 #define F2C_1_ANDI 2
 #define F2C_1_REG 3
 
-#define F1C_D 0
-#define F1C_W 1
-
 #define F2C_2_SUB 0
 #define F2C_2_XOR 1
 #define F2C_2_OR 2
 #define F2C_2_AND 3
 #define F2C_2_SUBW 0
 #define F2C_2_ADDW 1
+
+#define F1C_D 0
+#define F1C_W 1
+
+#define F1C_JRMV 0
+#define F1C_JALRADD 1
 
 #define R_zero 0
 #define R_ra 1

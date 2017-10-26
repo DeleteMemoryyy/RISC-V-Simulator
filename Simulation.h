@@ -25,6 +25,8 @@
 #define GET_BIT(i, b) ((i) & (1 << (b)))
 #define EXT_SIGNED_WORD(src, bit) ((((int)(src)) << (31 - (bit))) >> (31 - (bit)))
 #define EXT_SIGNED_DWORD(src, bit) ((((long long int)(src)) << (63 - (bit))) >> (63 - (bit)))
+#define EXT_UNSIGNED_WORD(src, bit) ((((unsigned int)(src)) << (31 - (bit))) >> (31 - (bit)))
+#define EXT_UNSIGNED_DWORD(src, bit) ((((ULL)(src)) << (63 - (bit))) >> (63 - (bit)))
 #define READ_BYTE(vaddr) (*((unsigned char *)(memory + V_TO_P((vaddr)))))
 #define READ_HWORD(vaddr) (*((unsigned short *)(memory + V_TO_P((vaddr)))))
 #define READ_WORD(vaddr) (*((unsigned int *)(memory + V_TO_P((vaddr)))))
