@@ -2,8 +2,6 @@
 
 **https://github.com/DeleteMemoryyy/RISC-V-Simulator**
 
-**刘德欣 1500017704**
-
 #### 程序编译运行环境：
 
 - Ubuntu 64-bit 16.04 
