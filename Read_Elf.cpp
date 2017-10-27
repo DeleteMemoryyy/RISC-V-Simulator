@@ -45,9 +45,8 @@ ULL entry = 0;
 
 //main
 ULL mainAddr = 0;
-
-//exit
-ULL exitAddr = 0;
+//main size
+ULL mainSize = 0;
 
 // Program headers
 ULL padr = 0;
@@ -549,11 +548,7 @@ void read_elf_symtable()
             if(strcmp((char *)(strtab + (unsigned int)elf64_sym.st_name),"main")==0)
             {
                 mainAddr = elf64_sym.st_value;
-            }
-
-            if(strcmp((char *)(strtab + (unsigned int)elf64_sym.st_name),"atexit")==0)
-            {
-                exitAddr = elf64_sym.st_value;
+                mainSize = elf64_sym.st_size;
             }
 
             fprintf(elf, "  Bind: ");

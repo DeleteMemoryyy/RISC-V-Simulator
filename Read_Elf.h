@@ -186,8 +186,8 @@ extern ULL entry;
 //main
 extern ULL mainAddr;
 
-//exit
-extern ULL exitAddr;
+//main
+extern ULL mainSize;
 
 extern FILE *file;
 

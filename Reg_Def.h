@@ -87,18 +87,30 @@ struct WBUP
 #define ALUOP_SUB 0x2
 #define ALUOP_MUL 0x3
 #define ALUOP_MULH 0x4
-#define ALUOP_DIV 0x5
-#define ALUOP_REM 0x6
-#define ALUOP_SLL 0x7
-#define ALUOP_SRL 0x8
-#define ALUOP_SRA 0x9
-#define ALUOP_AND 0xa
-#define ALUOP_OR 0xb
-#define ALUOP_XOR 0xc
-#define ALUOP_SLT 0xd
-#define ALUOP_SLTU 0xe
-#define ALUOP_ADDW 0xf
-#define ALUOP_SUBW 0x10
+#define ALUOP_MULHU 0x5
+#define ALUOP_MULHSU 0x6
+#define ALUOP_DIV 0x7
+#define ALUOP_DIVU 0x8
+#define ALUOP_REM 0x9
+#define ALUOP_REMU 0xa
+#define ALUOP_SLL 0xb
+#define ALUOP_SRL 0xc
+#define ALUOP_SRA 0xd
+#define ALUOP_AND 0xe
+#define ALUOP_OR 0xf
+#define ALUOP_XOR 0x10
+#define ALUOP_SLT 0x11
+#define ALUOP_SLTU 0x12
+#define ALUOP_ADDW 0x13
+#define ALUOP_SUBW 0x14
+#define ALUOP_MULW 0x15
+#define ALUOP_DIVW 0x16
+#define ALUOP_DIVUW 0x17
+#define ALUOP_REMW 0x18
+#define ALUOP_REMUW 0x19
+#define ALUOP_SLLW 0x1a
+#define ALUOP_SRLW 0x1b
+#define ALUOP_SRAW 0x1c
 
 
 #define ALUSRC_NONE 0
@@ -132,7 +144,8 @@ struct WBUP
 #define OP_ARIT_REG 0x33
 #define OP_LOAD 0x3
 #define OP_ARIT_IMM 0x13
-#define OP_ADDIW 0x1b
+#define OP_ARIT_IMM_W 0x1b
+#define OP_ARIT_REG_W 0x3b
 #define OP_JALR 0x67
 #define OP_ECALL 0x73
 #define OP_STORE 0x23
@@ -155,6 +168,7 @@ struct WBUP
 #define F3_OR 0x6
 #define F3_REM 0x6
 #define F3_AND 0x7
+
 #define F3_BYTE 0x0
 #define F3_HWORD 0x1
 #define F3_WORD 0x2
@@ -162,9 +176,9 @@ struct WBUP
 #define F3_BYTEU 0x4
 #define F3_HWORDU 0x5
 #define F3_WORDU 0x6
-#define F3_ADDIW 0x0
 #define F3_JALR 0x0
 #define F3_ECALL 0x0
+
 #define F3_EQ 0x0
 #define F3_NE 0x1
 #define F3_LT 0x4
@@ -177,14 +191,18 @@ struct WBUP
 #define F7_SUB 0x20
 #define F7_SLL 0x0
 #define F7_MULH 0x1
+#define F7_MULHU 0x1
+#define F7_MULHSU 0x1
 #define F7_SLT 0x0
 #define F7_SLTU 0x0
 #define F7_XOR 0x0
 #define F7_DIV 0x1
+#define F7_DIVU 0x1
 #define F7_SRL 0x0
 #define F7_SRA 0x20
 #define F7_OR 0x0
 #define F7_REM 0x1
+#define F7_REMU 0x1
 #define F7_AND 0x0
 #define F7_ECALL 0x0
 
