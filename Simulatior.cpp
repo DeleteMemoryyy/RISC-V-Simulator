@@ -1,4 +1,4 @@
-#include "Simulation.h"
+#include "Simulatior.h"
 #include "UI/imgui.h"
 #include "UI/imgui_impl_glfw.h"
 #include "UI/imgui_internal.h"
@@ -305,7 +305,7 @@ int main()
                             if (ImGui::Button("Select Format"))
                                 ImGui::OpenPopup("select");
                             ImGui::SameLine();
-                            ImGui::Text(names[selected_fish]);
+                            ImGui::Text("%s",names[selected_fish]);
                             if (ImGui::BeginPopup("select"))
                                 {
                                     ImGui::Text("Scale");
@@ -375,12 +375,12 @@ int main()
                             ImGui::PopItemWidth();
 
                             ImGui::SameLine(0, 20);
-                            static int selected_format = 2;
+                            static int selected_format = 1;
                             const char *formats[] = {"Hex", "Decimal", "Unsigned", "ASCII"};
                             if (ImGui::Button("Select Format"))
                                 ImGui::OpenPopup("select format");
                             ImGui::SameLine();
-                            ImGui::Text(formats[selected_format]);
+                            ImGui::Text("%s",formats[selected_format]);
                             if (ImGui::BeginPopup("select format"))
                                 {
                                     ImGui::Separator();
@@ -391,12 +391,12 @@ int main()
                                 }
                             ImGui::SameLine(0, 20);
 
-                            static int selected_size = 4;
+                            static int selected_size = 3;
                             const char *sizes[] = {"Byte", "Half Word", "Word", "Double"};
                             if (ImGui::Button("Select Scale"))
                                 ImGui::OpenPopup("select scale");
                             ImGui::SameLine();
-                            ImGui::Text(sizes[selected_size]);
+                            ImGui::Text("%s",sizes[selected_size]);
                             if (ImGui::BeginPopup("select scale"))
                                 {
                                     ImGui::Separator();

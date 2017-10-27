@@ -88,8 +88,6 @@ bool open_file(string fname)
 
 bool read_elf(string fname)
 {
-
-
     if (!open_file(fname))
         return false;
 
@@ -309,10 +307,10 @@ void read_elf_sections()
 
             fprintf(elf, "  Name: %s", (char *)(shsttab + (unsigned int)elf64_shdr.sh_name));
 
-            if(strcmp((char *)(shsttab + (unsigned int)elf64_shdr.sh_name),".data") == 0)
-            {
-                dataAddr = (ULL)elf64_shdr.sh_addr;
-            }
+            if (strcmp((char *)(shsttab + (unsigned int)elf64_shdr.sh_name), ".data") == 0)
+                {
+                    dataAddr = (ULL)elf64_shdr.sh_addr;
+                }
 
             fprintf(elf, "  Type: ");
             switch ((unsigned int)elf64_shdr.sh_type)
@@ -542,6 +540,8 @@ void read_elf_symtable()
 {
     Elf64_Sym elf64_sym;
 
+    symNum = 0;
+
     fseek(file, symadr, SEEK_SET);
 
     for (int c = 0; c < symnum; c++)
@@ -615,7 +615,9 @@ void read_elf_symtable()
                         break;
                 }
 
-            if ((ELF64_ST_BIND(elf64_sym.st_info) == 1) && (ELF64_ST_TYPE(elf64_sym.st_info) == 1))
+            if ((ELF64_ST_BIND(elf64_sym.st_info) == 1) &&
+                (ELF64_ST_TYPE(elf64_sym.st_info) == 1) &&
+                *((char *)(strtab + (unsigned int)elf64_sym.st_name)) != '_')
                 {
                     sprintf(globalSymbol[symNum].name, "%s",
                             (char *)(strtab + (unsigned int)elf64_sym.st_name));

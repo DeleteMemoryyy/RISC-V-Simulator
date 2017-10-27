@@ -1,7 +1,7 @@
 CXX = g++
 MAKE = make
-EXE = Simulation
-OBJS = Simulation.o Read_Elf.o
+EXE = Simulatior
+OBJS = Simulatior.o Read_Elf.o
 IMGUI = UI/imgui_impl_glfw.o UI/imgui.o UI/imgui_demo.o UI/imgui_draw.o
 UNAME_S := $(shell uname -s)
 
@@ -22,6 +22,7 @@ $(EXE):$(OBJS) imgui
 
 ui_test: main.o imgui
 	$(CXX) -o ui_test main.o $(IMGUI) $(CFLAGS) $(LIBS)
+	rm main.o
 
 imgui: main.o
 	@echo Making IMGUI
@@ -31,4 +32,4 @@ imgui: main.o
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm $(EXE) $(OBJS)
+	rm $(EXE) $(OBJS) $(IMGUI) main.o
