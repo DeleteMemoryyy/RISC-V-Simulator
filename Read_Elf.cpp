@@ -1,52 +1,56 @@
 #include "Read_Elf.h"
 
+using namespace std;
+
 FILE *file = NULL;
 FILE *elf = NULL;
 Elf64_Ehdr elf64_hdr;
 
-const char FileName[50] = "benchmark";
+// const char FileName[50] = "benchmark";
 
-char *shsttab = NULL;  // ¶ÎÃû±í
-char *strtab = NULL;   // ×Ö·û´®±í
-char *symtab = NULL;   // ·ûºÅ±í
+char *shsttab = NULL;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+char *strtab = NULL;   // ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½
+char *symtab = NULL;   // ï¿½ï¿½ï¿½Å±ï¿½
 
-//´úÂë¶ÎÔÚ½âÊÍÎÄ¼þÖÐµÄÆ«ÒÆµØÖ·
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ðµï¿½Æ«ï¿½Æµï¿½Ö·
 ULL coffset = 0;
 
-//´úÂë¶ÎµÄ³¤¶È
+//ï¿½ï¿½ï¿½ï¿½ÎµÄ³ï¿½ï¿½ï¿½
 ULL csize = 0;
 
-//´úÂë¶ÎÔÚÄÚ´æÖÐµÄÐéÄâµØÖ·
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
 ULL cvadr = 0;
 
-//È«¾ÖÊý¾Ý¶ÎÔÚ½âÊÍÎÄ¼þÖÐµÄÆ«ÒÆµØÖ·
+//È«ï¿½ï¿½ï¿½ï¿½ï¿½Ý¶ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ðµï¿½Æ«ï¿½Æµï¿½Ö·
 ULL doffset = 0;
 
-//È«¾ÖÊý¾Ý¶ÎµÄ³¤¶È
+//È«ï¿½ï¿½ï¿½ï¿½ï¿½Ý¶ÎµÄ³ï¿½ï¿½ï¿½
 ULL dsize = 0;
 
-//È«¾ÖÊý¾Ý¶ÎÔÚÄÚ´æÖÐµÄÐéÄâµØÖ·
+//È«ï¿½ï¿½ï¿½ï¿½ï¿½Ý¶ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
 ULL dvadr = 0;
 
-//.text½ÚµÄ³¤¶È
+//.textï¿½ÚµÄ³ï¿½ï¿½ï¿½
 ULL tsize = 0;
 
-// gp¶ÎÔÚÄÚ´æÖÐµÄÐéÄâµØÖ·
+// gpï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
 ULL gp = 0;
 
-// mainº¯ÊýÔÚÄÚ´æÖÐµØÖ·
+// mainï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ðµï¿½Ö·
 ULL madr = 0;
 
-//³ÌÐò½áÊøÊ±µÄPC
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½PC
 ULL endPC = 0;
 
-//³ÌÐòµÄÈë¿ÚµØÖ·
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½Ö·
 ULL entry = 0;
 
 // main
 ULL mainAddr = 0;
 // main size
 ULL mainSize = 0;
+
+ULL dataAddr = 0;
 
 GlobalSymbol globalSymbol[100];
 int symNum = 0;
@@ -66,26 +70,28 @@ ULL symadr = 0;
 unsigned short symsize = 0;
 unsigned short symnum = 0;
 
-// ½ÚÃû³ÆÔÚ½ÚÍ·×Ö·û´®±íÖÐµÄË÷Òý
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½Í·ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
 unsigned int sh_index = 0;
 
-// ×Ö·û´®±íÔÚÎÄ¼þÖÐµÄµØÖ·£¬ÆäÄÚÈÝ°üÀ¨.symtabºÍ.debug½ÚÖÐµÄ·ûºÅ±í
+// ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ÐµÄµï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½.symtabï¿½ï¿½.debugï¿½ï¿½ï¿½ÐµÄ·ï¿½ï¿½Å±ï¿½
 unsigned int stradr = 0;
 
 
-bool open_file()
+bool open_file(string fname)
 {
-    file = fopen(FileName, "r");
+    file = fopen(fname.c_str(), "r");
     elf = fopen("elf.log", "w");
     if (file == NULL || elf == NULL)
         return false;
     return true;
 }
 
-void read_elf()
+bool read_elf(string fname)
 {
-    if (!open_file())
-        return;
+
+
+    if (!open_file(fname))
+        return false;
 
     fprintf(elf, "ELF Header:\n");
     read_elf_header();
@@ -104,6 +110,7 @@ void read_elf()
     read_elf_symtable();
 
     fclose(elf);
+    return true;
 }
 
 void read_elf_header()
@@ -301,6 +308,11 @@ void read_elf_sections()
             fread(&elf64_shdr, 1, sizeof(elf64_shdr), file);
 
             fprintf(elf, "  Name: %s", (char *)(shsttab + (unsigned int)elf64_shdr.sh_name));
+
+            if(strcmp((char *)(shsttab + (unsigned int)elf64_shdr.sh_name),".data") == 0)
+            {
+                dataAddr = (ULL)elf64_shdr.sh_addr;
+            }
 
             fprintf(elf, "  Type: ");
             switch ((unsigned int)elf64_shdr.sh_type)

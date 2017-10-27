@@ -3,6 +3,9 @@
 
 #include <cstdio>
 #include <cstring>
+#include <string>
+
+using namespace std;
 
 typedef unsigned long long ULL;
 
@@ -144,8 +147,8 @@ typedef struct
 
 } GlobalSymbol;
 
-bool open_file();
-void read_elf();
+bool open_file(string fname);
+bool read_elf(string fname);
 void read_elf_header();
 void read_elf_shst();
 void read_elf_sections();
@@ -199,6 +202,8 @@ extern ULL mainAddr;
 
 //main
 extern ULL mainSize;
+
+extern ULL dataAddr;
 
 extern FILE *file;
 

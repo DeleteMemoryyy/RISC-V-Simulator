@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string>
 
 #define MEM_SIZE 1 << 28
 #define MEM_ST 1 << 21
@@ -41,15 +42,17 @@ const long long MASK_L = 0xffffffff;
 const long long MASK_SH = 0x3f;
 
 const char R_NAME[32][5] = {"zero", "ra", "sp", "gp", "tp",  "t0",  "t1",  "t2", "s0", "s1", "a0",
-                            "a1",   "a2", "a3", "a4", "a5",  "a6",  "a7,", "s2", "s3", "s4", "s5",
+                            "a1",   "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3", "s4", "s5",
                             "s6",   "s7", "s8", "s9", "s10", "s11", "t3",  "t4", "t5", "t6"};
 
 //加载内存
 void load_memory();
 
-void simulate();
+bool simulate_one_step();
 
-void ERROR();
+void setup();
+
+void ERROR(int);
 
 void IF();
 
