@@ -1,5 +1,5 @@
-#ifndef SIMULATION_H_
-#define SIMULATION_H_
+#ifndef SIMULATIOR_H_
+#define SIMULATIOR_H_
 
 #include "Read_Elf.h"
 #include "Reg_Def.h"

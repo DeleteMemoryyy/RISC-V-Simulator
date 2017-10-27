@@ -6,43 +6,30 @@ FILE *file = NULL;
 FILE *elf = NULL;
 Elf64_Ehdr elf64_hdr;
 
-// const char FileName[50] = "benchmark";
+char *shsttab = NULL;
+char *strtab = NULL;
+char *symtab = NULL;
 
-char *shsttab = NULL;  // ������
-char *strtab = NULL;   // �ַ�����
-char *symtab = NULL;   // ���ű�
-
-//������ڽ����ļ��е�ƫ�Ƶ�ַ
 ULL coffset = 0;
 
-//����εĳ���
 ULL csize = 0;
 
-//��������ڴ��е������ַ
 ULL cvadr = 0;
 
-//ȫ�����ݶ��ڽ����ļ��е�ƫ�Ƶ�ַ
 ULL doffset = 0;
 
-//ȫ�����ݶεĳ���
 ULL dsize = 0;
 
-//ȫ�����ݶ����ڴ��е������ַ
 ULL dvadr = 0;
 
-//.text�ڵĳ���
 ULL tsize = 0;
 
-// gp�����ڴ��е������ַ
 ULL gp = 0;
 
-// main�������ڴ��е�ַ
 ULL madr = 0;
 
-//�������ʱ��PC
 ULL endPC = 0;
 
-//�������ڵ�ַ
 ULL entry = 0;
 
 // main
@@ -70,10 +57,8 @@ ULL symadr = 0;
 unsigned short symsize = 0;
 unsigned short symnum = 0;
 
-// �������ڽ�ͷ�ַ������е�����
 unsigned int sh_index = 0;
 
-// �ַ��������ļ��еĵ�ַ�������ݰ���.symtab��.debug���еķ��ű�
 unsigned int stradr = 0;
 
 
