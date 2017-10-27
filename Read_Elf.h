@@ -183,6 +183,12 @@ extern ULL endPC;
 //程序的入口地址
 extern ULL entry;
 
+//main
+extern ULL mainAddr;
+
+//exit
+extern ULL exitAddr;
+
 extern FILE *file;
 
 #endif
