@@ -1,5 +1,18 @@
 #include "Simulation.h"
+#include "UI/imgui.h"
+#include "UI/imgui_impl_glfw.h"
+#include <GLFW/glfw3.h>
+#include <stdio.h>
+
 using namespace std;
+
+enum DisplayState
+{
+    Setting,
+    Simulating
+};
+
+DisplayState dstate = Setting;
 
 // memory
 unsigned char memory[MEM_SIZE] = {0};
@@ -8,7 +21,7 @@ REG reg[32] = {0};
 // PC
 ULL PC = 0;
 
-//
+// instruction
 char InstBuf[100] = "";
 
 
@@ -35,6 +48,74 @@ ULL inst_num = 0;
 
 int exit_flag = 0;
 
+int main()
+{
+    // Setup window
+    glfwSetErrorCallback(error_callback);
+    if (!glfwInit())
+        return 1;
+    GLFWwindow *window = glfwCreateWindow(1280, 720, "Risc-V Simulator", NULL, NULL);
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);  // Enable vsync
+
+    // Setup ImGui binding
+    ImGui_ImplGlfwGL2_Init(window, true);
+
+    while (!glfwWindowShouldClose(window))
+        {
+            glfwPollEvents();
+            ImGui_ImplGlfw_NewFrame();
+
+            switch (dstate)
+                {
+                    case Setting:
+                        {
+                        }
+                        break;
+                    case Simulating:
+                        {
+            simulate();
+    cout << "simulate over!" << endl;
+    
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+
+            // for (int i = 0; i < symNum; ++i)
+            //     {
+            //         printf("global variable: %s\n", globalSymbol[i].name);
+            //         int size = globalSymbol[i].size;
+            //         ULL addr = globalSymbol[i].addr;
+            //         for (int c = 0; c < size; c += 8)
+            //             {
+            //                 printf(" %llx", READ_DWORD(addr + c));
+            //             }
+            //         printf("\n\n");
+            //     }
+        }
+
+
+    // Cleanup
+    ImGui_ImplGlfwGL2_Shutdown();
+    glfwTerminate();
+    return 0;
+}
+
+void setup()
+{
+    read_elf();
+
+    load_memory();
+
+    PC = mainAddr;
+
+    reg[R_gp] = gp;
+
+    reg[R_sp] = P_TO_V(MEM_ED);
+}
 
 // load code and data
 void load_memory()
@@ -48,30 +129,9 @@ void load_memory()
     fclose(file);
 }
 
-int main()
-{
-    read_elf();
-
-    load_memory();
-
-    PC = mainAddr;
-
-    reg[R_gp] = gp;
-
-    reg[R_sp] = P_TO_V(MEM_ED);
-
-    simulate();
-
-    cout << "simulate over!" << endl;
-
-    return 0;
-}
-
 void simulate()
 {
-    ULL end = mainAddr + mainSize - 4;
-    if (READ_WORD(end) == 0)
-        end -= 4;
+    ULL end = mainAddr + mainSize - 3;
     while (PC != end)
         {
             // run
@@ -231,7 +291,7 @@ void ID()
                                             ALUSrc = ALUSRC_RS_IMM;
                                             MemWrite = MEMWRITE_WORD;
 
-                                            sprintf(InstBuf, "sw  %s, %lld(%s)", R_NAME[rs2],
+                                            sprintf(InstBuf, "sd  %s, %lld(%s)", R_NAME[rs2],
                                                     EXT_UNSIGNED_DWORD(EXTSrc, EXTBit),
                                                     R_NAME[rs1]);
                                         }
@@ -912,7 +972,7 @@ void ID()
                                                         break;
                                                     case F7_MULHSU:
                                                         {
-                                                            ALIOp = ALUOP_MULHSU;
+                                                            ALUOp = ALUOP_MULHSU;
 
                                                             sprintf(InstBuf, "mulhsu  %s, %s, %s",
                                                                     R_NAME[rd], R_NAME[rs1],
@@ -1588,7 +1648,7 @@ void ID()
                             imm5_11 = GET_BITS(inst, 25, 31);
                             EXTSrc = (imm5_11 << 5) | imm0_4;
                             EXTBit = 12;
-                            ALUSrc = ALUSRC_PC_IMM;
+                            ALUSrc = ALUSRC_RS_IMM;
                             ALUOp = ALUOP_ADD;
 
                             switch (funct3)
@@ -1709,11 +1769,12 @@ void ID()
                             imm12_31 = GET_BITS(inst, 12, 31);
                             EXTSrc = (imm12_31) << 12;
                             EXTBit = 32;
+                            RegDst = rd;
                             ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
                             RegWrite = REGWRITE_VALE;
 
-                            sprintf(InstBuf, "auipc  %s, 0x%x", R_NAME[rd], imm12_31);
+                            sprintf(InstBuf, "auipc  %s, 0x%llx", R_NAME[rd], EXTSrc + PC);
                         }
                         break;
                     case OP_LUI:
@@ -1979,7 +2040,7 @@ void EX()
                             ERROR(__LINE__);
                         }
                 }
-                brek;
+                break;
             case ALUOP_REM:
                 {
                     if (VB != 0)

@@ -4,7 +4,7 @@ FILE *file = NULL;
 FILE *elf = NULL;
 Elf64_Ehdr elf64_hdr;
 
-const char FileName[50] = "test";
+const char FileName[50] = "benchmark";
 
 char *shsttab = NULL;  // 段名表
 char *strtab = NULL;   // 字符串表
@@ -31,7 +31,7 @@ ULL dvadr = 0;
 //.text节的长度
 ULL tsize = 0;
 
-//gp段在内存中的虚拟地址
+// gp段在内存中的虚拟地址
 ULL gp = 0;
 
 // main函数在内存中地址
@@ -43,10 +43,13 @@ ULL endPC = 0;
 //程序的入口地址
 ULL entry = 0;
 
-//main
+// main
 ULL mainAddr = 0;
-//main size
+// main size
 ULL mainSize = 0;
+
+GlobalSymbol globalSymbol[100];
+int symNum = 0;
 
 // Program headers
 ULL padr = 0;
@@ -245,12 +248,10 @@ void read_elf_header()
     fprintf(elf, " Entry point address:  0x%llx\n", (ULL)elf64_hdr.e_entry);
     entry = (ULL)elf64_hdr.e_entry;
 
-    fprintf(elf, " Start of program headers:  %lld bytes into file\n",
-            (ULL)elf64_hdr.e_phoff);
+    fprintf(elf, " Start of program headers:  %lld bytes into file\n", (ULL)elf64_hdr.e_phoff);
     padr = (ULL)elf64_hdr.e_phoff;
 
-    fprintf(elf, " Start of section headers:  %lld bytes into file\n",
-            (ULL)elf64_hdr.e_shoff);
+    fprintf(elf, " Start of section headers:  %lld bytes into file\n", (ULL)elf64_hdr.e_shoff);
     sadr = (ULL)elf64_hdr.e_shoff;
 
     fprintf(elf, " Flags:  0x%x\n", (unsigned int)elf64_hdr.e_flags);
@@ -413,8 +414,8 @@ void read_elf_strtab()
                     fseek(file, (ULL)elf64_shdr.sh_offset, SEEK_SET);
                     fread(strtab, 1, (ULL)elf64_shdr.sh_size, file);
                 }
-                else
-                if((unsigned int)elf64_shdr.sh_type == 1 && strcmp((char *)(shsttab + (unsigned int)elf64_shdr.sh_name),".text")==0)
+            else if ((unsigned int)elf64_shdr.sh_type == 1 &&
+                     strcmp((char *)(shsttab + (unsigned int)elf64_shdr.sh_name), ".text") == 0)
                 {
                     tsize = (ULL)elf64_shdr.sh_size;
                 }
@@ -485,21 +486,21 @@ void read_elf_phdr()
                         break;
                     case 5:
                         fprintf(elf, "RX");
-                        if(elf64_phdr.p_type == 1)
-                        {
-                            coffset = (ULL)elf64_phdr.p_offset;
-                            csize = (ULL)elf64_phdr.p_filesz;
-                            cvadr = (ULL)elf64_phdr.p_vaddr;
-                        }
+                        if (elf64_phdr.p_type == 1)
+                            {
+                                coffset = (ULL)elf64_phdr.p_offset;
+                                csize = (ULL)elf64_phdr.p_filesz;
+                                cvadr = (ULL)elf64_phdr.p_vaddr;
+                            }
                         break;
                     case 6:
                         fprintf(elf, "RW");
-                        if(elf64_phdr.p_type == 1)
-                        {
-                            doffset = (ULL)elf64_phdr.p_offset;
-                            dsize = elf64_phdr.p_filesz;
-                            dvadr = (ULL)elf64_phdr.p_vaddr;
-                        }
+                        if (elf64_phdr.p_type == 1)
+                            {
+                                doffset = (ULL)elf64_phdr.p_offset;
+                                dsize = elf64_phdr.p_filesz;
+                                dvadr = (ULL)elf64_phdr.p_vaddr;
+                            }
                         break;
                     case 7:
                         fprintf(elf, "RWX");
@@ -540,16 +541,17 @@ void read_elf_symtable()
 
             fprintf(elf, "  Name: %s", (char *)(strtab + (unsigned int)elf64_sym.st_name));
 
-            if(strcmp((char *)(strtab + (unsigned int)elf64_sym.st_name),"__global_pointer$")==0)
-            {
-                gp = elf64_sym.st_value;
-            }
+            if (strcmp((char *)(strtab + (unsigned int)elf64_sym.st_name), "__global_pointer$") ==
+                0)
+                {
+                    gp = elf64_sym.st_value;
+                }
 
-            if(strcmp((char *)(strtab + (unsigned int)elf64_sym.st_name),"main")==0)
-            {
-                mainAddr = elf64_sym.st_value;
-                mainSize = elf64_sym.st_size;
-            }
+            if (strcmp((char *)(strtab + (unsigned int)elf64_sym.st_name), "main") == 0)
+                {
+                    mainAddr = elf64_sym.st_value;
+                    mainSize = elf64_sym.st_size;
+                }
 
             fprintf(elf, "  Bind: ");
             switch (ELF64_ST_BIND(elf64_sym.st_info))
@@ -599,6 +601,15 @@ void read_elf_symtable()
                         break;
                     default:
                         break;
+                }
+
+            if ((ELF64_ST_BIND(elf64_sym.st_info) == 1) && (ELF64_ST_TYPE(elf64_sym.st_info) == 1))
+                {
+                    sprintf(globalSymbol[symNum].name, "%s",
+                            (char *)(strtab + (unsigned int)elf64_sym.st_name));
+                    globalSymbol[symNum].addr = elf64_sym.st_value;
+                    globalSymbol[symNum].size = elf64_sym.st_size;
+                    symNum++;
                 }
 
             fprintf(elf, "  NDX: %hd", (unsigned short)elf64_sym.st_shndx);

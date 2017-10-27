@@ -136,6 +136,14 @@ typedef struct
     Elf64_Xword p_align;  /* Alignment of segment */
 } Elf64_Phdr;
 
+typedef struct
+{
+    char name[50];
+    ULL addr;
+    ULL size;
+
+} GlobalSymbol;
+
 bool open_file();
 void read_elf();
 void read_elf_header();
@@ -144,6 +152,9 @@ void read_elf_sections();
 void read_elf_strtab();
 void read_elf_phdr();
 void read_elf_symtable();
+
+extern GlobalSymbol globalSymbol[100];
+extern int symNum;
 
 extern char *shsttab;  // 段名表
 extern char *strtab;   // 字符串表

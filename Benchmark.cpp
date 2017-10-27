@@ -268,7 +268,7 @@ int partation(int left, int right, int idx)
         return -1;
     long long tValue = a[idx], tIdx = left;
     swap(&a[idx], &a[right]);
-    while (left != right - 1)
+    while (left != right)
         {
             if (a[left] <= tValue)
                 {
