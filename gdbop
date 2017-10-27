@@ -1,7 +1,0 @@
-display /x PC 
-display /s InstBuf
-display /x IF_ID 
-display /x ID_EX 
-display /x EX_MEM 
-display /x MEM_WB 
-display /x WB_UP
