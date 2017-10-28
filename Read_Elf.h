@@ -192,7 +192,7 @@ extern ULL gp;
 extern ULL madr;
 
 //程序结束时的PC
-extern ULL endPC;
+extern ULL endAddr;
 
 //程序的入口地址
 extern ULL entry;

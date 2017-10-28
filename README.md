@@ -9,7 +9,7 @@
 
 #### 运行方法
 
-- 开始前执行 make 完成项目的编译，输入 ./Simulatior 进行模拟
+- 开始前执行 make 完成项目的编译，输入 ./riscv-simulator 进行模拟
 
 - 程序需要的绘图库（glfw3）文件在UI文件夹下，已经于 makefile 文件中关联到项目，无需手动配置
 

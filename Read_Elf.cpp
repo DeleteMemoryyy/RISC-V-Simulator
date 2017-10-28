@@ -28,7 +28,7 @@ ULL gp = 0;
 
 ULL madr = 0;
 
-ULL endPC = 0;
+ULL endAddr = 0;
 
 ULL entry = 0;
 
@@ -43,23 +43,23 @@ GlobalSymbol globalSymbol[100];
 int symNum = 0;
 
 // Program headers
-ULL padr = 0;
-unsigned short psize = 0;
-unsigned short pnum = 0;
+static ULL padr = 0;
+static unsigned short psize = 0;
+static unsigned short pnum = 0;
 
 // Section Headers
-ULL sadr = 0;
-unsigned short ssize = 0;
-unsigned short snum = 0;
+static ULL sadr = 0;
+static unsigned short ssize = 0;
+static unsigned short snum = 0;
 
 // Symbol table
 ULL symadr = 0;
-unsigned short symsize = 0;
-unsigned short symnum = 0;
+static unsigned short symsize = 0;
+static unsigned short symnum = 0;
 
-unsigned int sh_index = 0;
+static unsigned int sh_index = 0;
 
-unsigned int stradr = 0;
+static unsigned int stradr = 0;
 
 
 bool open_file(string fname)
