@@ -61,7 +61,6 @@ typedef int32 Elf64_Word;
 typedef int32 Elf64_Sword;
 typedef int16 Elf64_Half;
 
-
 #define EI_CLASS 4
 #define EI_DATA 5
 #define EI_VERSION 6
@@ -78,11 +77,9 @@ typedef int16 Elf64_Half;
 #define SHN_ABS 0xFFF1
 #define SHN_COMMON 0xFFF2
 
-
 #define ELF64_ST_BIND(i) ((i) >> 4)
 #define ELF64_ST_TYPE(i) ((i)&0xf)
 #define ELF64_ST_INFO(b, t) (((b) << 4) + ((t)&0xf))
-
 
 typedef struct
 {
@@ -156,55 +153,28 @@ void read_elf_strtab();
 void read_elf_phdr();
 void read_elf_symtable();
 
+extern FILE *file;
+
 extern GlobalSymbol globalSymbol[100];
 extern int symNum;
 
-extern char *shsttab;  // 段名表
-extern char *strtab;   // 字符串表
-extern char *symtab;   // 符号表
+extern char *shsttab;   // section name string table
+extern char *strtab;    // string table
+extern char *symtab;   // symbol table
 
+extern ULL cOffset;  // offset of code segment
+extern ULL cSize;   // size of code segment
+extern ULL cVadr;   // virtual address of code segment
 
-//代码段在解释文件中的偏移地址
-extern ULL coffset;
+extern ULL dOffset;  // offset of data segment
+extern ULL dSize;   // size of data segment
+extern ULL dVadr;   // virtual address of data segment
 
-//代码段的长度
-extern ULL csize;
-
-//代码段在内存中的虚拟地址
-extern ULL cvadr;
-
-//全局数据段在解释文件中的偏移地址
-extern ULL doffset;
-
-//全局数据段的长度
-extern ULL dsize;
-
-//全局数据段在内存中的虚拟地址
-extern ULL dvadr;
-
-//.text节的长度
-extern ULL tsize;
-
-//gp段在内存中的虚拟地址
-extern ULL gp;
-
-// main函数在内存中地址
-extern ULL madr;
-
-//程序结束时的PC
-extern ULL endAddr;
-
-//程序的入口地址
-extern ULL entry;
-
-//main
-extern ULL mainAddr;
-
-//main
-extern ULL mainSize;
-
-extern ULL dataAddr;
-
-extern FILE *file;
+extern ULL gp;  // global pointer
+extern ULL entry;   // entry address of program
+extern ULL mainAddr;    // virtual address of main function 
+extern ULL mainSize;    // size of main function code
+extern ULL textSize;    // size of .text section
+extern ULL dataAddr;    // virtual address of .data section
 
 #endif

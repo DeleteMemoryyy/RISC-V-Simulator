@@ -52,10 +52,10 @@ void setup()
 void load_memory()
 {
     memset(memory, 0, sizeof(char) * MEM_SIZE);
-    fseek(file, coffset, SEEK_SET);
-    fread(&memory[V_TO_P(cvadr)], 1, csize, file);
-    fseek(file, doffset, SEEK_SET);
-    fread(&memory[V_TO_P(dvadr)], 1, dsize, file);
+    fseek(file, cOffset, SEEK_SET);
+    fread(&memory[V_TO_P(cVadr)], 1, cSize, file);
+    fseek(file, dOffset, SEEK_SET);
+    fread(&memory[V_TO_P(dVadr)], 1, dSize, file);
 }
 
 bool simulate_one_step()
@@ -89,7 +89,6 @@ void ERROR(int line)
     printf("ERROR!: %d\n", line);
 }
 
-//取指令
 void IF()
 {
     // write IF_ID_old
@@ -110,7 +109,6 @@ void IF()
     IF_ID_old.PC = NextPC;
 }
 
-//译码
 void ID()
 {
     // Read IF_ID
@@ -1751,7 +1749,6 @@ void ID()
     ID_EX_old.Ctrl_UP_Branch = Branch;
 }
 
-//执行
 void EX()
 {
     // read ID_EX
@@ -2097,7 +2094,6 @@ void EX()
     EX_MEM_old.Ctrl_UP_Branch = Branch;
 }
 
-//访问存储器
 void MEM()
 {
     // read EX_MEM
@@ -2111,7 +2107,7 @@ void MEM()
 
     REG VMemRead = 0;
 
-    // read / write memory
+    // read/write memory
     switch (MemWrite)
         {
             case MEMWRITE_NO:
@@ -2202,8 +2198,6 @@ void MEM()
     MEM_WB_old.Ctrl_UP_Branch = EX_MEM.Ctrl_UP_Branch;
 }
 
-
-//写回
 void WB()
 {
     // read MEM_WB
@@ -2245,7 +2239,6 @@ void WB()
     WB_UP_old.Ctrl_UP_Branch = MEM_WB.Ctrl_UP_Branch;
 }
 
-//更新PC
 void UP()
 {
     ULL NextPC = WB_UP.PC;

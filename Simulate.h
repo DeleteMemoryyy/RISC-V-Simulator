@@ -60,7 +60,6 @@ extern ULL endpc;
 extern int exit_flag;
 
 
-//加载内存
 void load_memory();
 
 bool simulate_one_step();

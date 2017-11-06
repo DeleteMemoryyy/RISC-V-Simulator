@@ -10,33 +10,19 @@ char *shsttab = NULL;
 char *strtab = NULL;
 char *symtab = NULL;
 
-ULL coffset = 0;
+ULL cOffset = 0;
+ULL cSize = 0;
+ULL cVadr = 0;
 
-ULL csize = 0;
-
-ULL cvadr = 0;
-
-ULL doffset = 0;
-
-ULL dsize = 0;
-
-ULL dvadr = 0;
-
-ULL tsize = 0;
+ULL dOffset = 0;
+ULL dSize = 0;
+ULL dVadr = 0;
 
 ULL gp = 0;
-
-ULL madr = 0;
-
-ULL endAddr = 0;
-
 ULL entry = 0;
-
-// main
 ULL mainAddr = 0;
-// main size
 ULL mainSize = 0;
-
+ULL textSize = 0;
 ULL dataAddr = 0;
 
 GlobalSymbol globalSymbol[100];
@@ -56,9 +42,7 @@ static unsigned short snum = 0;
 ULL symadr = 0;
 static unsigned short symsize = 0;
 static unsigned short symnum = 0;
-
 static unsigned int sh_index = 0;
-
 static unsigned int stradr = 0;
 
 
@@ -412,7 +396,7 @@ void read_elf_strtab()
             else if ((unsigned int)elf64_shdr.sh_type == 1 &&
                      strcmp((char *)(shsttab + (unsigned int)elf64_shdr.sh_name), ".text") == 0)
                 {
-                    tsize = (ULL)elf64_shdr.sh_size;
+                    textSize = (ULL)elf64_shdr.sh_size;
                 }
         }
 }

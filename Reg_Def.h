@@ -67,7 +67,6 @@ struct WBUP
 	unsigned char Ctrl_UP_Branch;
 };
 
-
 #define INSTSIZE_16 0
 #define INSTSIZE_32 1
 
@@ -111,7 +110,6 @@ struct WBUP
 #define ALUOP_SLLW 0x1a
 #define ALUOP_SRLW 0x1b
 #define ALUOP_SRAW 0x1c
-
 
 #define ALUSRC_NONE 0
 #define ALUSRC_RS_RT 1
