@@ -49,8 +49,12 @@ static unsigned int stradr = 0;
 bool open_file(string fname)
 {
     file = fopen(fname.c_str(), "r");
-    elf = fopen("elf.log", "w");
-    if (file == NULL || elf == NULL)
+    if (file == NULL)
+        return false;
+    char elfName[100] = {0};
+    sprintf(elfName, "%s.elf", fname.c_str());
+    elf = fopen(elfName, "w");
+    if (elf == NULL)
         return false;
     return true;
 }
@@ -73,7 +77,7 @@ bool read_elf(string fname)
     fprintf(elf, "\n\nProgram Headers:\n");
     read_elf_phdr();
 
-    fprintf(elf, "\n\nSymbol table:\n");
+    fprintf(elf, "\n\nSymbol Table:\n");
     read_elf_symtable();
 
     fclose(elf);
@@ -467,18 +471,18 @@ void read_elf_phdr()
                         fprintf(elf, "RX");
                         if (elf64_phdr.p_type == 1)
                             {
-                                coffset = (ULL)elf64_phdr.p_offset;
-                                csize = (ULL)elf64_phdr.p_filesz;
-                                cvadr = (ULL)elf64_phdr.p_vaddr;
+                                cOffset = (ULL)elf64_phdr.p_offset;
+                                cSize = (ULL)elf64_phdr.p_filesz;
+                                cVadr = (ULL)elf64_phdr.p_vaddr;
                             }
                         break;
                     case 6:
                         fprintf(elf, "RW");
                         if (elf64_phdr.p_type == 1)
                             {
-                                doffset = (ULL)elf64_phdr.p_offset;
-                                dsize = elf64_phdr.p_filesz;
-                                dvadr = (ULL)elf64_phdr.p_vaddr;
+                                dOffset = (ULL)elf64_phdr.p_offset;
+                                dSize = elf64_phdr.p_filesz;
+                                dVadr = (ULL)elf64_phdr.p_vaddr;
                             }
                         break;
                     case 7:

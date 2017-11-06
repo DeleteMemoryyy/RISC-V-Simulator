@@ -123,7 +123,7 @@ int main()
                                                     if (elfBuf != NULL)
                                                         delete[] elfBuf;
                                                     FILE *pfile;
-                                                    pfile = fopen("elf.log", "rb");
+                                                    pfile = fopen(string(fileName+".elf").c_str(), "rb");
                                                     if (pfile == NULL)
                                                         {
                                                             ERROR(__LINE__);
@@ -343,7 +343,7 @@ int main()
                             ImGui::SameLine(0, 20);
 
                             static int selected_size = 3;
-                            const char *sizes[] = {"Byte", "Half Word", "Word", "Double"};
+                            const char *sizes[] = {"Byte", "Half Word", "Word", "Double Word"};
                             if (ImGui::Button("Select Scale"))
                                 ImGui::OpenPopup("select scale");
                             ImGui::SameLine();
@@ -518,7 +518,7 @@ int main()
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text(
-                                                                        "0x%llx: %u", memAddr + i,
+                                                                        "0x%llx: %uu", memAddr + i,
                                                                         READ_BYTE(memAddr + i));
                                                                 }
                                                         }
@@ -532,7 +532,7 @@ int main()
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
-                                                                    ImGui::Text("0x%llx: %u",
+                                                                    ImGui::Text("0x%llx: %uu",
                                                                                 memAddr + 2 * i,
                                                                                 READ_HWORD(memAddr +
                                                                                            2 * i));
@@ -549,7 +549,7 @@ int main()
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text(
-                                                                        "0x%llx: %u",
+                                                                        "0x%llx: %uu",
                                                                         memAddr + 4 * i,
                                                                         READ_WORD(memAddr + 4 * i));
                                                                 }
@@ -564,7 +564,7 @@ int main()
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
-                                                                    ImGui::Text("0x%llx: %llu",
+                                                                    ImGui::Text("0x%llx: %lluu",
                                                                                 memAddr + 8 * i,
                                                                                 READ_DWORD(memAddr +
                                                                                            8 * i));

@@ -41,7 +41,7 @@ Program Headers:
 [  1]  Type: PT_LOAD  Flags: RW  Offset: 4096  VirtAddr: 0x11000  PhysAddr: 0x11000  FileSiz: 2128  MemSiz: 2288  Align: 4096
 
 
-Symbol table:
+Symbol Table:
 [  0]  Name:   Bind: STB_LOCAL  Type: STT_NOTYPE  NDX: 0  Size: 0  Value: 0x0
 [  1]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 1  Size: 0  Value: 0x100b0
 [  2]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 2  Size: 0  Value: 0x10e40

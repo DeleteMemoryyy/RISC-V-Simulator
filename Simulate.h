@@ -14,8 +14,8 @@
 #define MEM_ST 1 << 21
 #define MEM_ED 0xfe00000
 
-#define V_TO_P(add) ((add) + (MEM_ST) - (cvadr))
-#define P_TO_V(add) ((add) + (cvadr) - (MEM_ST))
+#define V_TO_P(add) ((add) + (MEM_ST) - (cVadr))
+#define P_TO_V(add) ((add) + (cVadr) - (MEM_ST))
 #define RVC_TO_R(r) ((r)+8)
 #define HINT(cond)                                                                                 \
     {                                                                                              \
