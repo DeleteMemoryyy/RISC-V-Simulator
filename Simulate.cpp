@@ -119,7 +119,6 @@ void ID()
     unsigned char EXTOp = EXTOP_SIGNED;
     unsigned int EXTBit = 0;
     unsigned int EXTSrc = 0;
-    unsigned int RegDst = R_zero;
     unsigned char ALUOp = ALUOP_NOP, ALUSrc = ALUSRC_NONE, BranchCmp = BRANCHCMP_NOP;
     unsigned char MemRead = MEMREAD_NO, MemWrite = MEMWRITE_NO;
     unsigned char RegWrite = REGWRITE_NO;
@@ -145,7 +144,6 @@ void ID()
                                                      (GET_BIT(inst, 6) << 2);
                                             EXTBit = 10;
                                             EXTOp = EXTOP_UNSIGED;
-                                            RegDst = rd;
                                             ALUOp = ALUOP_ADD;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             RegWrite = REGWRITE_VALE;
@@ -163,7 +161,6 @@ void ID()
                                                      (GET_BIT(inst, 6) << 2);
                                             EXTBit = 7;
                                             EXTOp = EXTOP_UNSIGED;
-                                            RegDst = rd;
                                             ALUOp = ALUOP_ADD;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             MemRead = MEMREAD_WORD;
@@ -181,7 +178,6 @@ void ID()
                                                      (GET_BITS(inst, 10, 12) << 3);
                                             EXTBit = 8;
                                             EXTOp = EXTOP_UNSIGED;
-                                            RegDst = rd;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             MemRead = MEMREAD_DWORD;
                                             RegWrite = REGWRITE_VALM;
@@ -240,7 +236,6 @@ void ID()
                                             EXTSrc =
                                                 (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
                                             EXTBit = 6;
-                                            RegDst = rd;
                                             ALUOp = ALUOP_ADD;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             RegWrite = REGWRITE_VALE;
@@ -256,7 +251,6 @@ void ID()
                                             EXTSrc =
                                                 (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
                                             EXTBit = 6;
-                                            RegDst = rd;
                                             ALUOp = ALUOP_ADDW;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             RegWrite = REGWRITE_VALE;
@@ -272,7 +266,6 @@ void ID()
                                             EXTSrc =
                                                 (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
                                             EXTBit = 6;
-                                            RegDst = rd;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             ALUOp = ALUOP_ADD;
                                             RegWrite = REGWRITE_VALE;
@@ -291,14 +284,13 @@ void ID()
                                                     EXTSrc = (GET_BIT(inst, 12) << 17) |
                                                              (GET_BITS(inst, 2, 6) << 12);
                                                     EXTBit = 18;
-                                                    RegDst = rd;
                                                     ALUSrc = ALUSRC_RS_IMM;
                                                     ALUOp = ALUOP_ADD;
                                                     RegWrite = REGWRITE_VALE;
 
                                                     sprintf(
                                                         InstBuf, "lui  %s, %lld", R_NAME[rd],
-                                                        (EXT_SIGNED_DWORD(EXTSrc, EXTBit) >> 12));
+                                                        (EXT_SIGNED_DWORD(EXTSrc, EXTBit)));
                                                 }
                                             else  // C.ADDI16SPN
                                                 {
@@ -309,7 +301,6 @@ void ID()
                                                              (GET_BIT(inst, 2) << 5) |
                                                              (GET_BIT(inst, 6) << 4);
                                                     EXTBit = 10;
-                                                    RegDst = rd;
                                                     ALUOp = ALUOP_ADD;
                                                     ALUSrc = ALUSRC_RS_IMM;
                                                     RegWrite = REGWRITE_VALE;
@@ -332,7 +323,6 @@ void ID()
                                                             EXTSrc = (GET_BIT(inst, 12) << 5) |
                                                                      (GET_BITS(inst, 2, 6));
                                                             EXTBit = 6;
-                                                            RegDst = rd;
                                                             ALUOp = ALUOP_SRL;
                                                             ALUSrc = ALUSRC_RS_IMM;
                                                             RegWrite = REGWRITE_VALE;
@@ -350,7 +340,6 @@ void ID()
                                                             EXTSrc = (GET_BIT(inst, 12) << 5) |
                                                                      (GET_BITS(inst, 2, 6));
                                                             EXTBit = 6;
-                                                            RegDst = rd;
                                                             ALUOp = ALUOP_SRA;
                                                             ALUSrc = ALUSRC_RS_IMM;
                                                             RegWrite = REGWRITE_VALE;
@@ -368,7 +357,6 @@ void ID()
                                                             EXTSrc = (GET_BIT(inst, 12) << 5) |
                                                                      (GET_BITS(inst, 2, 6));
                                                             EXTBit = 6;
-                                                            RegDst = rd;
                                                             ALUOp = ALUOP_AND;
                                                             ALUSrc = ALUSRC_RS_IMM;
                                                             RegWrite = REGWRITE_VALE;
@@ -388,7 +376,6 @@ void ID()
                                                             rd = RVC_TO_R(GET_BITS(inst, 7, 9));
                                                             rs1 = rd;
                                                             rs2 = RVC_TO_R(GET_BITS(inst, 2, 4));
-                                                            RegDst = rd;
                                                             ALUSrc = ALUSRC_RS_RT;
                                                             RegWrite = REGWRITE_VALE;
                                                             switch (funct1)
@@ -636,7 +623,6 @@ void ID()
                                             EXTSrc =
                                                 (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
                                             EXTBit = 6;
-                                            RegDst = rd;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             ALUOp = ALUOP_SLL;
                                             RegWrite = REGWRITE_VALE;
@@ -654,7 +640,6 @@ void ID()
                                                      (GET_BITS(inst, 4, 6) << 2);
                                             EXTBit = 8;
                                             EXTOp = EXTOP_UNSIGED;
-                                            RegDst = rd;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             ALUOp = ALUOP_ADD;
                                             MemRead = MEMREAD_WORD;
@@ -674,7 +659,6 @@ void ID()
                                                      (GET_BITS(inst, 5, 6) << 3);
                                             EXTBit = 9;
                                             EXTOp = EXTOP_UNSIGED;
-                                            RegDst = rd;
                                             ALUSrc = ALUSRC_RS_IMM;
                                             ALUOp = ALUOP_ADD;
                                             MemRead = MEMREAD_DWORD;
@@ -709,7 +693,6 @@ void ID()
                                                                 {
                                                                     rd = GET_BITS(inst, 7, 11);
                                                                     rs1 = R_zero;
-                                                                    RegDst = rd;
                                                                     ALUSrc = ALUSRC_RS_RT;
                                                                     ALUOp = ALUOP_ADD;
                                                                     RegWrite = REGWRITE_VALE;
@@ -726,7 +709,6 @@ void ID()
                                                                 {
                                                                     rd = R_ra;
                                                                     rs1 = GET_BITS(inst, 7, 11);
-                                                                    RegDst = rd;
                                                                     ALUSrc = ALUSRC_RS_IMM;
                                                                     ALUOp = ALUOP_ADD;
                                                                     RegWrite = REGWRITE_VALP;
@@ -741,7 +723,6 @@ void ID()
                                                                 {
                                                                     rd = GET_BITS(inst, 7, 11);
                                                                     rs1 = rd;
-                                                                    RegDst = rd;
                                                                     ALUSrc = ALUSRC_RS_RT;
                                                                     ALUOp = ALUOP_ADD;
                                                                     RegWrite = REGWRITE_VALE;
@@ -812,7 +793,6 @@ void ID()
                             rd = GET_BITS(inst, 7, 11);
                             rs1 = GET_BITS(inst, 15, 19);
                             rs2 = GET_BITS(inst, 20, 24);
-                            RegDst = rd;
                             ALUSrc = ALUSRC_RS_RT;
                             RegWrite = REGWRITE_VALE;
                             switch (funct3)
@@ -1075,7 +1055,6 @@ void ID()
                             rd = GET_BITS(inst, 7, 11);
                             rs1 = GET_BITS(inst, 15, 19);
                             rs2 = GET_BITS(inst, 20, 24);
-                            RegDst = rd;
                             ALUSrc = ALUSRC_RS_RT;
                             RegWrite = REGWRITE_VALE;
                             switch (funct3)
@@ -1245,7 +1224,6 @@ void ID()
                             funct3 = GET_BITS(inst, 12, 14);
                             rd = GET_BITS(inst, 7, 11);
                             rs1 = GET_BITS(inst, 15, 19);
-                            RegDst = rd;
                             ALUSrc = ALUSRC_RS_IMM;
                             RegWrite = REGWRITE_VALE;
                             switch (funct3)
@@ -1387,7 +1365,6 @@ void ID()
                             funct3 = GET_BITS(inst, 12, 14);
                             rd = GET_BITS(inst, 7, 11);
                             rs1 = GET_BITS(inst, 15, 19);
-                            RegDst = rd;
                             ALUSrc = ALUSRC_RS_IMM;
                             RegWrite = REGWRITE_VALE;
                             switch (funct3)
@@ -1475,7 +1452,6 @@ void ID()
                             rd = GET_BITS(inst, 7, 11);
                             rs1 = GET_BITS(inst, 15, 19);
                             imm0_11 = GET_BITS(inst, 20, 31);
-                            RegDst = rd;
                             EXTSrc = imm0_11;
                             EXTBit = 12;
                             ALUOp = ALUOP_ADD;
@@ -1547,7 +1523,6 @@ void ID()
                                     imm0_11 = GET_BITS(inst, 20, 31);
                                     EXTSrc = imm0_11;
                                     EXTBit = 12;
-                                    RegDst = rd;
                                     ALUSrc = ALUSRC_RS_IMM;
                                     ALUOp = ALUOP_ADD;
                                     Branch = BRANCH_YES;
@@ -1697,7 +1672,6 @@ void ID()
                             imm12_31 = GET_BITS(inst, 12, 31);
                             EXTSrc = (imm12_31) << 12;
                             EXTBit = 32;
-                            RegDst = rd;
                             ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
                             RegWrite = REGWRITE_VALE;
@@ -1712,12 +1686,11 @@ void ID()
                             imm12_31 = GET_BITS(inst, 12, 31);
                             EXTSrc = ((imm12_31) << 12);
                             EXTBit = 32;
-                            RegDst = rd;
                             ALUSrc = ALUSRC_RS_IMM;
                             ALUOp = ALUOP_ADD;
                             RegWrite = REGWRITE_VALE;
 
-                            sprintf(InstBuf, "lui  %s, 0x%x", R_NAME[rd], imm12_31);
+                            sprintf(InstBuf, "lui  %s, 0x%x", R_NAME[rd], EXTSrc);
                         }
                         break;
                     case OP_JAL:
@@ -1726,7 +1699,6 @@ void ID()
                             EXTSrc = (GET_BIT(inst, 31) << 20) | (GET_BITS(inst, 12, 19) << 12) |
                                      (GET_BIT(inst, 20) << 11) | (GET_BITS(inst, 21, 30) << 1);
                             EXTBit = 21;
-                            RegDst = rd;
                             ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
                             RegWrite = REGWRITE_VALP;
@@ -1743,9 +1715,6 @@ void ID()
         }
 
     // write ID_EX_old
-    ID_EX_old.rd = RegDst;
-    ID_EX_old.PC = IF_ID.PC;
-
     if (EXTBit != 0)
         {
             switch (EXTOp)
@@ -1767,6 +1736,7 @@ void ID()
     else
         ID_EX_old.Imm = EXTSrc;
 
+    ID_EX_old.rd = rd;
     ID_EX_old.PC = NextPC;
 
     ID_EX_old.Reg_rs = reg[rs1];
@@ -2118,7 +2088,7 @@ void EX()
     // write EX_MEM_old
     EX_MEM_old.PC = NextPC;
     EX_MEM_old.ALU_out = ALUOut;
-    EX_MEM_old.rd = RegDst;
+    EX_MEM_old.rd = rd;
     EX_MEM_old.Reg_rt = RegRt;
 
     EX_MEM_old.Ctrl_M_MemWrite = ID_EX.Ctrl_M_MemWrite;
