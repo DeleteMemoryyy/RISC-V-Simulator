@@ -91,6 +91,8 @@ int main()
                                     ImGui::Begin("Load File", &load_from_file,
                                                  ImGuiWindowFlags_NoResize);
                                     static char buf1[64] = "test";
+                                    ImGui::Text("./Test/");
+                                    ImGui::SameLine();
                                     ImGui::InputText("	File Name", buf1, 64);
 
 
@@ -115,7 +117,7 @@ int main()
 
                                     if (start_to_load)
                                         {
-                                            string fileName = string(buf1);
+                                            string fileName = string("./Test/") + string(buf1);
                                             if (read_elf(fileName))
                                                 {
                                                     curFileName = fileName;
@@ -123,7 +125,8 @@ int main()
                                                     if (elfBuf != NULL)
                                                         delete[] elfBuf;
                                                     FILE *pfile;
-                                                    pfile = fopen(string(fileName+".elf").c_str(), "rb");
+                                                    pfile = fopen(string(fileName + ".elf").c_str(),
+                                                                  "rb");
                                                     if (pfile == NULL)
                                                         {
                                                             ERROR(__LINE__);

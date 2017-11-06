@@ -24,8 +24,9 @@ ui_test: ui_test.o imgui
 	$(CXX) -o ui_test ui_test.o $(IMGUI) $(CFLAGS) $(LIBS)
 	rm ui_test.o
 
-inst: inst.o Simulate.o Read_Elf.o
-	$(CXX) -o inst inst.o Simulate.o Read_Elf.o $(CFLAGS) $(LIBS)
+inst: ./Test/inst.o Simulate.o Read_Elf.o
+	$(CXX) -o ./Test/inst ./Test/inst.o Simulate.o Read_Elf.o $(CFLAGS) $(LIBS)
+	rm ./Test/inst.o Simulate.o Read_Elf.o
 
 imgui:
 	@echo Making IMGUI
