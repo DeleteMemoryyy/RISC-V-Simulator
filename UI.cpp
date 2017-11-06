@@ -38,6 +38,14 @@ int main()
     // Setup ImGui binding
     ImGui_ImplGlfwGL2_Init(window, true);
 
+    // Load Fonts
+    // ImGuiIO& io = ImGui::GetIO();
+    // io.Fonts->AddFontDefault();
+    // io.Fonts->AddFontFromFileTTF("UI_LIB/extra_fonts/Cousine-Regular.ttf", 15.0f);
+    // io.Fonts->AddFontFromFileTTF("UI_LIB/extra_fonts/DroidSans.ttf", 16.0f);
+    // io.Fonts->AddFontFromFileTTF("UI_LIB/extra_fonts/Roboto-Medium.ttf", 16.0f);
+    // io.Fonts->AddFontFromFileTTF("UI_LIB/extra_fonts/ProggyTiny.ttf", 10.0f);
+
     while (!glfwWindowShouldClose(window))
         {
             glfwPollEvents();
