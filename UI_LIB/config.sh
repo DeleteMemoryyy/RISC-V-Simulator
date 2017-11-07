@@ -14,7 +14,7 @@ then
     sudo make
     sudo make install
     cd ..
-    rm -rf glfw-3.2.1
+    sudo rm -rf glfw-3.2.1
 else
     echo "  glfw exsited."
 fi
