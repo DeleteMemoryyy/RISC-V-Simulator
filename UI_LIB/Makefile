@@ -10,6 +10,7 @@ CXXFLAGS += -Wall -Wformat -g
 all: dep $(IMGUI)
 
 dep:
+	chmod a+x ./config.sh
 	./config.sh
 
 .cpp.o:
