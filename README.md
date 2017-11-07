@@ -1,6 +1,6 @@
 # RISC-V-Simulator
 
-**https://github.com/DeleteMemoryyy/RISC-V-Simulator**   ![Build Status](https://travis-ci.org/DeleteMemoryyy/RISC-V-Simulator.svg?branch=master)
+**https://github.com/DeleteMemoryyy/RISC-V-Simulator**   		![Build Status](https://travis-ci.org/DeleteMemoryyy/RISC-V-Simulator.svg?branch=master)
 
 #### 程序编译运行环境：
 
