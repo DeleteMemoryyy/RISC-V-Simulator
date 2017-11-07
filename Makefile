@@ -14,7 +14,7 @@ all:$(EXE)
 	rm $(OBJS)
 	@echo Build complete for $(ECHO_MESSAGE)
 
-$(EXE):$(OBJS) imgui
+$(EXE): imgui $(OBJS)
 	$(CXX) -o $(EXE) $(OBJS) $(IMGUI) $(CXXFLAGS) $(LIBS)
 
 ui_test: ui_test.o imgui
