@@ -17,7 +17,7 @@ all:$(EXE)
 $(EXE): imgui $(OBJS)
 	$(CXX) -o $(EXE) $(OBJS) $(IMGUI) $(CXXFLAGS) $(LIBS)
 
-ui_test: ui_test.o imgui
+ui_test: imgui ui_test.o
 	$(CXX) -o ui_test ui_test.o $(IMGUI) $(CXXFLAGS) $(LIBS)
 	rm ui_test.o
 
