@@ -26,7 +26,6 @@ int exit_flag = 0;
 // instruction sections
 static unsigned int opcode = 0;
 static unsigned int funct3 = 0, funct7 = 0;
-static unsigned int shamt = 0;
 static unsigned int rs1 = 0, rs2 = 0, rd = 0;
 static unsigned int imm0_11 = 0;
 static unsigned int imm12_31 = 0;
@@ -37,14 +36,16 @@ static unsigned int imm0_4 = 0;
 
 void setup()
 {
+    for (int i = 0; i < 32; ++i)
+        reg[i] = 0;
+    memset(memory, 0, MEM_SIZE);
+
     load_memory();
 
     PC = mainAddr;
-
     endPC = mainAddr + mainSize - 3;
 
     reg[R_gp] = gp;
-
     reg[R_sp] = P_TO_V(MEM_ED);
 }
 
@@ -286,9 +287,8 @@ void ID()
                                                     ALUOp = ALUOP_ADD;
                                                     RegWrite = REGWRITE_VALE;
 
-                                                    sprintf(
-                                                        InstBuf, "lui  %s, %lld", R_NAME[rd],
-                                                        (EXT_SIGNED_DWORD(EXTSrc, EXTBit)));
+                                                    sprintf(InstBuf, "lui  %s, %lld", R_NAME[rd],
+                                                            (EXT_SIGNED_DWORD(EXTSrc, EXTBit)));
                                                 }
                                             else  // C.ADDI16SPN
                                                 {
@@ -2085,7 +2085,7 @@ void EX()
     // write EX_MEM_old
     EX_MEM_old.PC = NextPC;
     EX_MEM_old.ALU_out = ALUOut;
-    EX_MEM_old.rd = rd;
+    EX_MEM_old.rd = RegDst;
     EX_MEM_old.Reg_rt = RegRt;
 
     EX_MEM_old.Ctrl_M_MemWrite = ID_EX.Ctrl_M_MemWrite;

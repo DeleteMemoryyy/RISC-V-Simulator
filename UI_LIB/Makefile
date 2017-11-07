@@ -3,15 +3,13 @@ MAKE = make
 EXE = UI
 IMGUI = imgui_impl_glfw.o imgui.o imgui_demo.o imgui_draw.o
 
-ifeq ($(UNAME_S), Linux) #LINUX
-	LIBS = -lGL `pkg-config --static --libs glfw3`
-	CXXFLAGS = -I UI/ `pkg-config --cflags glfw3`
-	CXXFLAGS += -Wall -Wformat
-	CFLAGS = $(CXXFLAGS)
-endif
+
+LIBS = -lGL `pkg-config --static --libs glfw3`
+CXXFLAGS = -I glfw/include/ `pkg-config --cflags glfw3`
+CXXFLAGS += -Wall -Wformat -g
 
 .cpp.o:
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(LIBS) -c -o $@ $<
 
 all: $(IMGUI)
 

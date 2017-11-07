@@ -287,7 +287,6 @@ int main()
                             ImGui::Text("Value");
                             ImGui::NextColumn();
                             ImGui::Separator();
-                            static int selected = -1;
                             for (int i = 0; i < 32; i++)
                                 {
                                     ImGui::Text("%d", i);
@@ -382,7 +381,7 @@ int main()
                                                         {
                                                             ULL endAddr = (V_TO_P(memAddr + 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? ((MEM_ED - endAddr))
+                                                                           ? ((MEM_ED - V_TO_P(memAddr)))
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -397,7 +396,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 2 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 2
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 2
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -413,7 +412,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 4 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 4
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 4
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -429,7 +428,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 8 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 8
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 8
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -453,7 +452,7 @@ int main()
                                                         {
                                                             ULL endAddr = (V_TO_P(memAddr + 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr)
+                                                                           ? (MEM_ED - V_TO_P(memAddr))
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -468,7 +467,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 2 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 2
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 2
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -484,7 +483,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 4 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 4
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 4
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -500,7 +499,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 8 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 8
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 8
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -524,7 +523,7 @@ int main()
                                                         {
                                                             ULL endAddr = (V_TO_P(memAddr + 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr)
+                                                                           ? (MEM_ED - V_TO_P(memAddr))
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -539,7 +538,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 2 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 2
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 2
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -555,7 +554,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 4 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 4
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 4
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -571,7 +570,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 8 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 8
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 8
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -595,7 +594,7 @@ int main()
                                                         {
                                                             ULL endAddr = (V_TO_P(memAddr + 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr)
+                                                                           ? (MEM_ED - V_TO_P(memAddr))
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -610,7 +609,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 2 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 2
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 2
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -626,7 +625,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 4 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 4
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 4
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -642,7 +641,7 @@ int main()
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 8 * 100));
                                                             int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - endAddr) / 8
+                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 8
                                                                            : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
@@ -752,7 +751,7 @@ int main()
                         break;
                     case Stepping:
                         {
-                            bool res = simulate_one_step();
+                            simulate_one_step();
                             dState = Pausing;
                         }
                         break;

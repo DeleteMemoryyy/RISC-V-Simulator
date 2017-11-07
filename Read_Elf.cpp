@@ -42,8 +42,6 @@ static unsigned short snum = 0;
 ULL symadr = 0;
 static unsigned short symsize = 0;
 static unsigned short symnum = 0;
-static unsigned int sh_index = 0;
-static unsigned int stradr = 0;
 
 
 bool open_file(string fname)
