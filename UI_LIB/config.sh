@@ -5,6 +5,7 @@ PKG_EXSITED='-I/usr/include/libdrm'
 
 if [ $PKG_CONFIG != $PKG_EXSITED ]
 then
+    echo "  install glfw"
     sudo apt-get build-dep glfw
     sudo apt-get install cmake xorg-dev libglu1-mesa-dev
     cd glfw-3.2.1
