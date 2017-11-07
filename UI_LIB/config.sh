@@ -10,6 +10,7 @@ then
     sudo apt-get install cmake xorg-dev libglu1-mesa-dev
     cd glfw-3.2.1
     mkdir glfw-build
+    cd glfw-buld
     sudo cmake ../
     sudo make
     sudo make install
