@@ -6,7 +6,6 @@
 #include "UI_LIB/imgui_impl_glfw.h"
 #include "UI_LIB/imgui_internal.h"
 #include "Simulate.h"
-#include "Reg_Def.h"
 
 enum DisplayState
 {

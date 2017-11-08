@@ -16,5 +16,5 @@ then
     cd ..
     sudo rm -rf glfw-3.2.1
 else
-    echo "  glfw exsited."
+    echo "  glfw exsited"
 fi

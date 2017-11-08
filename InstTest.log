@@ -1,0 +1,308 @@
+Ori: lui  a0, 409600
+Idf: lui  a0, 409600
+Exp Res: 409600
+Exe Res: 409600
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: auipc  a0, 409600
+Idf: auipc  a0, 409600
+Exp Res: 475392
+Exe Res: 475392
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: jal  a0, 0x10128
+Idf: jal  a0, 0x10128
+Exp Res: 0x10104
+Exe Res: 0x10104
+Exp PC: 0x10128
+Exe PC: 0x10128
+
+Ori: jalr  a0, a1, 40
+Idf: jalr  a0, a1, 40
+Exp Res: 0x10104
+Exe Res: 0x10104
+Exp PC: 0x10528
+Exe PC: 0x10528
+
+Ori: jalr  a0, a1, 40
+Idf: jalr  a0, a1, 40
+Exp Res: 0x10104
+Exe Res: 0x10104
+Exp PC: 0x10528
+Exe PC: 0x10528
+
+Ori: beq  a0, a1, 0x10124
+Idf: beq  a0, a1, 0x10124
+Exp PC: 0x10104
+Exe PC: 0x10104
+Exp PC: 0x10124
+Exe PC: 0x10124
+
+Ori: bne  a0, a1, 0x10120
+Idf: bne  a0, a1, 0x10120
+Exp PC: 0x10104
+Exe PC: 0x10104
+Exp PC: 0x10120
+Exe PC: 0x10120
+
+Ori: blt  a0, a1, 0x1011c
+Idf: blt  a0, a1, 0x1011c
+Exp PC: 0x10104
+Exe PC: 0x10104
+Exp PC: 0x1011c
+Exe PC: 0x1011c
+
+Ori: bge  a0, a1, 0x10118
+Idf: bge  a0, a1, 0x10118
+Exp PC: 0x10104
+Exe PC: 0x10104
+Exp PC: 0x10118
+Exe PC: 0x10118
+
+Ori: bltu  a0, a1, 0x10114
+Idf: bltu  a0, a1, 0x10114
+Exp PC: 0x10104
+Exe PC: 0x10104
+Exp PC: 0x10114
+Exe PC: 0x10114
+
+Ori: bgeu  a0, a1, 0x10110
+Idf: bgeu  a0, a1, 0x10110
+Exp PC: 0x10104
+Exe PC: 0x10104
+Exp PC: 0x10110
+Exe PC: 0x10110
+
+Ori: sb  a1, 40(a0)
+Idf: sb  a1, 40(a0)
+Exp Res: 255
+Exe Res: 255
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: sh  a1, 40(a0)
+Idf: sh  a1, 40(a0)
+Exp Res: 65535
+Exe Res: 65535
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: sw  a1, 40(a0)
+Idf: sw  a1, 40(a0)
+Exp Res: -1
+Exe Res: -1
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: lb  a1, 40(a0)
+Idf: lb  a1, 40(a0)
+Exp Res: -1
+Exe Res: -1
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: lh  a1, 40(a0)
+Idf: lh  a1, 40(a0)
+Exp Res: -1
+Exe Res: -1
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: lw  a1, 40(a0)
+Idf: lw  a1, 40(a0)
+Exp Res: -1
+Exe Res: -1
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: lbu  a1, 40(a0)
+Idf: lbu  a1, 40(a0)
+Exp Res: 255
+Exe Res: 255
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: lhu  a1, 40(a0)
+Idf: lhu  a1, 40(a0)
+Exp Res: 65535
+Exe Res: 65535
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: addi  a0, a1, 40
+Idf: addi  a0, a1, 40
+Exp Res: 65575
+Exe Res: 65575
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: slti  a0, a1, 40
+Idf: slti  a0, a1, 40
+Exp Res: 0
+Exe Res: 0
+Exp Res: 1
+Exe Res: 1
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: sltiu  a0, a1, 40
+Idf: sltiu  a0, a1, 40
+Exp Res: 0
+Exe Res: 0
+Exp Res: 1
+Exe Res: 1
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: xori  a0, a1, 119
+Idf: xori  a0, a1, 119
+Exp Res: 120
+Exe Res: 120
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: ori  a0, a1, 119
+Idf: ori  a0, a1, 119
+Exp Res: 127
+Exe Res: 127
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: andi  a0, a1, 119
+Idf: andi  a0, a1, 119
+Exp Res: 7
+Exe Res: 7
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: add  a0, a1, a2
+Idf: add  a0, a1, a2
+Exp Res: 134
+Exe Res: 134
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: sub  a0, a1, a2
+Idf: sub  a0, a1, a2
+Exp Res: -104
+Exe Res: -104
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: sll  a0, a1, a2
+Idf: sll  a0, a1, a2
+Exp Res: 15232
+Exe Res: 15232
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: slt  a0, a1, a2
+Idf: slt  a0, a1, a2
+Exp Res: 0
+Exe Res: 0
+Exp Res: 1
+Exe Res: 1
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: sltu  a0, a1, a2
+Idf: sltu  a0, a1, a2
+Exp Res: 0
+Exe Res: 0
+Exp Res: 1
+Exe Res: 1
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: xor  a0, a1, a2
+Idf: xor  a0, a1, a2
+Exp Res: 120
+Exe Res: 120
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: srl  a0, a1, a2
+Idf: srl  a0, a1, a2
+Exp Res: 144115188075855871
+Exe Res: 144115188075855871
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: sra  a0, a1, a2
+Idf: sra  a0, a1, a2
+Exp Res: -1
+Exe Res: -1
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: or  a0, a1, a2
+Idf: or  a0, a1, a2
+Exp Res: 127
+Exe Res: 127
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: and  a0, a1, a2
+Idf: and  a0, a1, a2
+Exp Res: 7
+Exe Res: 7
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: mul  a0, a1, a2
+Idf: mul  a0, a1, a2
+Exp Res: 1785
+Exe Res: 1785
+Exp Res: 20
+Exe Res: 20
+Exp Res: -200
+Exe Res: -200
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: div  a0, a1, a2
+Idf: div  a0, a1, a2
+Exp Res: 7
+Exe Res: 7
+Exp Res: 582
+Exe Res: 582
+Exp Res: -25
+Exe Res: -25
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: divu  a0, a1, a2
+Idf: divu  a0, a1, a2
+Exp Res: 7
+Exe Res: 7
+Exp Res: 0
+Exe Res: 0
+Exp Res: 2635249153387078776
+Exe Res: 2635249153387078776
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: rem  a0, a1, a2
+Idf: rem  a0, a1, a2
+Exp Res: 14
+Exe Res: 14
+Exp Res: -7
+Exe Res: -7
+Exp Res: -5
+Exe Res: -5
+Exp PC: 0x10104
+Exe PC: 0x10104
+
+Ori: remu  a0, a1, a2
+Idf: remu  a0, a1, a2
+Exp Res: 14
+Exe Res: 14
+Exp Res: -5245
+Exe Res: -5245
+Exp Res: 4
+Exe Res: 4
+Exp PC: 0x10104
+Exe PC: 0x10104
+

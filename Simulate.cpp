@@ -978,6 +978,7 @@ void ID()
                                                                     R_NAME[rd], R_NAME[rs1],
                                                                     R_NAME[rs2]);
                                                         }
+                                                        break;
                                                     default:
                                                         ERROR(__LINE__);
                                                         break;
@@ -1489,6 +1490,14 @@ void ID()
                                                     EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
                                         }
                                         break;
+                                    case F3_BYTEU:
+                                        {
+                                            MemRead = MEMREAD_BYTEU;
+
+                                            sprintf(InstBuf, "lbu  %s, %lld(%s)", R_NAME[rd],
+                                                    EXT_SIGNED_DWORD(EXTSrc, EXTBit), R_NAME[rs1]);
+                                        }
+                                        break;
                                     case F3_HWORDU:
                                         {
                                             MemRead = MEMREAD_HWORDU;
@@ -1674,7 +1683,7 @@ void ID()
                             ALUOp = ALUOP_ADD;
                             RegWrite = REGWRITE_VALE;
 
-                            sprintf(InstBuf, "auipc  %s, 0x%llx", R_NAME[rd], EXTSrc + PC);
+                            sprintf(InstBuf, "auipc  %s, %d", R_NAME[rd], (int)EXTSrc);
                         }
                         break;
                     case OP_LUI:
@@ -1688,7 +1697,7 @@ void ID()
                             ALUOp = ALUOP_ADD;
                             RegWrite = REGWRITE_VALE;
 
-                            sprintf(InstBuf, "lui  %s, 0x%x", R_NAME[rd], EXTSrc);
+                            sprintf(InstBuf, "lui  %s, %d", R_NAME[rd], (int)EXTSrc);
                         }
                         break;
                     case OP_JAL:
@@ -1872,11 +1881,33 @@ void EX()
                 break;
             case ALUOP_MULH:
                 {
-                    long long VA_H = (((long long)VA & MASK_H) >> 32),
-                              VA_L = ((long long)VA & MASK_L),
-                              VB_H = (((long long)VB & MASK_H) >> 32),
-                              VB_L = ((long long)VB & MASK_L);
-                    long long VT_1 = VA_H * VB_L, VT_2 = VA_L * VB_H, VT_3 = VA_H * VB_H;
+                    long long VT_1 = 0, VT_2 = 0, VT_3 = 0;
+
+                    ULL VA_H = (((long long)VA & MASK_H) >> 32), VA_L = ((long long)VA & MASK_L),
+                        VB_H = (((long long)VB & MASK_H) >> 32), VB_L = ((long long)VB & MASK_L);
+
+                    if (VA_H != 0)
+                        {
+                            if (VB_H != 0)
+                                {
+                                    VT_1 = (long long)VA_H * (ULL)VB_L;
+                                    VT_2 = (ULL)VA_L * (long long)VB_H;
+                                    VT_3 = (long long)VA_H * (long long)VB_H;
+                                }
+                            else
+                                {
+                                    VT_1 = (long long)VA_H * (long long)VB_L;
+                                    VT_2 = (ULL)VA_L * (ULL)VB_H;
+                                    VT_3 = (long long)VA_H * (ULL)VB_H;
+                                }
+                        }
+                    else
+                        {
+                            VT_1 = (ULL)VA_H * (long long)VB_L;
+                            VT_2 = (long long)VA_L * (ULL)VB_H;
+                            VT_3 = (ULL)VA_H * (ULL)VB_H;
+                        }
+
                     if (VT_1 < 0 && VT_2 < 0 && (VT_1 + VT_2) >= 0)
                         {
                             VT_3 += 1;
@@ -1886,10 +1917,8 @@ void EX()
                 break;
             case ALUOP_MULHU:
                 {
-                    long long VA_H = (((long long)VA & MASK_H) >> 32),
-                              VA_L = ((long long)VA & MASK_L),
-                              VB_H = (((long long)VB & MASK_H) >> 32),
-                              VB_L = ((long long)VB & MASK_L);
+                    ULL VA_H = ((VA & MASK_H) >> 32), VA_L = (VA & MASK_L),
+                        VB_H = ((VB & MASK_H) >> 32), VB_L = (VB & MASK_L);
                     long long VT_1 = VA_H * VB_L, VT_2 = VA_L * VB_H, VT_3 = VA_H * VB_H;
                     if (VT_1 < 0 && VT_2 < 0 && (VT_1 + VT_2) >= 0)
                         {
@@ -1900,11 +1929,24 @@ void EX()
                 break;
             case ALUOP_MULHSU:
                 {
-                    long long VA_H = (((long long)VA & MASK_H) >> 32),
-                              VA_L = ((long long)VA & MASK_L),
-                              VB_H = (((long long)VB & MASK_H) >> 32),
-                              VB_L = ((long long)VB & MASK_L);
-                    long long VT_1 = VA_H * VB_L, VT_2 = VA_L * VB_H, VT_3 = VA_H * VB_H;
+                    long long VT_1 = 0, VT_2 = 0, VT_3 = 0;
+
+                    ULL VA_H = (((long long)VA & MASK_H) >> 32), VA_L = ((long long)VA & MASK_L),
+                        VB_H = (((long long)VB & MASK_H) >> 32), VB_L = ((long long)VB & MASK_L);
+
+                    if (VA_H != 0)
+                        {
+                            VT_1 = (long long)VA_H * (long long)VB_L;
+                            VT_2 = (ULL)VA_L * (ULL)VB_H;
+                            VT_3 = (long long)VA_H * (ULL)VB_H;
+                        }
+                    else
+                        {
+                            VT_1 = (ULL)VA_H * (long long)VB_L;
+                            VT_2 = (long long)VA_L * (ULL)VB_H;
+                            VT_3 = (ULL)VA_H * (ULL)VB_H;
+                        }
+
                     if (VT_1 < 0 && VT_2 < 0 && (VT_1 + VT_2) >= 0)
                         {
                             VT_3 += 1;
@@ -1962,17 +2004,17 @@ void EX()
                 break;
             case ALUOP_SLL:
                 {
-                    ALUOut = (VA << (VB & MASK_SH));
+                    ALUOut = (VA << (int)(VB & MASK_SH));
                 }
                 break;
             case ALUOP_SRL:
                 {
-                    ALUOut = VA >> (VB & MASK_SH);
+                    ALUOut = VA >> (int)(VB & MASK_SH);
                 }
                 break;
             case ALUOP_SRA:
                 {
-                    ALUOut = (REG)((long long)VA >> (VB & MASK_SH));
+                    ALUOut = (REG)((long long)VA >> (int)(VB & MASK_SH));
                 }
                 break;
             case ALUOP_AND:
@@ -2064,19 +2106,18 @@ void EX()
                 }
             case ALUOP_SLLW:
                 {
-                    ALUOut = EXT_SIGNED_DWORD(((unsigned int)VA << (VB & MASK_SH)), 32);
+                    ALUOut = EXT_SIGNED_DWORD(((unsigned int)VA << (int)(VB & MASK_SH)), 32);
                 }
                 break;
             case ALUOP_SRLW:
                 {
-                    ALUOut = EXT_SIGNED_DWORD(((unsigned int)VA >> (VB & MASK_SH)), 32);
+                    ALUOut = EXT_SIGNED_DWORD(((unsigned int)VA >> (int)(VB & MASK_SH)), 32);
                 }
                 break;
             case ALUOP_SRAW:
                 {
-                    ALUOut = EXT_SIGNED_DWORD(((int)VA >> (VB & MASK_SH)), 32);
+                    ALUOut = EXT_SIGNED_DWORD(((int)VA >> (int)(VB & MASK_SH)), 32);
                 }
-                break;
                 break;
             default:
                 ERROR(__LINE__);
@@ -2157,7 +2198,7 @@ void MEM()
                 break;
             case MEMREAD_WORD:
                 {
-                    unsigned char vReadWord = READ_WORD(ALUOut);
+                    unsigned int vReadWord = READ_WORD(ALUOut);
                     VMemRead = EXT_SIGNED_DWORD(vReadWord, 32);
                 }
                 break;
@@ -2180,7 +2221,7 @@ void MEM()
                 break;
             case MEMREAD_WORDU:
                 {
-                    unsigned char vReadWord = READ_WORD(ALUOut);
+                    unsigned int vReadWord = READ_WORD(ALUOut);
                     VMemRead = EXT_UNSIGNED_DWORD(vReadWord, 32);
                 }
                 break;

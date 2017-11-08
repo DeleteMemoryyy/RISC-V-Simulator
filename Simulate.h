@@ -10,9 +10,9 @@
 #include "Read_Elf.h"
 #include "Reg_Def.h"
 
-#define MEM_SIZE 1 << 28
-#define MEM_ST 1 << 21
-#define MEM_ED 0xfe00000
+#define MEM_SIZE 1 << 24
+#define MEM_ST 1 << 17
+#define MEM_ED 0xfe0000
 
 #define V_TO_P(add) ((add) + (MEM_ST) - (cVadr))
 #define P_TO_V(add) ((add) + (cVadr) - (MEM_ST))
@@ -56,7 +56,7 @@ extern MEMWB MEM_WB, MEM_WB_old;
 extern WBUP WB_UP, WB_UP_old;
 
 extern ULL inst_num;
-extern ULL endpc;
+extern ULL endPC;
 extern int exit_flag;
 
 

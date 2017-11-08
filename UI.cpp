@@ -260,6 +260,8 @@ int main()
                             ImGui::Text(" Last instruction: %s", InstBuf);
 
                             ImGui::Text(" PC: 0x%llx", PC);
+                            ImGui::SameLine(0, 40);
+                            ImGui::Text(" EndPC: 0x%llx", endPC);
                             ImGui::Text(" ");
 
                             static int selected_fish = 1;
@@ -336,7 +338,7 @@ int main()
                             ImGui::PopItemWidth();
 
                             ImGui::SameLine(0, 20);
-                            static int selected_format = 1;
+                            static int selected_format = 1; // default to be decimal
                             const char *formats[] = {"Hex", "Decimal", "Unsigned", "ASCII"};
                             if (ImGui::Button("Select Format"))
                                 ImGui::OpenPopup("select format");
@@ -352,7 +354,7 @@ int main()
                                 }
                             ImGui::SameLine(0, 20);
 
-                            static int selected_size = 3;
+                            static int selected_size = 2; // default to be word
                             const char *sizes[] = {"Byte", "Half Word", "Word", "Double Word"};
                             if (ImGui::Button("Select Scale"))
                                 ImGui::OpenPopup("select scale");
@@ -380,9 +382,10 @@ int main()
                                                     case 0:
                                                         {
                                                             ULL endAddr = (V_TO_P(memAddr + 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? ((MEM_ED - V_TO_P(memAddr)))
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? ((MEM_ED - V_TO_P(memAddr)))
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text(
@@ -395,9 +398,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 2 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 2
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 2
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text("0x%llx: 0x%x",
@@ -411,9 +415,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 4 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 4
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 4
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text(
@@ -427,9 +432,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 8 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 8
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 8
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text("0x%llx: 0x%llx",
@@ -451,9 +457,10 @@ int main()
                                                     case 0:
                                                         {
                                                             ULL endAddr = (V_TO_P(memAddr + 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr))
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr))
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text(
@@ -466,9 +473,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 2 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 2
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 2
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text("0x%llx: %d",
@@ -482,9 +490,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 4 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 4
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 4
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text(
@@ -498,9 +507,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 8 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 8
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 8
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text("0x%llx: %lld",
@@ -522,9 +532,10 @@ int main()
                                                     case 0:
                                                         {
                                                             ULL endAddr = (V_TO_P(memAddr + 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr))
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr))
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text(
@@ -537,9 +548,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 2 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 2
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 2
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text("0x%llx: %uu",
@@ -553,9 +565,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 4 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 4
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 4
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text(
@@ -569,9 +582,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 8 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 8
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 8
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text("0x%llx: %lluu",
@@ -593,9 +607,10 @@ int main()
                                                     case 0:
                                                         {
                                                             ULL endAddr = (V_TO_P(memAddr + 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr))
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr))
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text(
@@ -608,9 +623,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 2 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 2
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 2
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text("0x%llx: 0x%x",
@@ -624,9 +640,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 4 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 4
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 4
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text(
@@ -640,9 +657,10 @@ int main()
                                                         {
                                                             ULL endAddr =
                                                                 (V_TO_P(memAddr + 8 * 100));
-                                                            int stop = (endAddr >= MEM_ED)
-                                                                           ? (MEM_ED - V_TO_P(memAddr)) / 8
-                                                                           : 100;
+                                                            int stop =
+                                                                (endAddr >= MEM_ED)
+                                                                    ? (MEM_ED - V_TO_P(memAddr)) / 8
+                                                                    : 100;
                                                             for (int i = 0; i < stop; ++i)
                                                                 {
                                                                     ImGui::Text("0x%llx: 0x%llx",
@@ -718,7 +736,7 @@ int main()
                                 }
                             else if (_dump)
                                 {
-                                    load_from_file = false;
+                                    load_from_file = true;
                                     start_to_load = false;
                                     load_false = false;
                                     show_elf = false;
@@ -744,7 +762,7 @@ int main()
                         break;
                     case Running:
                         {
-                            while (simulate_one_step() == 0)
+                            while (simulate_one_step() == false)
                                 ;
                             dState = Pausing;
                         }
