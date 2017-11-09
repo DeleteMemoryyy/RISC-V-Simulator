@@ -1,5 +1,5 @@
-#ifndef SIMULATIOR_H_
-#define SIMULATIOR_H_
+#ifndef SIMULATE_H_
+#define SIMULATE_H_
 
 #include <iostream>
 #include <math.h>
