@@ -32,7 +32,7 @@ static unsigned int imm0_5 = 0;
 static unsigned int imm0_4 = 0;
 
 // last ALU operation
-static LAST_ALU LastAlu;
+static ALU_REC *LastAlu = new ALU_REC, *ThisAlu = new ALU_REC;
 
 void setup()
 {
@@ -41,6 +41,15 @@ void setup()
     CPI = 0.0f;
     memset(InstBuf, 0, sizeof(InstBuf));
     exit_flag = 0;
+
+    LastAlu->ALUOp = ALUOP_NOP;
+    LastAlu->rd = R_zero;
+    LastAlu->rs1 = R_zero;
+    LastAlu->rs2 = R_zero;
+    ThisAlu->ALUOp = ALUOP_NOP;
+    ThisAlu->rd = R_zero;
+    ThisAlu->rs1 = R_zero;
+    ThisAlu->rs2 = R_zero;
 
     for (int i = 0; i < 32; ++i)
         reg[i] = 0;
@@ -1758,6 +1767,13 @@ void ID()
                 }
         }
 
+    // record ALU operation
+    swap(LastAlu, ThisAlu);
+    ThisAlu->ALUOp = ALUOp;
+    ThisAlu->rd = rd;
+    ThisAlu->rs1 = rs1;
+    ThisAlu->rs2 = rs2;
+
     // write ID_EX
     if (EXTBit != 0)
         {
@@ -2029,8 +2045,10 @@ void EX()
                 break;
             case ALUOP_REM:
                 {
-                    if (!(LastAlu.ALUOp == ALUOP_DIV && LastAlu.V_rs1 == RegRs1 &&
-                          LastAlu.V_rs2 == RegRs2))
+                    if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
+                          LastAlu->rs1 == ThisAlu->rs1 &&
+                          LastAlu->rs2 == ThisAlu->rs2 && LastAlu->rd != LastAlu->rs1 &&
+                          LastAlu->rd != LastAlu->rs2))
                         {
                             CycleCount += 39;
                         }
@@ -2047,8 +2065,10 @@ void EX()
                 break;
             case ALUOP_REMU:
                 {
-                    if (!(LastAlu.ALUOp == ALUOP_DIVU && LastAlu.V_rs1 == RegRs1 &&
-                          LastAlu.V_rs2 == RegRs2))
+                    if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
+                          LastAlu->rs1 == ThisAlu->rs1 &&
+                          LastAlu->rs2 == ThisAlu->rs2 && LastAlu->rd != LastAlu->rs1 &&
+                          LastAlu->rd != LastAlu->rs2))
                         {
                             CycleCount += 39;
                         }
@@ -2148,8 +2168,10 @@ void EX()
                 break;
             case ALUOP_REMW:
                 {
-                    if (!(LastAlu.ALUOp == ALUOP_DIVW && LastAlu.V_rs1 == RegRs1 &&
-                          LastAlu.V_rs2 == RegRs2))
+                    if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
+                          LastAlu->rs1 == ThisAlu->rs1 &&
+                          LastAlu->rs2 == ThisAlu->rs2 && LastAlu->rd != LastAlu->rs1 &&
+                          LastAlu->rd != LastAlu->rs2))
                         {
                             CycleCount += 39;
                         }
@@ -2166,8 +2188,10 @@ void EX()
                 break;
             case ALUOP_REMUW:
                 {
-                    if (!(LastAlu.ALUOp == ALUOP_DIVUW && LastAlu.V_rs1 == RegRs1 &&
-                          LastAlu.V_rs2 == RegRs2))
+                    if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
+                          LastAlu->rs1 == ThisAlu->rs1 &&
+                          LastAlu->rs2 == ThisAlu->rs2 && LastAlu->rd != LastAlu->rs1 &&
+                          LastAlu->rd != LastAlu->rs2))
                         {
                             CycleCount += 39;
                         }
@@ -2199,11 +2223,6 @@ void EX()
             default:
                 ERROR(__LINE__);
         }
-
-    // record ALU operation
-    LastAlu.ALUOp = ALUOp;
-    LastAlu.V_rs1 = RegRs1;
-    LastAlu.V_rs2 = RegRs2;
 
     // write EX_MEM
     EX_MEM.PC = NextPC;

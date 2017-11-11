@@ -38,11 +38,12 @@
 #define WRITE_WORD(vaddr, value) (*((unsigned int *)(memory + V_TO_P((vaddr)))) = (value))
 #define WRITE_DWORD(vaddr, value) (*((ULL *)(memory + V_TO_P((vaddr)))) = (value))
 
-struct LAST_ALU
+struct ALU_REC
 {
     unsigned char ALUOp;
-    ULL V_rs1;
-    ULL V_rs2;
+    unsigned char rd;
+    unsigned char rs1;
+    unsigned char rs2;
 };
 
 const long long MASK_H = 0xffffffff00000000;
