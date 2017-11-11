@@ -2046,11 +2046,14 @@ void EX()
             case ALUOP_REM:
                 {
                     if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
-                          LastAlu->rs1 == ThisAlu->rs1 &&
-                          LastAlu->rs2 == ThisAlu->rs2 && LastAlu->rd != LastAlu->rs1 &&
-                          LastAlu->rd != LastAlu->rs2))
+                          LastAlu->rs1 == ThisAlu->rs1 && LastAlu->rs2 == ThisAlu->rs2 &&
+                          LastAlu->rd != LastAlu->rs1 && LastAlu->rd != LastAlu->rs2))
                         {
                             CycleCount += 39;
+                        }
+                    else
+                        {
+                            CycleCount -= 1;
                         }
 
                     if (VB != 0)
@@ -2066,12 +2069,16 @@ void EX()
             case ALUOP_REMU:
                 {
                     if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
-                          LastAlu->rs1 == ThisAlu->rs1 &&
-                          LastAlu->rs2 == ThisAlu->rs2 && LastAlu->rd != LastAlu->rs1 &&
-                          LastAlu->rd != LastAlu->rs2))
+                          LastAlu->rs1 == ThisAlu->rs1 && LastAlu->rs2 == ThisAlu->rs2 &&
+                          LastAlu->rd != LastAlu->rs1 && LastAlu->rd != LastAlu->rs2))
                         {
                             CycleCount += 39;
                         }
+                    else
+                        {
+                            CycleCount -= 1;
+                        }
+
 
                     if (VB != 0)
                         {
@@ -2169,12 +2176,16 @@ void EX()
             case ALUOP_REMW:
                 {
                     if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
-                          LastAlu->rs1 == ThisAlu->rs1 &&
-                          LastAlu->rs2 == ThisAlu->rs2 && LastAlu->rd != LastAlu->rs1 &&
-                          LastAlu->rd != LastAlu->rs2))
+                          LastAlu->rs1 == ThisAlu->rs1 && LastAlu->rs2 == ThisAlu->rs2 &&
+                          LastAlu->rd != LastAlu->rs1 && LastAlu->rd != LastAlu->rs2))
                         {
                             CycleCount += 39;
                         }
+                    else
+                        {
+                            CycleCount -= 1;
+                        }
+
 
                     if (VB != 0)
                         {
@@ -2189,12 +2200,16 @@ void EX()
             case ALUOP_REMUW:
                 {
                     if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
-                          LastAlu->rs1 == ThisAlu->rs1 &&
-                          LastAlu->rs2 == ThisAlu->rs2 && LastAlu->rd != LastAlu->rs1 &&
-                          LastAlu->rd != LastAlu->rs2))
+                          LastAlu->rs1 == ThisAlu->rs1 && LastAlu->rs2 == ThisAlu->rs2 &&
+                          LastAlu->rd != LastAlu->rs1 && LastAlu->rd != LastAlu->rs2))
                         {
                             CycleCount += 39;
                         }
+                    else
+                        {
+                            CycleCount -= 1;
+                        }
+
 
                     if (VB != 0)
                         {
