@@ -6,22 +6,19 @@ unsigned char memory[MEM_SIZE] = {0};
 REG reg[32] = {0};
 // PC
 ULL PC = 0;
-
-// instruction
-char InstBuf[100] = "";
-
-IFID IF_ID, IF_ID_old;
-IDEX ID_EX, ID_EX_old;
-EXMEM EX_MEM, EX_MEM_old;
-MEMWB MEM_WB, MEM_WB_old;
-WBUP WB_UP, WB_UP_old;
-
-// instruction running number
-ULL inst_num = 0;
-
 ULL endPC = 0;
-
 int exit_flag = 0;
+// instruction string
+char InstBuf[100] = "";
+int InstCount = 0;
+int CycleCount = 0;
+float CPI = 0.0f;
+// transmission
+IFID IF_ID;
+IDEX ID_EX;
+EXMEM EX_MEM;
+MEMWB MEM_WB;
+WBIF WB_IF;
 
 // instruction sections
 static unsigned int opcode = 0;
@@ -34,15 +31,26 @@ static unsigned int imm5_11 = 0;
 static unsigned int imm0_5 = 0;
 static unsigned int imm0_4 = 0;
 
+// last ALU operation
+static LAST_ALU LastAlu;
+
 void setup()
 {
+    InstCount = 0;
+    CycleCount = 0;
+    CPI = 0.0f;
+    memset(InstBuf, 0, sizeof(InstBuf));
+    exit_flag = 0;
+
     for (int i = 0; i < 32; ++i)
         reg[i] = 0;
     memset(memory, 0, MEM_SIZE);
 
     load_memory();
 
-    PC = mainAddr;
+    WB_IF.PC = mainAddr;
+    WB_IF.Ctrl_IF_Branch = BRANCH_NO;
+
     endPC = mainAddr + mainSize - 3;
 
     reg[R_gp] = gp;
@@ -63,18 +71,16 @@ bool simulate_one_step()
 {
     if (PC == endPC)
         return true;
+
     // run
     IF();
-    IF_ID = IF_ID_old;
     ID();
-    ID_EX = ID_EX_old;
     EX();
-    EX_MEM = EX_MEM_old;
     MEM();
-    MEM_WB = MEM_WB_old;
     WB();
-    WB_UP = WB_UP_old;
-    UP();
+
+    // calculate CPI
+    CPI = (float)CycleCount / (float)InstCount;
 
     // update register
     reg[0] = 0;  // register zero should alwarys be 0
@@ -92,29 +98,58 @@ void ERROR(int line)
 
 void IF()
 {
-    // write IF_ID_old
-    unsigned int inst = READ_WORD(PC);
-    ULL NextPC;
-    if ((inst & 0x3) != 0x3)
+    // read WB_IF
+    ULL NextPC = WB_IF.PC;
+    REG ALUOut = WB_IF.ALU_out;
+    unsigned char Branch = WB_IF.Ctrl_IF_Branch;
+
+    unsigned int Inst = 0;
+    unsigned char InstSize = INSTSIZE_32;
+    ULL OrderedPC = 0;
+
+    // update PC
+    switch (Branch)
         {
-            IF_ID_old.Ctrl_ID_InstSize = INSTSIZE_16;
-            NextPC = PC + 2;
+            case BRANCH_NO:
+                {
+                    PC = NextPC;
+                }
+                break;
+            case BRANCH_YES:
+                {
+                    PC = ALUOut;
+                }
+                break;
+            default:
+                ERROR(__LINE__);
+        }
+
+    // fetch instructor
+    Inst = READ_WORD(PC);
+
+    if ((Inst & 0x3) != 0x3)
+        {
+            InstSize = INSTSIZE_16;
+            OrderedPC = PC + 2;
         }
     else
         {
-            IF_ID_old.Ctrl_ID_InstSize = INSTSIZE_32;
-            NextPC = PC + 4;
+            InstSize = INSTSIZE_32;
+            OrderedPC = PC + 4;
         }
 
-    IF_ID_old.inst = inst;
-    IF_ID_old.PC = NextPC;
+    // write IF_ID
+    IF_ID.Ctrl_ID_InstSize = InstSize;
+    IF_ID.Inst = Inst;
+    IF_ID.PC = OrderedPC;
 }
 
 void ID()
 {
-    // Read IF_ID
+    // read IF_ID
     ULL NextPC = IF_ID.PC;
-    unsigned int inst = IF_ID.inst;
+    unsigned int Inst = IF_ID.Inst;
+
     unsigned char EXTOp = EXTOP_SIGNED;
     unsigned int EXTBit = 0;
     unsigned int EXTSrc = 0;
@@ -122,29 +157,31 @@ void ID()
     unsigned char MemRead = MEMREAD_NO, MemWrite = MEMWRITE_NO;
     unsigned char RegWrite = REGWRITE_NO;
     unsigned char Branch = BRANCH_NO;
+
+    // indentify instructor
     if (IF_ID.Ctrl_ID_InstSize == INSTSIZE_16)
         {
-            opcode = GET_BITS(inst, 0, 1);
-            funct3 = GET_BITS(inst, 13, 15);
+            opcode = GET_BITS(Inst, 0, 1);
+            funct3 = GET_BITS(Inst, 13, 15);
             switch (opcode)
                 {
                     case OPC_00:
                         {
-                            rs1 = RVC_TO_R(GET_BITS(inst, 7, 9));
+                            rs1 = RVC_TO_R(GET_BITS(Inst, 7, 9));
                             switch (funct3)
                                 {
                                     case F3C_ADDI4SPN:
                                         {
-                                            rd = RVC_TO_R(GET_BITS(inst, 2, 4));
+                                            rd = RVC_TO_R(GET_BITS(Inst, 2, 4));
                                             rs1 = R_sp;
-                                            EXTSrc = (GET_BITS(inst, 7, 10) << 6) |
-                                                     (GET_BITS(inst, 11, 12) << 4) |
-                                                     (GET_BIT(inst, 5) << 3) |
-                                                     (GET_BIT(inst, 6) << 2);
+                                            EXTSrc = (GET_BITS(Inst, 7, 10) << 6) |
+                                                     (GET_BITS(Inst, 11, 12) << 4) |
+                                                     (GET_BIT(Inst, 5) << 3) |
+                                                     (GET_BIT(Inst, 6) << 2);
                                             EXTBit = 10;
                                             EXTOp = EXTOP_UNSIGED;
                                             ALUOp = ALUOP_ADD;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             RegWrite = REGWRITE_VALE;
 
                                             sprintf(InstBuf, "addi  %s, %s, %lld", R_NAME[rd],
@@ -154,14 +191,14 @@ void ID()
                                         break;
                                     case F3C_LW:
                                         {
-                                            rd = RVC_TO_R(GET_BITS(inst, 2, 4));
-                                            EXTSrc = (GET_BIT(inst, 5) << 6) |
-                                                     (GET_BITS(inst, 10, 12) << 3) |
-                                                     (GET_BIT(inst, 6) << 2);
+                                            rd = RVC_TO_R(GET_BITS(Inst, 2, 4));
+                                            EXTSrc = (GET_BIT(Inst, 5) << 6) |
+                                                     (GET_BITS(Inst, 10, 12) << 3) |
+                                                     (GET_BIT(Inst, 6) << 2);
                                             EXTBit = 7;
                                             EXTOp = EXTOP_UNSIGED;
                                             ALUOp = ALUOP_ADD;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             MemRead = MEMREAD_WORD;
                                             RegWrite = REGWRITE_VALM;
 
@@ -172,12 +209,12 @@ void ID()
                                         break;
                                     case F3C_LD:
                                         {
-                                            rd = RVC_TO_R(GET_BITS(inst, 2, 4));
-                                            EXTSrc = (GET_BITS(inst, 5, 6) << 6) |
-                                                     (GET_BITS(inst, 10, 12) << 3);
+                                            rd = RVC_TO_R(GET_BITS(Inst, 2, 4));
+                                            EXTSrc = (GET_BITS(Inst, 5, 6) << 6) |
+                                                     (GET_BITS(Inst, 10, 12) << 3);
                                             EXTBit = 8;
                                             EXTOp = EXTOP_UNSIGED;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             MemRead = MEMREAD_DWORD;
                                             RegWrite = REGWRITE_VALM;
 
@@ -188,14 +225,14 @@ void ID()
                                         break;
                                     case F3C_SW:
                                         {
-                                            rs2 = RVC_TO_R(GET_BITS(inst, 2, 4));
-                                            EXTSrc = (GET_BIT(inst, 5) << 6) |
-                                                     (GET_BITS(inst, 10, 12) << 3) |
-                                                     (GET_BIT(inst, 6) << 2);
+                                            rs2 = RVC_TO_R(GET_BITS(Inst, 2, 4));
+                                            EXTSrc = (GET_BIT(Inst, 5) << 6) |
+                                                     (GET_BITS(Inst, 10, 12) << 3) |
+                                                     (GET_BIT(Inst, 6) << 2);
                                             EXTBit = 7;
                                             EXTOp = EXTOP_UNSIGED;
                                             ALUOp = ALUOP_ADD;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             MemWrite = MEMWRITE_WORD;
 
                                             sprintf(InstBuf, "sw  %s, %lld(%s)", R_NAME[rs2],
@@ -205,13 +242,13 @@ void ID()
                                         break;
                                     case F3C_SD:
                                         {
-                                            rs2 = RVC_TO_R(GET_BITS(inst, 2, 4));
-                                            EXTSrc = (GET_BITS(inst, 5, 6) << 6) |
-                                                     (GET_BITS(inst, 10, 12) << 3);
+                                            rs2 = RVC_TO_R(GET_BITS(Inst, 2, 4));
+                                            EXTSrc = (GET_BITS(Inst, 5, 6) << 6) |
+                                                     (GET_BITS(Inst, 10, 12) << 3);
                                             EXTBit = 8;
                                             EXTOp = EXTOP_UNSIGED;
                                             ALUOp = ALUOP_ADD;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             MemWrite = MEMWRITE_WORD;
 
                                             sprintf(InstBuf, "sd  %s, %lld(%s)", R_NAME[rs2],
@@ -230,13 +267,13 @@ void ID()
                                 {
                                     case F3C_ADDI:
                                         {
-                                            rd = GET_BITS(inst, 7, 11);
+                                            rd = GET_BITS(Inst, 7, 11);
                                             rs1 = rd;
                                             EXTSrc =
-                                                (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
+                                                (GET_BIT(Inst, 12) << 5) | (GET_BITS(Inst, 2, 6));
                                             EXTBit = 6;
                                             ALUOp = ALUOP_ADD;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             RegWrite = REGWRITE_VALE;
 
                                             sprintf(InstBuf, "addi  %s, %s, %lld", R_NAME[rd],
@@ -245,13 +282,13 @@ void ID()
                                         break;
                                     case F3C_ADDIW:
                                         {
-                                            rd = GET_BITS(inst, 7, 11);
+                                            rd = GET_BITS(Inst, 7, 11);
                                             rs1 = rd;
                                             EXTSrc =
-                                                (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
+                                                (GET_BIT(Inst, 12) << 5) | (GET_BITS(Inst, 2, 6));
                                             EXTBit = 6;
                                             ALUOp = ALUOP_ADDW;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             RegWrite = REGWRITE_VALE;
 
                                             sprintf(InstBuf, "addiw  %s, %s, %lld", R_NAME[rd],
@@ -259,13 +296,13 @@ void ID()
                                         }
                                     case F3C_LI:
                                         {
-                                            rd = GET_BITS(inst, 7, 11);
+                                            rd = GET_BITS(Inst, 7, 11);
                                             HINT(rd == 0);
                                             rs1 = R_zero;
                                             EXTSrc =
-                                                (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
+                                                (GET_BIT(Inst, 12) << 5) | (GET_BITS(Inst, 2, 6));
                                             EXTBit = 6;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             ALUOp = ALUOP_ADD;
                                             RegWrite = REGWRITE_VALE;
 
@@ -275,15 +312,15 @@ void ID()
                                         break;
                                     case F3C_LUI:
                                         {
-                                            rd = GET_BITS(inst, 7, 11);
+                                            rd = GET_BITS(Inst, 7, 11);
                                             HINT(rd == 0);
                                             if (rd != R_sp)  // C.LUI
                                                 {
                                                     rs1 = R_zero;
-                                                    EXTSrc = (GET_BIT(inst, 12) << 17) |
-                                                             (GET_BITS(inst, 2, 6) << 12);
+                                                    EXTSrc = (GET_BIT(Inst, 12) << 17) |
+                                                             (GET_BITS(Inst, 2, 6) << 12);
                                                     EXTBit = 18;
-                                                    ALUSrc = ALUSRC_RS_IMM;
+                                                    ALUSrc = ALUSRC_RS1_IMM;
                                                     ALUOp = ALUOP_ADD;
                                                     RegWrite = REGWRITE_VALE;
 
@@ -293,14 +330,14 @@ void ID()
                                             else  // C.ADDI16SPN
                                                 {
                                                     rs1 = rd;
-                                                    EXTSrc = (GET_BIT(inst, 12) << 9) |
-                                                             (GET_BITS(inst, 3, 4) << 7) |
-                                                             (GET_BIT(inst, 5) << 6) |
-                                                             (GET_BIT(inst, 2) << 5) |
-                                                             (GET_BIT(inst, 6) << 4);
+                                                    EXTSrc = (GET_BIT(Inst, 12) << 9) |
+                                                             (GET_BITS(Inst, 3, 4) << 7) |
+                                                             (GET_BIT(Inst, 5) << 6) |
+                                                             (GET_BIT(Inst, 2) << 5) |
+                                                             (GET_BIT(Inst, 6) << 4);
                                                     EXTBit = 10;
                                                     ALUOp = ALUOP_ADD;
-                                                    ALUSrc = ALUSRC_RS_IMM;
+                                                    ALUSrc = ALUSRC_RS1_IMM;
                                                     RegWrite = REGWRITE_VALE;
 
                                                     sprintf(InstBuf, "addi  %s, %s, %lld",
@@ -311,18 +348,18 @@ void ID()
                                         break;
                                     case F3C_ARIT:
                                         {
-                                            unsigned int funct2_1 = GET_BITS(inst, 10, 11);
+                                            unsigned int funct2_1 = GET_BITS(Inst, 10, 11);
                                             switch (funct2_1)
                                                 {
                                                     case F2C_1_SRLI:
                                                         {
-                                                            rd = RVC_TO_R(GET_BITS(inst, 7, 9));
+                                                            rd = RVC_TO_R(GET_BITS(Inst, 7, 9));
                                                             rs1 = rd;
-                                                            EXTSrc = (GET_BIT(inst, 12) << 5) |
-                                                                     (GET_BITS(inst, 2, 6));
+                                                            EXTSrc = (GET_BIT(Inst, 12) << 5) |
+                                                                     (GET_BITS(Inst, 2, 6));
                                                             EXTBit = 6;
                                                             ALUOp = ALUOP_SRL;
-                                                            ALUSrc = ALUSRC_RS_IMM;
+                                                            ALUSrc = ALUSRC_RS1_IMM;
                                                             RegWrite = REGWRITE_VALE;
 
                                                             sprintf(
@@ -333,13 +370,13 @@ void ID()
                                                         break;
                                                     case F2C_1_SRAI:
                                                         {
-                                                            rd = RVC_TO_R(GET_BITS(inst, 7, 9));
+                                                            rd = RVC_TO_R(GET_BITS(Inst, 7, 9));
                                                             rs1 = rd;
-                                                            EXTSrc = (GET_BIT(inst, 12) << 5) |
-                                                                     (GET_BITS(inst, 2, 6));
+                                                            EXTSrc = (GET_BIT(Inst, 12) << 5) |
+                                                                     (GET_BITS(Inst, 2, 6));
                                                             EXTBit = 6;
                                                             ALUOp = ALUOP_SRA;
-                                                            ALUSrc = ALUSRC_RS_IMM;
+                                                            ALUSrc = ALUSRC_RS1_IMM;
                                                             RegWrite = REGWRITE_VALE;
 
                                                             sprintf(
@@ -350,13 +387,13 @@ void ID()
                                                         break;
                                                     case F2C_1_ANDI:
                                                         {
-                                                            rd = RVC_TO_R(GET_BITS(inst, 7, 9));
+                                                            rd = RVC_TO_R(GET_BITS(Inst, 7, 9));
                                                             rs1 = rd;
-                                                            EXTSrc = (GET_BIT(inst, 12) << 5) |
-                                                                     (GET_BITS(inst, 2, 6));
+                                                            EXTSrc = (GET_BIT(Inst, 12) << 5) |
+                                                                     (GET_BITS(Inst, 2, 6));
                                                             EXTBit = 6;
                                                             ALUOp = ALUOP_AND;
-                                                            ALUSrc = ALUSRC_RS_IMM;
+                                                            ALUSrc = ALUSRC_RS1_IMM;
                                                             RegWrite = REGWRITE_VALE;
 
                                                             sprintf(
@@ -367,14 +404,14 @@ void ID()
                                                         break;
                                                     case F2C_1_REG:
                                                         {
-                                                            unsigned int funct1 = GET_BIT(inst, 12);
+                                                            unsigned int funct1 = GET_BIT(Inst, 12);
                                                             unsigned int funct2_2 =
-                                                                GET_BITS(inst, 5, 6);
+                                                                GET_BITS(Inst, 5, 6);
 
-                                                            rd = RVC_TO_R(GET_BITS(inst, 7, 9));
+                                                            rd = RVC_TO_R(GET_BITS(Inst, 7, 9));
                                                             rs1 = rd;
-                                                            rs2 = RVC_TO_R(GET_BITS(inst, 2, 4));
-                                                            ALUSrc = ALUSRC_RS_RT;
+                                                            rs2 = RVC_TO_R(GET_BITS(Inst, 2, 4));
+                                                            ALUSrc = ALUSRC_RS1_RS2;
                                                             RegWrite = REGWRITE_VALE;
                                                             switch (funct1)
                                                                 {
@@ -552,12 +589,12 @@ void ID()
                                     case F3C_J:
                                         {
                                             EXTSrc =
-                                                (GET_BIT(inst, 12) << 11) |
-                                                (GET_BIT(inst, 8) << 10) |
-                                                (GET_BITS(inst, 9, 10) << 8) |
-                                                (GET_BIT(inst, 6) << 7) | (GET_BIT(inst, 7) << 6) |
-                                                (GET_BIT(inst, 2) << 5) | (GET_BIT(inst, 11) << 4) |
-                                                (GET_BITS(inst, 3, 5) << 1);
+                                                (GET_BIT(Inst, 12) << 11) |
+                                                (GET_BIT(Inst, 8) << 10) |
+                                                (GET_BITS(Inst, 9, 10) << 8) |
+                                                (GET_BIT(Inst, 6) << 7) | (GET_BIT(Inst, 7) << 6) |
+                                                (GET_BIT(Inst, 2) << 5) | (GET_BIT(Inst, 11) << 4) |
+                                                (GET_BITS(Inst, 3, 5) << 1);
                                             EXTBit = 12;
                                             ALUSrc = ALUSRC_PC_IMM;
                                             ALUOp = ALUOP_ADD;
@@ -569,13 +606,13 @@ void ID()
                                         break;
                                     case F3C_BEQZ:
                                         {
-                                            rs1 = RVC_TO_R(GET_BITS(inst, 7, 9));
+                                            rs1 = RVC_TO_R(GET_BITS(Inst, 7, 9));
                                             rs2 = R_zero;
-                                            EXTSrc = (GET_BIT(inst, 12) << 8) |
-                                                     (GET_BITS(inst, 5, 6) << 6) |
-                                                     (GET_BIT(inst, 2) << 5) |
-                                                     (GET_BITS(inst, 10, 11) << 3) |
-                                                     (GET_BITS(inst, 3, 4) << 1);
+                                            EXTSrc = (GET_BIT(Inst, 12) << 8) |
+                                                     (GET_BITS(Inst, 5, 6) << 6) |
+                                                     (GET_BIT(Inst, 2) << 5) |
+                                                     (GET_BITS(Inst, 10, 11) << 3) |
+                                                     (GET_BITS(Inst, 3, 4) << 1);
                                             EXTBit = 9;
                                             BranchCmp = BRANCHCMP_EQ;
                                             ALUSrc = ALUSRC_PC_IMM;
@@ -588,13 +625,13 @@ void ID()
                                         break;
                                     case F3C_BENZ:
                                         {
-                                            rs1 = RVC_TO_R(GET_BITS(inst, 7, 9));
+                                            rs1 = RVC_TO_R(GET_BITS(Inst, 7, 9));
                                             rs2 = R_zero;
-                                            EXTSrc = (GET_BIT(inst, 12) << 8) |
-                                                     (GET_BITS(inst, 5, 6) << 6) |
-                                                     (GET_BIT(inst, 2) << 5) |
-                                                     (GET_BITS(inst, 10, 11) << 3) |
-                                                     (GET_BITS(inst, 3, 4) << 1);
+                                            EXTSrc = (GET_BIT(Inst, 12) << 8) |
+                                                     (GET_BITS(Inst, 5, 6) << 6) |
+                                                     (GET_BIT(Inst, 2) << 5) |
+                                                     (GET_BITS(Inst, 10, 11) << 3) |
+                                                     (GET_BITS(Inst, 3, 4) << 1);
                                             EXTBit = 9;
                                             BranchCmp = BRANCHCMP_NE;
                                             ALUSrc = ALUSRC_PC_IMM;
@@ -616,12 +653,12 @@ void ID()
                                 {
                                     case F3C_SLLI:
                                         {
-                                            rd = GET_BITS(inst, 7, 11);
+                                            rd = GET_BITS(Inst, 7, 11);
                                             rs1 = rd;
                                             EXTSrc =
-                                                (GET_BIT(inst, 12) << 5) | (GET_BITS(inst, 2, 6));
+                                                (GET_BIT(Inst, 12) << 5) | (GET_BITS(Inst, 2, 6));
                                             EXTBit = 6;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             ALUOp = ALUOP_SLL;
                                             RegWrite = REGWRITE_VALE;
 
@@ -631,14 +668,14 @@ void ID()
                                         break;
                                     case F3C_LWSP:
                                         {
-                                            rd = GET_BITS(inst, 7, 11);
+                                            rd = GET_BITS(Inst, 7, 11);
                                             rs1 = R_sp;
-                                            EXTSrc = (GET_BITS(inst, 2, 3) << 6) |
-                                                     (GET_BIT(inst, 12) << 5) |
-                                                     (GET_BITS(inst, 4, 6) << 2);
+                                            EXTSrc = (GET_BITS(Inst, 2, 3) << 6) |
+                                                     (GET_BIT(Inst, 12) << 5) |
+                                                     (GET_BITS(Inst, 4, 6) << 2);
                                             EXTBit = 8;
                                             EXTOp = EXTOP_UNSIGED;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             ALUOp = ALUOP_ADD;
                                             MemRead = MEMREAD_WORD;
                                             RegWrite = REGWRITE_VALM;
@@ -650,14 +687,14 @@ void ID()
                                         break;
                                     case F3C_LDSP:
                                         {
-                                            rd = GET_BITS(inst, 7, 11);
+                                            rd = GET_BITS(Inst, 7, 11);
                                             rs1 = R_sp;
-                                            EXTSrc = (GET_BITS(inst, 2, 4) << 6) |
-                                                     (GET_BIT(inst, 12) << 5) |
-                                                     (GET_BITS(inst, 5, 6) << 3);
+                                            EXTSrc = (GET_BITS(Inst, 2, 4) << 6) |
+                                                     (GET_BIT(Inst, 12) << 5) |
+                                                     (GET_BITS(Inst, 5, 6) << 3);
                                             EXTBit = 9;
                                             EXTOp = EXTOP_UNSIGED;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             ALUOp = ALUOP_ADD;
                                             MemRead = MEMREAD_DWORD;
                                             RegWrite = REGWRITE_VALM;
@@ -669,16 +706,16 @@ void ID()
                                         break;
                                     case F3C_JR:
                                         {
-                                            unsigned int funct1 = GET_BIT(inst, 12);
-                                            rs2 = GET_BITS(inst, 2, 6);
+                                            unsigned int funct1 = GET_BIT(Inst, 12);
+                                            rs2 = GET_BITS(Inst, 2, 6);
                                             switch (funct1)
                                                 {
                                                     case F1C_JRMV:
                                                         {
                                                             if (rs2 == 0)  // C.JR
                                                                 {
-                                                                    rs1 = GET_BITS(inst, 7, 11);
-                                                                    ALUSrc = ALUSRC_RS_IMM;
+                                                                    rs1 = GET_BITS(Inst, 7, 11);
+                                                                    ALUSrc = ALUSRC_RS1_IMM;
                                                                     ALUOp = ALUOP_ADD;
                                                                     Branch = BRANCH_YES;
 
@@ -689,9 +726,9 @@ void ID()
                                                                 }
                                                             else  // C.MV
                                                                 {
-                                                                    rd = GET_BITS(inst, 7, 11);
+                                                                    rd = GET_BITS(Inst, 7, 11);
                                                                     rs1 = R_zero;
-                                                                    ALUSrc = ALUSRC_RS_RT;
+                                                                    ALUSrc = ALUSRC_RS1_RS2;
                                                                     ALUOp = ALUOP_ADD;
                                                                     RegWrite = REGWRITE_VALE;
 
@@ -706,8 +743,8 @@ void ID()
                                                             if (rs2 == 0)  // C.JALR
                                                                 {
                                                                     rd = R_ra;
-                                                                    rs1 = GET_BITS(inst, 7, 11);
-                                                                    ALUSrc = ALUSRC_RS_IMM;
+                                                                    rs1 = GET_BITS(Inst, 7, 11);
+                                                                    ALUSrc = ALUSRC_RS1_IMM;
                                                                     ALUOp = ALUOP_ADD;
                                                                     RegWrite = REGWRITE_VALP;
                                                                     Branch = BRANCH_YES;
@@ -719,9 +756,9 @@ void ID()
                                                                 }
                                                             else  // C.ADD
                                                                 {
-                                                                    rd = GET_BITS(inst, 7, 11);
+                                                                    rd = GET_BITS(Inst, 7, 11);
                                                                     rs1 = rd;
-                                                                    ALUSrc = ALUSRC_RS_RT;
+                                                                    ALUSrc = ALUSRC_RS1_RS2;
                                                                     ALUOp = ALUOP_ADD;
                                                                     RegWrite = REGWRITE_VALE;
 
@@ -740,12 +777,12 @@ void ID()
                                     case F3C_SWSP:
                                         {
                                             rs1 = R_sp;
-                                            rs2 = GET_BITS(inst, 2, 6);
-                                            EXTSrc = (GET_BITS(inst, 7, 8) << 6) |
-                                                     (GET_BITS(inst, 9, 12) << 2);
+                                            rs2 = GET_BITS(Inst, 2, 6);
+                                            EXTSrc = (GET_BITS(Inst, 7, 8) << 6) |
+                                                     (GET_BITS(Inst, 9, 12) << 2);
                                             EXTBit = 8;
                                             EXTOp = EXTOP_UNSIGED;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             ALUOp = ALUOP_ADD;
                                             MemWrite = MEMWRITE_WORD;
 
@@ -757,12 +794,12 @@ void ID()
                                     case F3C_SDSP:
                                         {
                                             rs1 = R_sp;
-                                            rs2 = GET_BITS(inst, 2, 6);
-                                            EXTSrc = (GET_BITS(inst, 7, 9) << 6) |
-                                                     (GET_BITS(inst, 10, 12) << 3);
+                                            rs2 = GET_BITS(Inst, 2, 6);
+                                            EXTSrc = (GET_BITS(Inst, 7, 9) << 6) |
+                                                     (GET_BITS(Inst, 10, 12) << 3);
                                             EXTBit = 9;
                                             EXTOp = EXTOP_UNSIGED;
-                                            ALUSrc = ALUSRC_RS_IMM;
+                                            ALUSrc = ALUSRC_RS1_IMM;
                                             ALUOp = ALUOP_ADD;
                                             MemWrite = MEMWRITE_DWORD;
 
@@ -782,22 +819,22 @@ void ID()
         }
     else if (IF_ID.Ctrl_ID_InstSize == INSTSIZE_32)
         {
-            opcode = GET_BITS(inst, 0, 6);
+            opcode = GET_BITS(Inst, 0, 6);
             switch (opcode)
                 {
                     case OP_ARIT_REG:
                         {
-                            funct3 = GET_BITS(inst, 12, 14);
-                            rd = GET_BITS(inst, 7, 11);
-                            rs1 = GET_BITS(inst, 15, 19);
-                            rs2 = GET_BITS(inst, 20, 24);
-                            ALUSrc = ALUSRC_RS_RT;
+                            funct3 = GET_BITS(Inst, 12, 14);
+                            rd = GET_BITS(Inst, 7, 11);
+                            rs1 = GET_BITS(Inst, 15, 19);
+                            rs2 = GET_BITS(Inst, 20, 24);
+                            ALUSrc = ALUSRC_RS1_RS2;
                             RegWrite = REGWRITE_VALE;
                             switch (funct3)
                                 {
                                     case F3_ADD:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_ADD:
@@ -835,7 +872,7 @@ void ID()
                                         break;
                                     case F3_SLL:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_SLL:
@@ -864,7 +901,7 @@ void ID()
                                         break;
                                     case F3_SLT:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_SLT:
@@ -892,7 +929,7 @@ void ID()
                                         break;
                                     case F3_SLTU:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_SLTU:
@@ -920,7 +957,7 @@ void ID()
                                         break;
                                     case F3_XOR:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_XOR:
@@ -949,7 +986,7 @@ void ID()
                                         break;
                                     case F3_SRL:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_SRL:
@@ -987,7 +1024,7 @@ void ID()
                                         break;
                                     case F3_OR:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_OR:
@@ -1016,7 +1053,7 @@ void ID()
                                         break;
                                     case F3_AND:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_AND:
@@ -1050,17 +1087,17 @@ void ID()
                         break;
                     case OP_ARIT_REG_W:
                         {
-                            funct3 = GET_BITS(inst, 12, 14);
-                            rd = GET_BITS(inst, 7, 11);
-                            rs1 = GET_BITS(inst, 15, 19);
-                            rs2 = GET_BITS(inst, 20, 24);
-                            ALUSrc = ALUSRC_RS_RT;
+                            funct3 = GET_BITS(Inst, 12, 14);
+                            rd = GET_BITS(Inst, 7, 11);
+                            rs1 = GET_BITS(Inst, 15, 19);
+                            rs2 = GET_BITS(Inst, 20, 24);
+                            ALUSrc = ALUSRC_RS1_RS2;
                             RegWrite = REGWRITE_VALE;
                             switch (funct3)
                                 {
                                     case F3_ADD:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_ADD:
@@ -1098,7 +1135,7 @@ void ID()
                                         break;
                                     case F3_SLL:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_SLL:
@@ -1118,7 +1155,7 @@ void ID()
                                         break;
                                     case F3_XOR:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_DIV:
@@ -1138,7 +1175,7 @@ void ID()
                                         break;
                                     case F3_SRL:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_SRL:
@@ -1175,7 +1212,7 @@ void ID()
                                         break;
                                     case F3_OR:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_REM:
@@ -1195,7 +1232,7 @@ void ID()
                                         break;
                                     case F3_AND:
                                         {
-                                            funct7 = GET_BITS(inst, 25, 31);
+                                            funct7 = GET_BITS(Inst, 25, 31);
                                             switch (funct7)
                                                 {
                                                     case F7_REMU:
@@ -1220,16 +1257,16 @@ void ID()
                         break;
                     case OP_ARIT_IMM:
                         {
-                            funct3 = GET_BITS(inst, 12, 14);
-                            rd = GET_BITS(inst, 7, 11);
-                            rs1 = GET_BITS(inst, 15, 19);
-                            ALUSrc = ALUSRC_RS_IMM;
+                            funct3 = GET_BITS(Inst, 12, 14);
+                            rd = GET_BITS(Inst, 7, 11);
+                            rs1 = GET_BITS(Inst, 15, 19);
+                            ALUSrc = ALUSRC_RS1_IMM;
                             RegWrite = REGWRITE_VALE;
                             switch (funct3)
                                 {
                                     case F3_ADD:
                                         {
-                                            imm0_11 = GET_BITS(inst, 20, 31);
+                                            imm0_11 = GET_BITS(Inst, 20, 31);
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_ADD;
@@ -1240,11 +1277,11 @@ void ID()
                                         break;
                                     case F3_SLL:
                                         {
-                                            imm6_11 = GET_BITS(inst, 26, 31);
+                                            imm6_11 = GET_BITS(Inst, 26, 31);
                                             if (imm6_11 == IMM6_11_SLLI)
                                                 {
-                                                    imm0_5 = (GET_BIT(inst, 25) << 5) |
-                                                             (GET_BITS(inst, 20, 24));
+                                                    imm0_5 = (GET_BIT(Inst, 25) << 5) |
+                                                             (GET_BITS(Inst, 20, 24));
                                                     EXTSrc = imm0_5;
                                                     EXTBit = 6;
                                                     ALUOp = ALUOP_SLL;
@@ -1261,7 +1298,7 @@ void ID()
                                         break;
                                     case F3_SLT:
                                         {
-                                            imm0_11 = GET_BITS(inst, 20, 31);
+                                            imm0_11 = GET_BITS(Inst, 20, 31);
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_SLT;
@@ -1272,7 +1309,7 @@ void ID()
                                         break;
                                     case F3_SLTU:
                                         {
-                                            imm0_11 = GET_BITS(inst, 20, 31);
+                                            imm0_11 = GET_BITS(Inst, 20, 31);
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_SLTU;
@@ -1283,7 +1320,7 @@ void ID()
                                         break;
                                     case F3_XOR:
                                         {
-                                            imm0_11 = GET_BITS(inst, 20, 31);
+                                            imm0_11 = GET_BITS(Inst, 20, 31);
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_XOR;
@@ -1294,13 +1331,13 @@ void ID()
                                         break;
                                     case F3_SRL:
                                         {
-                                            imm6_11 = GET_BITS(inst, 26, 31);
+                                            imm6_11 = GET_BITS(Inst, 26, 31);
                                             switch (imm6_11)
                                                 {
                                                     case IMM6_11_SRLI:
                                                         {
-                                                            imm0_5 = (GET_BIT(inst, 25) << 5) |
-                                                                     (GET_BITS(inst, 20, 24));
+                                                            imm0_5 = (GET_BIT(Inst, 25) << 5) |
+                                                                     (GET_BITS(Inst, 20, 24));
                                                             EXTSrc = imm0_5;
                                                             EXTBit = 6;
                                                             ALUOp = ALUOP_SRL;
@@ -1313,8 +1350,8 @@ void ID()
                                                         break;
                                                     case IMM6_11_SRAI:
                                                         {
-                                                            imm0_5 = (GET_BIT(inst, 25) << 5) |
-                                                                     (GET_BITS(inst, 20, 24));
+                                                            imm0_5 = (GET_BIT(Inst, 25) << 5) |
+                                                                     (GET_BITS(Inst, 20, 24));
                                                             EXTSrc = imm0_5;
                                                             EXTBit = 6;
                                                             ALUOp = ALUOP_SRA;
@@ -1333,7 +1370,7 @@ void ID()
                                         break;
                                     case F3_OR:
                                         {
-                                            imm0_11 = GET_BITS(inst, 20, 31);
+                                            imm0_11 = GET_BITS(Inst, 20, 31);
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_OR;
@@ -1344,7 +1381,7 @@ void ID()
                                         break;
                                     case F3_AND:
                                         {
-                                            imm0_11 = GET_BITS(inst, 20, 31);
+                                            imm0_11 = GET_BITS(Inst, 20, 31);
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_AND;
@@ -1361,16 +1398,16 @@ void ID()
                         break;
                     case OP_ARIT_IMM_W:
                         {
-                            funct3 = GET_BITS(inst, 12, 14);
-                            rd = GET_BITS(inst, 7, 11);
-                            rs1 = GET_BITS(inst, 15, 19);
-                            ALUSrc = ALUSRC_RS_IMM;
+                            funct3 = GET_BITS(Inst, 12, 14);
+                            rd = GET_BITS(Inst, 7, 11);
+                            rs1 = GET_BITS(Inst, 15, 19);
+                            ALUSrc = ALUSRC_RS1_IMM;
                             RegWrite = REGWRITE_VALE;
                             switch (funct3)
                                 {
                                     case F3_ADD:
                                         {
-                                            imm0_11 = GET_BITS(inst, 20, 31);
+                                            imm0_11 = GET_BITS(Inst, 20, 31);
                                             EXTSrc = imm0_11;
                                             EXTBit = 12;
                                             ALUOp = ALUOP_ADDW;
@@ -1381,11 +1418,11 @@ void ID()
                                         break;
                                     case F3_SLL:
                                         {
-                                            imm6_11 = GET_BITS(inst, 26, 31);
+                                            imm6_11 = GET_BITS(Inst, 26, 31);
                                             if (imm6_11 == IMM6_11_SLLI)
                                                 {
-                                                    imm0_5 = (GET_BIT(inst, 25) << 5) |
-                                                             (GET_BITS(inst, 20, 24));
+                                                    imm0_5 = (GET_BIT(Inst, 25) << 5) |
+                                                             (GET_BITS(Inst, 20, 24));
                                                     EXTSrc = imm0_5;
                                                     EXTBit = 6;
                                                     ALUOp = ALUOP_SLLW;
@@ -1402,13 +1439,13 @@ void ID()
                                         break;
                                     case F3_SRL:
                                         {
-                                            imm6_11 = GET_BITS(inst, 26, 31);
+                                            imm6_11 = GET_BITS(Inst, 26, 31);
                                             switch (imm6_11)
                                                 {
                                                     case IMM6_11_SRLI:
                                                         {
-                                                            imm0_5 = (GET_BIT(inst, 25) << 5) |
-                                                                     (GET_BITS(inst, 20, 24));
+                                                            imm0_5 = (GET_BIT(Inst, 25) << 5) |
+                                                                     (GET_BITS(Inst, 20, 24));
                                                             EXTSrc = imm0_5;
                                                             EXTBit = 6;
                                                             ALUOp = ALUOP_SRLW;
@@ -1421,8 +1458,8 @@ void ID()
                                                         break;
                                                     case IMM6_11_SRAI:
                                                         {
-                                                            imm0_5 = (GET_BIT(inst, 25) << 5) |
-                                                                     (GET_BITS(inst, 20, 24));
+                                                            imm0_5 = (GET_BIT(Inst, 25) << 5) |
+                                                                     (GET_BITS(Inst, 20, 24));
                                                             EXTSrc = imm0_5;
                                                             EXTBit = 6;
                                                             ALUOp = ALUOP_SRAW;
@@ -1447,14 +1484,14 @@ void ID()
                         break;
                     case OP_LOAD:
                         {
-                            funct3 = GET_BITS(inst, 12, 14);
-                            rd = GET_BITS(inst, 7, 11);
-                            rs1 = GET_BITS(inst, 15, 19);
-                            imm0_11 = GET_BITS(inst, 20, 31);
+                            funct3 = GET_BITS(Inst, 12, 14);
+                            rd = GET_BITS(Inst, 7, 11);
+                            rs1 = GET_BITS(Inst, 15, 19);
+                            imm0_11 = GET_BITS(Inst, 20, 31);
                             EXTSrc = imm0_11;
                             EXTBit = 12;
                             ALUOp = ALUOP_ADD;
-                            ALUSrc = ALUSRC_RS_IMM;
+                            ALUSrc = ALUSRC_RS1_IMM;
                             RegWrite = REGWRITE_VALM;
                             switch (funct3)
                                 {
@@ -1522,15 +1559,15 @@ void ID()
                         break;
                     case OP_JALR:
                         {
-                            funct3 = GET_BITS(inst, 12, 14);
+                            funct3 = GET_BITS(Inst, 12, 14);
                             if (funct3 == F3_JALR)
                                 {
-                                    rd = GET_BITS(inst, 7, 11);
-                                    rs1 = GET_BITS(inst, 15, 19);
-                                    imm0_11 = GET_BITS(inst, 20, 31);
+                                    rd = GET_BITS(Inst, 7, 11);
+                                    rs1 = GET_BITS(Inst, 15, 19);
+                                    imm0_11 = GET_BITS(Inst, 20, 31);
                                     EXTSrc = imm0_11;
                                     EXTBit = 12;
-                                    ALUSrc = ALUSRC_RS_IMM;
+                                    ALUSrc = ALUSRC_RS1_IMM;
                                     ALUOp = ALUOP_ADD;
                                     Branch = BRANCH_YES;
                                     RegWrite = REGWRITE_VALP;
@@ -1551,14 +1588,14 @@ void ID()
                         break;
                     case OP_STORE:
                         {
-                            funct3 = GET_BITS(inst, 12, 14);
-                            rs1 = GET_BITS(inst, 15, 19);
-                            rs2 = GET_BITS(inst, 20, 24);
-                            imm0_4 = GET_BITS(inst, 7, 11);
-                            imm5_11 = GET_BITS(inst, 25, 31);
+                            funct3 = GET_BITS(Inst, 12, 14);
+                            rs1 = GET_BITS(Inst, 15, 19);
+                            rs2 = GET_BITS(Inst, 20, 24);
+                            imm0_4 = GET_BITS(Inst, 7, 11);
+                            imm5_11 = GET_BITS(Inst, 25, 31);
                             EXTSrc = (imm5_11 << 5) | imm0_4;
                             EXTBit = 12;
-                            ALUSrc = ALUSRC_RS_IMM;
+                            ALUSrc = ALUSRC_RS1_IMM;
                             ALUOp = ALUOP_ADD;
 
                             switch (funct3)
@@ -1603,11 +1640,11 @@ void ID()
                         break;
                     case OP_BRANCH:
                         {
-                            funct3 = GET_BITS(inst, 12, 14);
-                            rs1 = GET_BITS(inst, 15, 19);
-                            rs2 = GET_BITS(inst, 20, 24);
-                            EXTSrc = (GET_BIT(inst, 31) << 12) | (GET_BIT(inst, 7) << 11) |
-                                     (GET_BITS(inst, 25, 30) << 5) | (GET_BITS(inst, 8, 11) << 1);
+                            funct3 = GET_BITS(Inst, 12, 14);
+                            rs1 = GET_BITS(Inst, 15, 19);
+                            rs2 = GET_BITS(Inst, 20, 24);
+                            EXTSrc = (GET_BIT(Inst, 31) << 12) | (GET_BIT(Inst, 7) << 11) |
+                                     (GET_BITS(Inst, 25, 30) << 5) | (GET_BITS(Inst, 8, 11) << 1);
                             EXTBit = 13;
                             ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
@@ -1675,8 +1712,8 @@ void ID()
                         break;
                     case OP_AUIPC:
                         {
-                            rd = GET_BITS(inst, 7, 11);
-                            imm12_31 = GET_BITS(inst, 12, 31);
+                            rd = GET_BITS(Inst, 7, 11);
+                            imm12_31 = GET_BITS(Inst, 12, 31);
                             EXTSrc = (imm12_31) << 12;
                             EXTBit = 32;
                             ALUSrc = ALUSRC_PC_IMM;
@@ -1688,12 +1725,12 @@ void ID()
                         break;
                     case OP_LUI:
                         {
-                            rd = GET_BITS(inst, 7, 11);
+                            rd = GET_BITS(Inst, 7, 11);
                             rs1 = R_zero;
-                            imm12_31 = GET_BITS(inst, 12, 31);
+                            imm12_31 = GET_BITS(Inst, 12, 31);
                             EXTSrc = ((imm12_31) << 12);
                             EXTBit = 32;
-                            ALUSrc = ALUSRC_RS_IMM;
+                            ALUSrc = ALUSRC_RS1_IMM;
                             ALUOp = ALUOP_ADD;
                             RegWrite = REGWRITE_VALE;
 
@@ -1702,9 +1739,9 @@ void ID()
                         break;
                     case OP_JAL:
                         {
-                            rd = GET_BITS(inst, 7, 11);
-                            EXTSrc = (GET_BIT(inst, 31) << 20) | (GET_BITS(inst, 12, 19) << 12) |
-                                     (GET_BIT(inst, 20) << 11) | (GET_BITS(inst, 21, 30) << 1);
+                            rd = GET_BITS(Inst, 7, 11);
+                            EXTSrc = (GET_BIT(Inst, 31) << 20) | (GET_BITS(Inst, 12, 19) << 12) |
+                                     (GET_BIT(Inst, 20) << 11) | (GET_BITS(Inst, 21, 30) << 1);
                             EXTBit = 21;
                             ALUSrc = ALUSRC_PC_IMM;
                             ALUOp = ALUOP_ADD;
@@ -1721,19 +1758,19 @@ void ID()
                 }
         }
 
-    // write ID_EX_old
+    // write ID_EX
     if (EXTBit != 0)
         {
             switch (EXTOp)
                 {
                     case EXTOP_SIGNED:
                         {
-                            ID_EX_old.Imm = EXT_SIGNED_DWORD(EXTSrc, EXTBit);
+                            ID_EX.Imm = EXT_SIGNED_DWORD(EXTSrc, EXTBit);
                         }
                         break;
                     case EXTOP_UNSIGED:
                         {
-                            ID_EX_old.Imm = EXT_UNSIGNED_DWORD(EXTSrc, EXTBit);
+                            ID_EX.Imm = EXT_UNSIGNED_DWORD(EXTSrc, EXTBit);
                         }
                         break;
                     default:
@@ -1741,21 +1778,21 @@ void ID()
                 }
         }
     else
-        ID_EX_old.Imm = EXTSrc;
+        ID_EX.Imm = EXTSrc;
 
-    ID_EX_old.rd = rd;
-    ID_EX_old.PC = NextPC;
+    ID_EX.rd = rd;
+    ID_EX.PC = NextPC;
 
-    ID_EX_old.Reg_rs = reg[rs1];
-    ID_EX_old.Reg_rt = reg[rs2];
+    ID_EX.Reg_rs1 = reg[rs1];
+    ID_EX.Reg_rs2 = reg[rs2];
 
-    ID_EX_old.Ctrl_EX_BranchCmp = BranchCmp;
-    ID_EX_old.Ctrl_EX_ALUSrc = ALUSrc;
-    ID_EX_old.Ctrl_EX_ALUOp = ALUOp;
-    ID_EX_old.Ctrl_M_MemWrite = MemWrite;
-    ID_EX_old.Ctrl_M_MemRead = MemRead;
-    ID_EX_old.Ctrl_WB_RegWrite = RegWrite;
-    ID_EX_old.Ctrl_UP_Branch = Branch;
+    ID_EX.Ctrl_EX_BranchCmp = BranchCmp;
+    ID_EX.Ctrl_EX_ALUSrc = ALUSrc;
+    ID_EX.Ctrl_EX_ALUOp = ALUOp;
+    ID_EX.Ctrl_MEM_MemWrite = MemWrite;
+    ID_EX.Ctrl_MEM_MemRead = MemRead;
+    ID_EX.Ctrl_WB_RegWrite = RegWrite;
+    ID_EX.Ctrl_IF_Branch = Branch;
 }
 
 void EX()
@@ -1763,25 +1800,25 @@ void EX()
     // read ID_EX
     unsigned int RegDst = ID_EX.rd;
     ULL NextPC = ID_EX.PC;
-    REG RegRs = ID_EX.Reg_rs;
-    REG RegRt = ID_EX.Reg_rt;
+    REG RegRs1 = ID_EX.Reg_rs1;
+    REG RegRs2 = ID_EX.Reg_rs2;
     long long Imm = ID_EX.Imm;
-    ULL VA = 0, VB = 0;
-    REG ALUOut = 0;
-
     unsigned char BranchCmp = ID_EX.Ctrl_EX_BranchCmp;
     unsigned char ALUSrc = ID_EX.Ctrl_EX_ALUSrc;
     unsigned char ALUOp = ID_EX.Ctrl_EX_ALUOp;
+    unsigned char Branch = ID_EX.Ctrl_IF_Branch;
 
-    unsigned char Branch = ID_EX.Ctrl_UP_Branch;
+    ULL VA = 0, VB = 0;
+    REG ALUOut = 0;
 
+    // branch compare
     switch (BranchCmp)
         {
             case BRANCHCMP_NOP:
                 break;
             case BRANCHCMP_EQ:
                 {
-                    if (RegRs == RegRt)
+                    if (RegRs1 == RegRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1789,7 +1826,7 @@ void EX()
                 break;
             case BRANCHCMP_NE:
                 {
-                    if (RegRs != RegRt)
+                    if (RegRs1 != RegRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1797,7 +1834,7 @@ void EX()
                 break;
             case BRANCHCMP_LT:
                 {
-                    if ((long long)RegRs < (long long)RegRt)
+                    if ((long long)RegRs1 < (long long)RegRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1805,7 +1842,7 @@ void EX()
                 break;
             case BRANCHCMP_GE:
                 {
-                    if ((long long)RegRs >= (long long)RegRt)
+                    if ((long long)RegRs1 >= (long long)RegRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1813,7 +1850,7 @@ void EX()
                 break;
             case BRANCHCMP_LTU:
                 {
-                    if (RegRs < RegRt)
+                    if (RegRs1 < RegRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1821,7 +1858,7 @@ void EX()
                 break;
             case BRANCHCMP_GEU:
                 {
-                    if (RegRs >= RegRt)
+                    if (RegRs1 >= RegRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1837,15 +1874,15 @@ void EX()
         {
             case ALUSRC_NONE:
                 break;
-            case ALUSRC_RS_RT:
+            case ALUSRC_RS1_RS2:
                 {
-                    VA = RegRs;
-                    VB = RegRt;
+                    VA = RegRs1;
+                    VB = RegRs2;
                 }
                 break;
-            case ALUSRC_RS_IMM:
+            case ALUSRC_RS1_IMM:
                 {
-                    VA = RegRs;
+                    VA = RegRs1;
                     VB = (ULL)Imm;
                 }
                 break;
@@ -1876,11 +1913,15 @@ void EX()
                 break;
             case ALUOP_MUL:
                 {
+                    CycleCount += 1;
+
                     ALUOut = VA * VB;
                 }
                 break;
             case ALUOP_MULH:
                 {
+                    CycleCount += 1;
+
                     long long VT_1 = 0, VT_2 = 0, VT_3 = 0;
 
                     ULL VA_H = (((long long)VA & MASK_H) >> 32), VA_L = ((long long)VA & MASK_L),
@@ -1917,6 +1958,8 @@ void EX()
                 break;
             case ALUOP_MULHU:
                 {
+                    CycleCount += 1;
+
                     ULL VA_H = ((VA & MASK_H) >> 32), VA_L = (VA & MASK_L),
                         VB_H = ((VB & MASK_H) >> 32), VB_L = (VB & MASK_L);
                     long long VT_1 = VA_H * VB_L, VT_2 = VA_L * VB_H, VT_3 = VA_H * VB_H;
@@ -1929,6 +1972,8 @@ void EX()
                 break;
             case ALUOP_MULHSU:
                 {
+                    CycleCount += 1;
+
                     long long VT_1 = 0, VT_2 = 0, VT_3 = 0;
 
                     ULL VA_H = (((long long)VA & MASK_H) >> 32), VA_L = ((long long)VA & MASK_L),
@@ -1956,6 +2001,8 @@ void EX()
                 break;
             case ALUOP_DIV:
                 {
+                    CycleCount += 39;
+
                     if (VB != 0)
                         {
                             ALUOut = (long long)VA / (long long)VB;
@@ -1968,6 +2015,8 @@ void EX()
                 break;
             case ALUOP_DIVU:
                 {
+                    CycleCount += 39;
+
                     if (VB != 0)
                         {
                             ALUOut = VA / VB;
@@ -1980,6 +2029,12 @@ void EX()
                 break;
             case ALUOP_REM:
                 {
+                    if (!(LastAlu.ALUOp == ALUOP_DIV && LastAlu.V_rs1 == RegRs1 &&
+                          LastAlu.V_rs2 == RegRs2))
+                        {
+                            CycleCount += 39;
+                        }
+
                     if (VB != 0)
                         {
                             ALUOut = (long long)VA % (long long)VB;
@@ -1992,6 +2047,12 @@ void EX()
                 break;
             case ALUOP_REMU:
                 {
+                    if (!(LastAlu.ALUOp == ALUOP_DIVU && LastAlu.V_rs1 == RegRs1 &&
+                          LastAlu.V_rs2 == RegRs2))
+                        {
+                            CycleCount += 39;
+                        }
+
                     if (VB != 0)
                         {
                             ALUOut = VA % VB;
@@ -2059,6 +2120,8 @@ void EX()
                 break;
             case ALUOP_DIVW:
                 {
+                    CycleCount += 39;
+
                     if (VB != 0)
                         {
                             ALUOut = EXT_SIGNED_DWORD((int)VA / (int)VB, 32);
@@ -2071,6 +2134,8 @@ void EX()
                 break;
             case ALUOP_DIVUW:
                 {
+                    CycleCount += 39;
+
                     if (VB != 0)
                         {
                             ALUOut = EXT_SIGNED_DWORD((unsigned int)VA / (unsigned int)VB, 32);
@@ -2083,6 +2148,12 @@ void EX()
                 break;
             case ALUOP_REMW:
                 {
+                    if (!(LastAlu.ALUOp == ALUOP_DIVW && LastAlu.V_rs1 == RegRs1 &&
+                          LastAlu.V_rs2 == RegRs2))
+                        {
+                            CycleCount += 39;
+                        }
+
                     if (VB != 0)
                         {
                             ALUOut = EXT_SIGNED_DWORD((int)VA % (int)VB, 32);
@@ -2095,6 +2166,12 @@ void EX()
                 break;
             case ALUOP_REMUW:
                 {
+                    if (!(LastAlu.ALUOp == ALUOP_DIVUW && LastAlu.V_rs1 == RegRs1 &&
+                          LastAlu.V_rs2 == RegRs2))
+                        {
+                            CycleCount += 39;
+                        }
+
                     if (VB != 0)
                         {
                             ALUOut = EXT_SIGNED_DWORD((unsigned int)VA % (unsigned int)VB, 32);
@@ -2123,57 +2200,65 @@ void EX()
                 ERROR(__LINE__);
         }
 
-    // write EX_MEM_old
-    EX_MEM_old.PC = NextPC;
-    EX_MEM_old.ALU_out = ALUOut;
-    EX_MEM_old.rd = RegDst;
-    EX_MEM_old.Reg_rt = RegRt;
+    // record ALU operation
+    LastAlu.ALUOp = ALUOp;
+    LastAlu.V_rs1 = RegRs1;
+    LastAlu.V_rs2 = RegRs2;
 
-    EX_MEM_old.Ctrl_M_MemWrite = ID_EX.Ctrl_M_MemWrite;
-    EX_MEM_old.Ctrl_M_MemRead = ID_EX.Ctrl_M_MemRead;
-    EX_MEM_old.Ctrl_WB_RegWrite = ID_EX.Ctrl_WB_RegWrite;
-    EX_MEM_old.Ctrl_UP_Branch = Branch;
+    // write EX_MEM
+    EX_MEM.PC = NextPC;
+    EX_MEM.ALU_out = ALUOut;
+    EX_MEM.rd = RegDst;
+    EX_MEM.Reg_rs2 = RegRs2;
+
+    EX_MEM.Ctrl_MEM_MemWrite = ID_EX.Ctrl_MEM_MemWrite;
+    EX_MEM.Ctrl_MEM_MemRead = ID_EX.Ctrl_MEM_MemRead;
+    EX_MEM.Ctrl_WB_RegWrite = ID_EX.Ctrl_WB_RegWrite;
+    EX_MEM.Ctrl_IF_Branch = Branch;
 }
 
 void MEM()
 {
     // read EX_MEM
     ULL NextPC = EX_MEM.PC;
-    REG RegRt = EX_MEM.Reg_rt;
+    REG RegRs2 = EX_MEM.Reg_rs2;
     REG ALUOut = EX_MEM.ALU_out;
     unsigned int RegDst = EX_MEM.rd;
-
-    unsigned char MemWrite = EX_MEM.Ctrl_M_MemWrite;
-    unsigned char MemRead = EX_MEM.Ctrl_M_MemRead;
+    unsigned char MemWrite = EX_MEM.Ctrl_MEM_MemWrite;
+    unsigned char MemRead = EX_MEM.Ctrl_MEM_MemRead;
 
     REG VMemRead = 0;
+    int CycleAdd = 2;
 
     // read/write memory
     switch (MemWrite)
         {
             case MEMWRITE_NO:
+                {
+                    CycleAdd -= 1;
+                }
                 break;
             case MEMWRITE_BYTE:
                 {
-                    unsigned char vWriteByte = (unsigned char)RegRt;
+                    unsigned char vWriteByte = (unsigned char)RegRs2;
                     WRITE_BYTE(ALUOut, vWriteByte);
                 }
                 break;
             case MEMWRITE_HWORD:
                 {
-                    unsigned short vWriteHword = (unsigned short)RegRt;
+                    unsigned short vWriteHword = (unsigned short)RegRs2;
                     WRITE_HWORD(ALUOut, vWriteHword);
                 }
                 break;
             case MEMWRITE_WORD:
                 {
-                    unsigned int vWriteWord = (unsigned int)RegRt;
+                    unsigned int vWriteWord = (unsigned int)RegRs2;
                     WRITE_WORD(ALUOut, vWriteWord);
                 }
                 break;
             case MEMWRITE_DWORD:
                 {
-                    WRITE_DWORD(ALUOut, RegRt);
+                    WRITE_DWORD(ALUOut, RegRs2);
                 }
                 break;
             default:
@@ -2183,6 +2268,9 @@ void MEM()
     switch (MemRead)
         {
             case MEMREAD_NO:
+                {
+                    CycleAdd -= 1;
+                }
                 break;
             case MEMREAD_BYTE:
                 {
@@ -2229,14 +2317,16 @@ void MEM()
                 ERROR(__LINE__);
         }
 
-    // write MEM_WB_old
-    MEM_WB_old.PC = NextPC;
-    MEM_WB_old.rd = RegDst;
-    MEM_WB_old.Mem_read = VMemRead;
-    MEM_WB_old.ALU_out = ALUOut;
+    CycleCount += CycleAdd;
 
-    MEM_WB_old.Ctrl_WB_RegWrite = EX_MEM.Ctrl_WB_RegWrite;
-    MEM_WB_old.Ctrl_UP_Branch = EX_MEM.Ctrl_UP_Branch;
+    // write MEM_WB
+    MEM_WB.PC = NextPC;
+    MEM_WB.rd = RegDst;
+    MEM_WB.Mem_read = VMemRead;
+    MEM_WB.ALU_out = ALUOut;
+
+    MEM_WB.Ctrl_WB_RegWrite = EX_MEM.Ctrl_WB_RegWrite;
+    MEM_WB.Ctrl_IF_Branch = EX_MEM.Ctrl_IF_Branch;
 }
 
 void WB()
@@ -2245,14 +2335,19 @@ void WB()
     ULL NextPC = MEM_WB.PC;
     REG VMemRead = MEM_WB.Mem_read;
     REG ALUOut = MEM_WB.ALU_out;
-    unsigned int RegDst = MEM_WB_old.rd;
-
+    unsigned int RegDst = MEM_WB.rd;
     unsigned char RegWrite = MEM_WB.Ctrl_WB_RegWrite;
+
+    int CycleAdd = 1;
 
     // write reg
     switch (RegWrite)
         {
+
             case REGWRITE_NO:
+                {
+                    CycleAdd -= 1;
+                }
                 break;
             case REGWRITE_VALE:
                 {
@@ -2273,34 +2368,14 @@ void WB()
                 ERROR(__LINE__);
         }
 
-    // write WB_UP_old
-    WB_UP_old.PC = NextPC;
-    WB_UP_old.ALU_out = ALUOut;
+    CycleCount += CycleAdd;
 
-    WB_UP_old.Ctrl_UP_Branch = MEM_WB.Ctrl_UP_Branch;
-}
+    // write WB_IF
+    WB_IF.PC = NextPC;
+    WB_IF.ALU_out = ALUOut;
+    WB_IF.Ctrl_IF_Branch = MEM_WB.Ctrl_IF_Branch;
 
-void UP()
-{
-    ULL NextPC = WB_UP.PC;
-    REG ALUOut = WB_UP.ALU_out;
-
-    unsigned char Branch = WB_UP.Ctrl_UP_Branch;
-
-    // update PC
-    switch (Branch)
-        {
-            case BRANCH_NO:
-                {
-                    PC = NextPC;
-                }
-                break;
-            case BRANCH_YES:
-                {
-                    PC = ALUOut;
-                }
-                break;
-            default:
-                ERROR(__LINE__);
-        }
+    // update running statistic
+    InstCount += 1;
+    CycleCount += 3;
 }

@@ -4,7 +4,10 @@ static int init()
 {
     for (int i = 0; i < 32; ++i)
         reg[i] = 0;
-    PC = 0x10100;
+
+    WB_IF.PC = 0x10100;
+    WB_IF.Ctrl_IF_Branch = BRANCH_NO;
+
     reg[R_gp] = 0x12000;
     reg[R_sp] = P_TO_V(MEM_ED);
 }

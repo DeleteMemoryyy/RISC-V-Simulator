@@ -251,17 +251,30 @@ int main()
                             ImGui::End();
 
 
-                            ImGui::SetNextWindowSize(ImVec2(450, 450), ImGuiSetCond_Once);
-                            ImGui::SetNextWindowPos(ImVec2(20, 220), ImGuiSetCond_Once);
-                            ImGui::Begin("Register", NULL,
+                            ImGui::SetNextWindowSize(ImVec2(450, 150), ImGuiSetCond_Once);
+                            ImGui::SetNextWindowPos(ImVec2(20, 210), ImGuiSetCond_Once);
+                            ImGui::Begin("Running Status", NULL,
                                          ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                              ImGuiWindowFlags_NoCollapse);
                             ImGui::Text(" ");
-                            ImGui::Text(" Last instruction: %s", InstBuf);
+                            ImGui::Text(" Last instruction:  %s", InstBuf);
 
                             ImGui::Text(" PC: 0x%llx", PC);
                             ImGui::SameLine(0, 40);
                             ImGui::Text(" EndPC: 0x%llx", endPC);
+                            ImGui::Text(" Instruction Count: %d", InstCount);
+                            ImGui::Text(" Total Cycles: %d", CycleCount);
+                            ImGui::Text(" CPI: %.3f", CPI);
+                            ImGui::Text(" ");
+
+                            ImGui::End();
+
+
+                            ImGui::SetNextWindowSize(ImVec2(450, 340), ImGuiSetCond_Once);
+                            ImGui::SetNextWindowPos(ImVec2(20, 365), ImGuiSetCond_Once);
+                            ImGui::Begin("Register", NULL,
+                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                             ImGuiWindowFlags_NoCollapse);
                             ImGui::Text(" ");
 
                             static int selected_fish = 1;
@@ -338,7 +351,7 @@ int main()
                             ImGui::PopItemWidth();
 
                             ImGui::SameLine(0, 20);
-                            static int selected_format = 1; // default to be decimal
+                            static int selected_format = 1;  // default to be decimal
                             const char *formats[] = {"Hex", "Decimal", "Unsigned", "ASCII"};
                             if (ImGui::Button("Select Format"))
                                 ImGui::OpenPopup("select format");
@@ -354,7 +367,7 @@ int main()
                                 }
                             ImGui::SameLine(0, 20);
 
-                            static int selected_size = 2; // default to be word
+                            static int selected_size = 2;  // default to be word
                             const char *sizes[] = {"Byte", "Half Word", "Word", "Double Word"};
                             if (ImGui::Button("Select Scale"))
                                 ImGui::OpenPopup("select scale");

@@ -5,7 +5,7 @@ typedef unsigned long long REG;
 
 struct IFID
 {
-    unsigned int inst;
+    unsigned int Inst;
     REG PC;
     unsigned char Ctrl_ID_InstSize;
 };
@@ -16,18 +16,18 @@ struct IDEX
     unsigned int rd;
     REG PC;
     long long Imm;
-    REG Reg_rs, Reg_rt;
+    REG Reg_rs1, Reg_rs2;
 
     unsigned char Ctrl_EX_BranchCmp;
     unsigned char Ctrl_EX_ALUSrc;
     unsigned char Ctrl_EX_ALUOp;
 
-    unsigned char Ctrl_M_MemWrite;
-    unsigned char Ctrl_M_MemRead;
+    unsigned char Ctrl_MEM_MemWrite;
+    unsigned char Ctrl_MEM_MemRead;
 
     unsigned char Ctrl_WB_RegWrite;
 
-	unsigned char Ctrl_UP_Branch;
+	unsigned char Ctrl_IF_Branch;
 
 } ;
 
@@ -36,14 +36,14 @@ struct EXMEM
     REG PC;
     unsigned int rd;
     REG ALU_out;
-    REG Reg_rt;
+    REG Reg_rs2;
 
-    unsigned char Ctrl_M_MemWrite;
-    unsigned char Ctrl_M_MemRead;
+    unsigned char Ctrl_MEM_MemWrite;
+    unsigned char Ctrl_MEM_MemRead;
 
     unsigned char Ctrl_WB_RegWrite;
 
-	unsigned char Ctrl_UP_Branch;
+	unsigned char Ctrl_IF_Branch;
 
 } ;
 
@@ -56,15 +56,15 @@ struct MEMWB
 
     unsigned char Ctrl_WB_RegWrite;
 
-	unsigned char Ctrl_UP_Branch;
+	unsigned char Ctrl_IF_Branch;
 
 } ;
 
-struct WBUP
+struct WBIF
 {
     REG PC;
     REG ALU_out;
-	unsigned char Ctrl_UP_Branch;
+	unsigned char Ctrl_IF_Branch;
 };
 
 #define INSTSIZE_16 0
@@ -112,8 +112,8 @@ struct WBUP
 #define ALUOP_SRAW 0x1c
 
 #define ALUSRC_NONE 0
-#define ALUSRC_RS_RT 1
-#define ALUSRC_RS_IMM 2
+#define ALUSRC_RS1_RS2 1
+#define ALUSRC_RS1_IMM 2
 #define ALUSRC_PC_IMM 3
 
 #define BRANCH_NO 0
