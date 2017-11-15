@@ -6,7 +6,8 @@ typedef unsigned long long REG;
 struct IFID
 {
     unsigned int Inst;
-    REG PC;
+    REG InstPC;
+    REG NextPC;
 
     unsigned char Ctrl_ID_Mode;
     unsigned char Ctrl_ID_InstSize;
@@ -16,7 +17,8 @@ struct IFID
 struct IDEX
 {
     unsigned int rd;
-    REG PC;
+    REG InstPC;
+    REG NextPC;
     long long Imm;
     REG Reg_rs1, Reg_rs2;
 
@@ -37,11 +39,11 @@ struct IDEX
 struct EXMEM
 {
     unsigned int rd;
+    REG NextPC;
     REG ALU_out;
     REG Reg_rs2;
 
     unsigned char Ctrl_MEM_Mode;
-    unsigned char Ctrl_MEM_MemWrite;
     unsigned char Ctrl_MEM_MemWrite;
     unsigned char Ctrl_MEM_MemRead;
 
@@ -52,6 +54,7 @@ struct EXMEM
 struct MEMWB
 {
     unsigned int rd;
+    REG NextPC;
     REG Mem_read;
     REG ALU_out;
 

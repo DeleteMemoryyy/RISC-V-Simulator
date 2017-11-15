@@ -94,13 +94,48 @@ void ERROR(int line)
 void IF()
 {
     // read WB_IF
-    ULL NextPC = WB_IF.PC;
-    REG ALUOut = WB_IF.ALU_out;
-    unsigned char Branch = WB_IF.Ctrl_IF_Branch;
 
+    ULL InstPC = PC;
+    REG NextPC = 0;
     unsigned int Inst = 0;
     unsigned char InstSize = INSTSIZE_32;
-    ULL OrderedPC = 0;
+
+    // fetch instructor
+    Inst = READ_WORD(InstPC);
+
+    if ((Inst & 0x3) != 0x3)
+        {
+            InstSize = INSTSIZE_16;
+            NextPC = InstPC + 2;
+        }
+    else
+        {
+            InstSize = INSTSIZE_32;
+            NextPC = InstPC + 4;
+        }
+
+    // write IF_ID
+    IF_ID.Inst = Inst;
+    IF_ID.InstPC = InstPC;
+    IF_ID.NextPC = NextPC;
+
+    IF_ID.Ctrl_ID_InstSize = InstSize;
+}
+
+void ID()
+{
+    // read IF_ID
+    unsigned int Inst = IF_ID.Inst;
+    ULL InstPC = IF_ID.InstPC;
+    ULL NextPC = IF_ID.NextPC;
+
+    unsigned char EXTOp = EXTOP_SIGNED;
+    unsigned int EXTBit = 0;
+    unsigned int EXTSrc = 0;
+    unsigned char ALUOp = ALUOP_NOP, ALUSrc = ALUSRC_NONE, BranchCmp = BRANCHCMP_NOP;
+    unsigned char MemRead = MEMREAD_NO, MemWrite = MEMWRITE_NO;
+    unsigned char RegWrite = REGWRITE_NO;
+    unsigned char Branch = BRANCH_NO;
 
     // instruction sections
     unsigned int opcode = 0;
@@ -112,39 +147,6 @@ void IF()
     unsigned int imm5_11 = 0;
     unsigned int imm0_5 = 0;
     unsigned int imm0_4 = 0;
-
-
-    // fetch instructor
-    Inst = READ_WORD(PC);
-
-    if ((Inst & 0x3) != 0x3)
-        {
-            InstSize = INSTSIZE_16;
-            OrderedPC = PC + 2;
-        }
-    else
-        {
-            InstSize = INSTSIZE_32;
-            OrderedPC = PC + 4;
-        }
-
-    // write IF_ID
-    IF_ID.Ctrl_ID_InstSize = InstSize;
-    IF_ID.Inst = Inst;
-    IF_ID.PC = OrderedPC;
-}
-
-void ID()
-{
-    // read IF_ID
-
-    unsigned char EXTOp = EXTOP_SIGNED;
-    unsigned int EXTBit = 0;
-    unsigned int EXTSrc = 0;
-    unsigned char ALUOp = ALUOP_NOP, ALUSrc = ALUSRC_NONE, BranchCmp = BRANCHCMP_NOP;
-    unsigned char MemRead = MEMREAD_NO, MemWrite = MEMWRITE_NO;
-    unsigned char RegWrite = REGWRITE_NO;
-    unsigned char Branch = BRANCH_NO;
 
     // indentify instructor
     if (IF_ID.Ctrl_ID_InstSize == INSTSIZE_16)
@@ -1776,7 +1778,8 @@ void ID()
         ID_EX.Imm = EXTSrc;
 
     ID_EX.rd = rd;
-    ID_EX.PC = NextPC;
+    ID_EX.InstPC = InstPC;
+    ID_EX.NextPC = NextPC;
     ID_EX.Reg_rs1 = reg[rs1];
     ID_EX.Reg_rs2 = reg[rs2];
 
@@ -1793,7 +1796,8 @@ void EX()
 {
     // read ID_EX
     unsigned int RegDst = ID_EX.rd;
-    ULL NextPC = ID_EX.PC;
+    ULL InstPC = ID_EX.InstPC;
+    REG NextPC = ID_EX.NextPC;
     REG RegRs1 = ID_EX.Reg_rs1;
     REG RegRs2 = ID_EX.Reg_rs2;
     long long Imm = ID_EX.Imm;
@@ -1882,7 +1886,7 @@ void EX()
                 break;
             case ALUSRC_PC_IMM:
                 {
-                    VA = PC;
+                    VA = InstPC;
                     VB = (ULL)Imm;
                 }
                 break;
@@ -2172,8 +2176,9 @@ void EX()
         }
 
     // write EX_MEM
-    EX_MEM.ALU_out = ALUOut;
     EX_MEM.rd = RegDst;
+    EX_MEM.NextPC = NextPC;
+    EX_MEM.ALU_out = ALUOut;
     EX_MEM.Reg_rs2 = RegRs2;
 
     EX_MEM.Ctrl_MEM_MemWrite = ID_EX.Ctrl_MEM_MemWrite;
@@ -2184,9 +2189,10 @@ void EX()
 void MEM()
 {
     // read EX_MEM
-    REG RegRs2 = EX_MEM.Reg_rs2;
-    REG ALUOut = EX_MEM.ALU_out;
     unsigned int RegDst = EX_MEM.rd;
+    REG NextPC = EX_MEM.NextPC;
+    REG ALUOut = EX_MEM.ALU_out;
+    REG RegRs2 = EX_MEM.Reg_rs2;
     unsigned char MemWrite = EX_MEM.Ctrl_MEM_MemWrite;
     unsigned char MemRead = EX_MEM.Ctrl_MEM_MemRead;
 
@@ -2279,6 +2285,7 @@ void MEM()
 
     // write MEM_WB
     MEM_WB.rd = RegDst;
+    MEM_WB.NextPC = NextPC;
     MEM_WB.Mem_read = VMemRead;
     MEM_WB.ALU_out = ALUOut;
 
@@ -2288,10 +2295,10 @@ void MEM()
 void WB()
 {
     // read MEM_WB
-    ULL NextPC = MEM_WB.PC;
+    unsigned int RegDst = MEM_WB.rd;
+    REG NextPC = MEM_WB.NextPC;
     REG VMemRead = MEM_WB.Mem_read;
     REG ALUOut = MEM_WB.ALU_out;
-    unsigned int RegDst = MEM_WB.rd;
     unsigned char RegWrite = MEM_WB.Ctrl_WB_RegWrite;
 
     // write reg
