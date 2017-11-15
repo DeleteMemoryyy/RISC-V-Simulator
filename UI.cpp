@@ -775,7 +775,7 @@ int main()
                         break;
                     case Running:
                         {
-                            while (simulate_one_step() == false)
+                            while (simulate_one_step())
                                 ;
                             dState = Pausing;
                         }

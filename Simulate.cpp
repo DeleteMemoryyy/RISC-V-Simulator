@@ -65,7 +65,7 @@ void load_memory()
 bool simulate_one_step()
 {
     if (PC == endPC)
-        return true;
+        return false;
 
     // run
     IF();
@@ -80,10 +80,10 @@ bool simulate_one_step()
     // update register
     reg[0] = 0;  // register zero should alwarys be 0
 
-    if (exit_flag == 1)
-        return true;
+    if (exit_flag != 0)
+        return false;
 
-    return false;
+    return true;
 }
 
 void ERROR(int line)
@@ -1776,7 +1776,6 @@ void ID()
         }
     else
         ID_EX.Imm = EXTSrc;
-
     ID_EX.rd = rd;
     ID_EX.InstPC = InstPC;
     ID_EX.NextPC = NextPC;
