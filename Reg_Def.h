@@ -7,6 +7,8 @@ struct IFID
 {
     unsigned int Inst;
     REG PC;
+
+    unsigned char Ctrl_ID_Mode;
     unsigned char Ctrl_ID_InstSize;
 };
 
@@ -18,53 +20,49 @@ struct IDEX
     long long Imm;
     REG Reg_rs1, Reg_rs2;
 
+    unsigned char CTRL_EX_Mode;
     unsigned char Ctrl_EX_BranchCmp;
     unsigned char Ctrl_EX_ALUSrc;
     unsigned char Ctrl_EX_ALUOp;
+	unsigned char Ctrl_EX_Branch;
 
     unsigned char Ctrl_MEM_MemWrite;
     unsigned char Ctrl_MEM_MemRead;
 
     unsigned char Ctrl_WB_RegWrite;
 
-	unsigned char Ctrl_IF_Branch;
 
 } ;
 
 struct EXMEM
 {
-    REG PC;
     unsigned int rd;
     REG ALU_out;
     REG Reg_rs2;
 
+    unsigned char Ctrl_MEM_Mode;
+    unsigned char Ctrl_MEM_MemWrite;
     unsigned char Ctrl_MEM_MemWrite;
     unsigned char Ctrl_MEM_MemRead;
 
     unsigned char Ctrl_WB_RegWrite;
 
-	unsigned char Ctrl_IF_Branch;
-
 } ;
 
 struct MEMWB
 {
-    REG PC;
     unsigned int rd;
     REG Mem_read;
     REG ALU_out;
 
+    unsigned char Ctrl_WB_Mode;
     unsigned char Ctrl_WB_RegWrite;
-
-	unsigned char Ctrl_IF_Branch;
 
 } ;
 
 struct WBIF
 {
-    REG PC;
-    REG ALU_out;
-	unsigned char Ctrl_IF_Branch;
+    unsigned char Ctrl_IF_Mode;
 };
 
 #define INSTSIZE_16 0

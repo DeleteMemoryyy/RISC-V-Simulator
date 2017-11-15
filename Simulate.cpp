@@ -20,17 +20,6 @@ EXMEM EX_MEM;
 MEMWB MEM_WB;
 WBIF WB_IF;
 
-// instruction sections
-static unsigned int opcode = 0;
-static unsigned int funct3 = 0, funct7 = 0;
-static unsigned int rs1 = 0, rs2 = 0, rd = 0;
-static unsigned int imm0_11 = 0;
-static unsigned int imm12_31 = 0;
-static unsigned int imm6_11 = 0;
-static unsigned int imm5_11 = 0;
-static unsigned int imm0_5 = 0;
-static unsigned int imm0_4 = 0;
-
 // last ALU operation
 static ALU_REC *LastAlu = new ALU_REC, *ThisAlu = new ALU_REC;
 
@@ -57,11 +46,8 @@ void setup()
 
     load_memory();
 
-    WB_IF.PC = mainAddr;
-    WB_IF.Ctrl_IF_Branch = BRANCH_NO;
-
+    PC = mainAddr;
     endPC = mainAddr + mainSize - 3;
-
     reg[R_gp] = gp;
     reg[R_sp] = P_TO_V(MEM_ED);
 }
@@ -116,22 +102,17 @@ void IF()
     unsigned char InstSize = INSTSIZE_32;
     ULL OrderedPC = 0;
 
-    // update PC
-    switch (Branch)
-        {
-            case BRANCH_NO:
-                {
-                    PC = NextPC;
-                }
-                break;
-            case BRANCH_YES:
-                {
-                    PC = ALUOut;
-                }
-                break;
-            default:
-                ERROR(__LINE__);
-        }
+    // instruction sections
+    unsigned int opcode = 0;
+    unsigned int funct3 = 0, funct7 = 0;
+    unsigned int rs1 = 0, rs2 = 0, rd = 0;
+    unsigned int imm0_11 = 0;
+    unsigned int imm12_31 = 0;
+    unsigned int imm6_11 = 0;
+    unsigned int imm5_11 = 0;
+    unsigned int imm0_5 = 0;
+    unsigned int imm0_4 = 0;
+
 
     // fetch instructor
     Inst = READ_WORD(PC);
@@ -156,8 +137,6 @@ void IF()
 void ID()
 {
     // read IF_ID
-    ULL NextPC = IF_ID.PC;
-    unsigned int Inst = IF_ID.Inst;
 
     unsigned char EXTOp = EXTOP_SIGNED;
     unsigned int EXTBit = 0;
@@ -1798,17 +1777,16 @@ void ID()
 
     ID_EX.rd = rd;
     ID_EX.PC = NextPC;
-
     ID_EX.Reg_rs1 = reg[rs1];
     ID_EX.Reg_rs2 = reg[rs2];
 
     ID_EX.Ctrl_EX_BranchCmp = BranchCmp;
     ID_EX.Ctrl_EX_ALUSrc = ALUSrc;
     ID_EX.Ctrl_EX_ALUOp = ALUOp;
+    ID_EX.Ctrl_EX_Branch = Branch;
     ID_EX.Ctrl_MEM_MemWrite = MemWrite;
     ID_EX.Ctrl_MEM_MemRead = MemRead;
     ID_EX.Ctrl_WB_RegWrite = RegWrite;
-    ID_EX.Ctrl_IF_Branch = Branch;
 }
 
 void EX()
@@ -1822,7 +1800,7 @@ void EX()
     unsigned char BranchCmp = ID_EX.Ctrl_EX_BranchCmp;
     unsigned char ALUSrc = ID_EX.Ctrl_EX_ALUSrc;
     unsigned char ALUOp = ID_EX.Ctrl_EX_ALUOp;
-    unsigned char Branch = ID_EX.Ctrl_IF_Branch;
+    unsigned char Branch = ID_EX.Ctrl_EX_Branch;
 
     ULL VA = 0, VB = 0;
     REG ALUOut = 0;
@@ -1929,15 +1907,11 @@ void EX()
                 break;
             case ALUOP_MUL:
                 {
-                    CycleCount += 1;
-
                     ALUOut = VA * VB;
                 }
                 break;
             case ALUOP_MULH:
                 {
-                    CycleCount += 1;
-
                     long long VT_1 = 0, VT_2 = 0, VT_3 = 0;
 
                     ULL VA_H = (((long long)VA & MASK_H) >> 32), VA_L = ((long long)VA & MASK_L),
@@ -1974,8 +1948,6 @@ void EX()
                 break;
             case ALUOP_MULHU:
                 {
-                    CycleCount += 1;
-
                     ULL VA_H = ((VA & MASK_H) >> 32), VA_L = (VA & MASK_L),
                         VB_H = ((VB & MASK_H) >> 32), VB_L = (VB & MASK_L);
                     long long VT_1 = VA_H * VB_L, VT_2 = VA_L * VB_H, VT_3 = VA_H * VB_H;
@@ -1988,8 +1960,6 @@ void EX()
                 break;
             case ALUOP_MULHSU:
                 {
-                    CycleCount += 1;
-
                     long long VT_1 = 0, VT_2 = 0, VT_3 = 0;
 
                     ULL VA_H = (((long long)VA & MASK_H) >> 32), VA_L = ((long long)VA & MASK_L),
@@ -2017,8 +1987,6 @@ void EX()
                 break;
             case ALUOP_DIV:
                 {
-                    CycleCount += 39;
-
                     if (VB != 0)
                         {
                             ALUOut = (long long)VA / (long long)VB;
@@ -2031,8 +1999,6 @@ void EX()
                 break;
             case ALUOP_DIVU:
                 {
-                    CycleCount += 39;
-
                     if (VB != 0)
                         {
                             ALUOut = VA / VB;
@@ -2045,17 +2011,6 @@ void EX()
                 break;
             case ALUOP_REM:
                 {
-                    if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
-                          LastAlu->rs1 == ThisAlu->rs1 && LastAlu->rs2 == ThisAlu->rs2 &&
-                          LastAlu->rd != LastAlu->rs1 && LastAlu->rd != LastAlu->rs2))
-                        {
-                            CycleCount += 39;
-                        }
-                    else
-                        {
-                            CycleCount -= 1;
-                        }
-
                     if (VB != 0)
                         {
                             ALUOut = (long long)VA % (long long)VB;
@@ -2068,18 +2023,6 @@ void EX()
                 break;
             case ALUOP_REMU:
                 {
-                    if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
-                          LastAlu->rs1 == ThisAlu->rs1 && LastAlu->rs2 == ThisAlu->rs2 &&
-                          LastAlu->rd != LastAlu->rs1 && LastAlu->rd != LastAlu->rs2))
-                        {
-                            CycleCount += 39;
-                        }
-                    else
-                        {
-                            CycleCount -= 1;
-                        }
-
-
                     if (VB != 0)
                         {
                             ALUOut = VA % VB;
@@ -2147,8 +2090,6 @@ void EX()
                 break;
             case ALUOP_DIVW:
                 {
-                    CycleCount += 39;
-
                     if (VB != 0)
                         {
                             ALUOut = EXT_SIGNED_DWORD((int)VA / (int)VB, 32);
@@ -2161,8 +2102,6 @@ void EX()
                 break;
             case ALUOP_DIVUW:
                 {
-                    CycleCount += 39;
-
                     if (VB != 0)
                         {
                             ALUOut = EXT_SIGNED_DWORD((unsigned int)VA / (unsigned int)VB, 32);
@@ -2175,18 +2114,6 @@ void EX()
                 break;
             case ALUOP_REMW:
                 {
-                    if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
-                          LastAlu->rs1 == ThisAlu->rs1 && LastAlu->rs2 == ThisAlu->rs2 &&
-                          LastAlu->rd != LastAlu->rs1 && LastAlu->rd != LastAlu->rs2))
-                        {
-                            CycleCount += 39;
-                        }
-                    else
-                        {
-                            CycleCount -= 1;
-                        }
-
-
                     if (VB != 0)
                         {
                             ALUOut = EXT_SIGNED_DWORD((int)VA % (int)VB, 32);
@@ -2199,18 +2126,6 @@ void EX()
                 break;
             case ALUOP_REMUW:
                 {
-                    if (!(LastAlu->ALUOp == ALUOP_DIV && LastAlu->rd == ThisAlu->rd &&
-                          LastAlu->rs1 == ThisAlu->rs1 && LastAlu->rs2 == ThisAlu->rs2 &&
-                          LastAlu->rd != LastAlu->rs1 && LastAlu->rd != LastAlu->rs2))
-                        {
-                            CycleCount += 39;
-                        }
-                    else
-                        {
-                            CycleCount -= 1;
-                        }
-
-
                     if (VB != 0)
                         {
                             ALUOut = EXT_SIGNED_DWORD((unsigned int)VA % (unsigned int)VB, 32);
@@ -2239,8 +2154,24 @@ void EX()
                 ERROR(__LINE__);
         }
 
+    // update PC
+    switch (Branch)
+        {
+            case BRANCH_NO:
+                {
+                    PC = NextPC;
+                }
+                break;
+            case BRANCH_YES:
+                {
+                    PC = ALUOut;
+                }
+                break;
+            default:
+                ERROR(__LINE__);
+        }
+
     // write EX_MEM
-    EX_MEM.PC = NextPC;
     EX_MEM.ALU_out = ALUOut;
     EX_MEM.rd = RegDst;
     EX_MEM.Reg_rs2 = RegRs2;
@@ -2248,13 +2179,11 @@ void EX()
     EX_MEM.Ctrl_MEM_MemWrite = ID_EX.Ctrl_MEM_MemWrite;
     EX_MEM.Ctrl_MEM_MemRead = ID_EX.Ctrl_MEM_MemRead;
     EX_MEM.Ctrl_WB_RegWrite = ID_EX.Ctrl_WB_RegWrite;
-    EX_MEM.Ctrl_IF_Branch = Branch;
 }
 
 void MEM()
 {
     // read EX_MEM
-    ULL NextPC = EX_MEM.PC;
     REG RegRs2 = EX_MEM.Reg_rs2;
     REG ALUOut = EX_MEM.ALU_out;
     unsigned int RegDst = EX_MEM.rd;
@@ -2262,14 +2191,12 @@ void MEM()
     unsigned char MemRead = EX_MEM.Ctrl_MEM_MemRead;
 
     REG VMemRead = 0;
-    int CycleAdd = 2;
 
     // read/write memory
     switch (MemWrite)
         {
             case MEMWRITE_NO:
                 {
-                    CycleAdd -= 1;
                 }
                 break;
             case MEMWRITE_BYTE:
@@ -2303,7 +2230,6 @@ void MEM()
         {
             case MEMREAD_NO:
                 {
-                    CycleAdd -= 1;
                 }
                 break;
             case MEMREAD_BYTE:
@@ -2351,16 +2277,12 @@ void MEM()
                 ERROR(__LINE__);
         }
 
-    CycleCount += CycleAdd;
-
     // write MEM_WB
-    MEM_WB.PC = NextPC;
     MEM_WB.rd = RegDst;
     MEM_WB.Mem_read = VMemRead;
     MEM_WB.ALU_out = ALUOut;
 
     MEM_WB.Ctrl_WB_RegWrite = EX_MEM.Ctrl_WB_RegWrite;
-    MEM_WB.Ctrl_IF_Branch = EX_MEM.Ctrl_IF_Branch;
 }
 
 void WB()
@@ -2372,15 +2294,12 @@ void WB()
     unsigned int RegDst = MEM_WB.rd;
     unsigned char RegWrite = MEM_WB.Ctrl_WB_RegWrite;
 
-    int CycleAdd = 1;
-
     // write reg
     switch (RegWrite)
         {
 
             case REGWRITE_NO:
                 {
-                    CycleAdd -= 1;
                 }
                 break;
             case REGWRITE_VALE:
@@ -2402,14 +2321,6 @@ void WB()
                 ERROR(__LINE__);
         }
 
-    CycleCount += CycleAdd;
 
     // write WB_IF
-    WB_IF.PC = NextPC;
-    WB_IF.ALU_out = ALUOut;
-    WB_IF.Ctrl_IF_Branch = MEM_WB.Ctrl_IF_Branch;
-
-    // update running statistic
-    InstCount += 1;
-    CycleCount += 3;
 }
