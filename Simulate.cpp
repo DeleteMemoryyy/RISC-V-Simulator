@@ -2659,20 +2659,6 @@ void EX()
                 ERROR(__LINE__);
         }
 
-    // if (ALUWait > 1)
-    //     {
-    //         EX_MEM.RegDst = R_zero;
-    //         EX_MEM.NextPC = 0;
-    //         EX_MEM.ALU_out = 0;
-    //         EX_MEM.VRs2 = 0;
-
-    //         EX_MEM.Ctrl_MEM_MemWrite = MEMWRITE_NO;
-    //         EX_MEM.Ctrl_MEM_MemRead = MEMREAD_NO;
-    //         EX_MEM.Ctrl_WB_RegWrite = REGWRITE_NO;
-
-    //         return;
-    //     }
-
     // update PC
     switch (Branch)
         {
