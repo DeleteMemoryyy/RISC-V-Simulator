@@ -8,17 +8,19 @@ REG reg[32] = {0};
 ULL PC = 0;
 ULL endPC = 0;
 int exit_flag = 0;
+unsigned char BranchFlag = BRANCH_NO;
 // instruction string
 char InstBuf[100] = "";
 int InstCount = 0;
 int CycleCount = 0;
 float CPI = 0.0f;
+
 // transmission
-IFID IF_ID;
-IDEX ID_EX;
-EXMEM EX_MEM;
-MEMWB MEM_WB;
-WBIF WB_IF;
+STAGEMODE StageMode[5], StageModeOld[5];
+IFID IF_ID, IF_ID_old;
+IDEX ID_EX, ID_EX_old;
+EXMEM EX_MEM, EX_MEM_old;
+MEMWB MEM_WB, MEM_WB_old;
 
 // last ALU operation
 static ALU_REC *LastAlu = new ALU_REC, *ThisAlu = new ALU_REC;
@@ -30,6 +32,15 @@ void setup()
     CPI = 0.0f;
     memset(InstBuf, 0, sizeof(InstBuf));
     exit_flag = 0;
+
+    StageMode[STAGE_IF] = MODE_LOAD;
+    StageMode[STAGE_ID] = MODE_BUBBLE;
+    StageMode[STAGE_EX] = MODE_BUBBLE;
+    StageMode[STAGE_MEM] = MODE_BUBBLE;
+    StageMode[STAGE_WB] = MODE_BUBBLE;
+
+    for (int i = 0; i < 5; ++i)
+        StageModeOld[i] = MODE_BUBBLE;
 
     LastAlu->ALUOp = ALUOP_NOP;
     LastAlu->rd = R_zero;
@@ -65,7 +76,37 @@ void load_memory()
 bool simulate_one_step()
 {
     if (PC == endPC)
-        return false;
+        {
+            StageMode[STAGE_IF] = MODE_BUBBLE;
+            bool exit_this_cycle = true;
+            for (int i = 1; i < 5; ++i)
+                if (StageMode[i] != MODE_BUBBLE)
+                    {
+                        exit_this_cycle = false;
+                        break;
+                    }
+            if (exit_this_cycle)
+                return false;
+        }
+
+    reg[0] = 0;  // register zero should alwarys be 0
+    BranchFlag = BRANCH_NO;
+
+    // set stall
+    if (StageMode[STAGE_ID] != MODE_BUBBLE &&
+        ((IF_ID_old.RegRs1 != R_zero &&
+          ((StageMode[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs1 == ID_EX_old.RegDst) ||
+           (StageMode[STAGE_MEM] == MODE_LOAD && IF_ID_old.RegRs1 == EX_MEM_old.RegDst) ||
+           (StageMode[STAGE_WB] == MODE_LOAD && IF_ID_old.RegRs1 == MEM_WB_old.RegDst))) ||
+         (IF_ID_old.RegRs2 != R_zero &&
+          ((StageMode[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs2 == ID_EX_old.RegDst) ||
+           (StageMode[STAGE_MEM] == MODE_LOAD && IF_ID_old.RegRs2 == EX_MEM_old.RegDst) ||
+           (StageMode[STAGE_WB] == MODE_LOAD &&
+            IF_ID_old.RegRs2 == MEM_WB_old.RegDst)))))  // data hazard
+        {
+            StageMode[STAGE_IF] = MODE_STALL;
+            StageMode[STAGE_ID] = MODE_STALL;
+        }
 
     // run
     IF();
@@ -74,11 +115,54 @@ bool simulate_one_step()
     MEM();
     WB();
 
+    // update bubble
+    for (int i = 0; i < 5; ++i)
+        {
+            StageModeOld[i] = StageMode[i];
+            StageMode[i] = MODE_LOAD;
+        }
+    for (int i = 0; i < 4; ++i)  // pass bubble
+        {
+            if (StageModeOld[i] == MODE_BUBBLE)
+                {
+                    StageMode[i + 1] = MODE_BUBBLE;
+                }
+        }
+
+    // set bubble
+    if (StageModeOld[STAGE_ID] != MODE_BUBBLE &&
+        ((IF_ID_old.RegRs1 != R_zero &&
+          ((StageModeOld[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs1 == ID_EX_old.RegDst) ||
+           (StageModeOld[STAGE_MEM] == MODE_LOAD && IF_ID_old.RegRs1 == EX_MEM_old.RegDst) ||
+           (StageModeOld[STAGE_WB] == MODE_LOAD && IF_ID_old.RegRs1 == MEM_WB_old.RegDst))) ||
+         (IF_ID_old.RegRs2 != R_zero &&
+          ((StageModeOld[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs2 == ID_EX_old.RegDst) ||
+           (StageModeOld[STAGE_MEM] == MODE_LOAD && IF_ID_old.RegRs2 == EX_MEM_old.RegDst) ||
+           (StageModeOld[STAGE_WB] == MODE_LOAD &&
+            IF_ID_old.RegRs2 == MEM_WB_old.RegDst)))))  // data hazard
+        {
+            StageMode[STAGE_EX] = MODE_BUBBLE;
+        }
+    if (BranchFlag == BRANCH_YES)  // branch
+        {
+            StageMode[STAGE_ID] = MODE_BUBBLE;
+            StageMode[STAGE_EX] = MODE_BUBBLE;
+        }
+
+    // update intermediate registers
+    if (StageModeOld[STAGE_IF] != MODE_STALL)
+        IF_ID_old = IF_ID;
+    if (StageModeOld[STAGE_ID] != MODE_STALL)
+        ID_EX_old = ID_EX;
+    if (StageModeOld[STAGE_EX] != MODE_STALL)
+        EX_MEM_old = EX_MEM;
+    if (StageModeOld[STAGE_MEM] != MODE_STALL)
+        MEM_WB_old = MEM_WB;
+
+    CycleCount += 1;
+
     // calculate CPI
     CPI = (float)CycleCount / (float)InstCount;
-
-    // update register
-    reg[0] = 0;  // register zero should alwarys be 0
 
     if (exit_flag != 0)
         return false;
@@ -93,12 +177,66 @@ void ERROR(int line)
 
 void IF()
 {
-    // read WB_IF
+    switch (StageMode[STAGE_IF])
+        {
+            case MODE_STALL:
+                {
+#ifdef PRINT_MODE
+                    printf("STALL IF\n");
+#endif
+                    return;
+                }
+                break;
+            case MODE_BUBBLE:
+                {
+#ifdef PRINT_MODE
+                    printf("BUBBLE IF\n");
+#endif
+                    IF_ID.RegDst = R_zero;
+                    IF_ID.RegRs1 = R_zero;
+                    IF_ID.RegRs2 = R_zero;
+                    IF_ID.InstPC = 0;
+                    IF_ID.NextPC = 0;
+                    IF_ID.EXTBit = 0;
+                    IF_ID.EXTSrc = 0;
+
+                    IF_ID.Ctrl_ID_EXTOp = EXTOP_SIGNED;
+                    IF_ID.Ctrl_EX_BranchCmp = BRANCHCMP_NOP;
+                    IF_ID.Ctrl_EX_ALUSrc = ALUSRC_NONE;
+                    IF_ID.Ctrl_EX_ALUOp = ALUOP_NOP;
+                    IF_ID.Ctrl_EX_Branch = BRANCH_NO;
+                    IF_ID.Ctrl_MEM_MemWrite = MEMWRITE_NO;
+                    IF_ID.Ctrl_MEM_MemRead = MEMREAD_NO;
+                    IF_ID.Ctrl_WB_RegWrite = REGWRITE_NO;
+                    return;
+                }
+                break;
+            default:
+                break;
+        }
 
     ULL InstPC = PC;
     REG NextPC = 0;
     unsigned int Inst = 0;
     unsigned char InstSize = INSTSIZE_32;
+    unsigned char EXTOp = EXTOP_SIGNED;
+    unsigned int EXTBit = 0;
+    unsigned int EXTSrc = 0;
+    unsigned char ALUOp = ALUOP_NOP, ALUSrc = ALUSRC_NONE, BranchCmp = BRANCHCMP_NOP;
+    unsigned char MemRead = MEMREAD_NO, MemWrite = MEMWRITE_NO;
+    unsigned char RegWrite = REGWRITE_NO;
+    unsigned char Branch = BRANCH_NO;
+
+    // instruction sections
+    unsigned int rs1 = R_zero, rs2 = R_zero, rd = R_zero;
+    unsigned int opcode = 0;
+    unsigned int funct3 = 0, funct7 = 0;
+    unsigned int imm0_11 = 0;
+    unsigned int imm12_31 = 0;
+    unsigned int imm6_11 = 0;
+    unsigned int imm5_11 = 0;
+    unsigned int imm0_5 = 0;
+    unsigned int imm0_4 = 0;
 
     // fetch instructor
     Inst = READ_WORD(InstPC);
@@ -114,42 +252,9 @@ void IF()
             NextPC = InstPC + 4;
         }
 
-    // write IF_ID
-    IF_ID.Inst = Inst;
-    IF_ID.InstPC = InstPC;
-    IF_ID.NextPC = NextPC;
-
-    IF_ID.Ctrl_ID_InstSize = InstSize;
-}
-
-void ID()
-{
-    // read IF_ID
-    unsigned int Inst = IF_ID.Inst;
-    ULL InstPC = IF_ID.InstPC;
-    ULL NextPC = IF_ID.NextPC;
-
-    unsigned char EXTOp = EXTOP_SIGNED;
-    unsigned int EXTBit = 0;
-    unsigned int EXTSrc = 0;
-    unsigned char ALUOp = ALUOP_NOP, ALUSrc = ALUSRC_NONE, BranchCmp = BRANCHCMP_NOP;
-    unsigned char MemRead = MEMREAD_NO, MemWrite = MEMWRITE_NO;
-    unsigned char RegWrite = REGWRITE_NO;
-    unsigned char Branch = BRANCH_NO;
-
-    // instruction sections
-    unsigned int opcode = 0;
-    unsigned int funct3 = 0, funct7 = 0;
-    unsigned int rs1 = 0, rs2 = 0, rd = 0;
-    unsigned int imm0_11 = 0;
-    unsigned int imm12_31 = 0;
-    unsigned int imm6_11 = 0;
-    unsigned int imm5_11 = 0;
-    unsigned int imm0_5 = 0;
-    unsigned int imm0_4 = 0;
 
     // indentify instructor
-    if (IF_ID.Ctrl_ID_InstSize == INSTSIZE_16)
+    if (InstSize == INSTSIZE_16)
         {
             opcode = GET_BITS(Inst, 0, 1);
             funct3 = GET_BITS(Inst, 13, 15);
@@ -807,7 +912,7 @@ void ID()
                         ERROR(__LINE__);
                 }
         }
-    else if (IF_ID.Ctrl_ID_InstSize == INSTSIZE_32)
+    else if (InstSize == INSTSIZE_32)
         {
             opcode = GET_BITS(Inst, 0, 6);
             switch (opcode)
@@ -1755,19 +1860,102 @@ void ID()
     ThisAlu->rs1 = rs1;
     ThisAlu->rs2 = rs2;
 
-    // write ID_EX
+    // predicting PC: no branch
+    PC = NextPC;
+
+    // write IF_ID
+    IF_ID.RegDst = rd;
+    IF_ID.RegRs1 = rs1;
+    IF_ID.RegRs2 = rs2;
+    IF_ID.InstPC = InstPC;
+    IF_ID.NextPC = NextPC;
+    IF_ID.EXTBit = EXTBit;
+    IF_ID.EXTSrc = EXTSrc;
+
+    IF_ID.Ctrl_ID_EXTOp = EXTOp;
+    IF_ID.Ctrl_EX_BranchCmp = BranchCmp;
+    IF_ID.Ctrl_EX_ALUSrc = ALUSrc;
+    IF_ID.Ctrl_EX_ALUOp = ALUOp;
+    IF_ID.Ctrl_EX_Branch = Branch;
+    IF_ID.Ctrl_MEM_MemWrite = MemWrite;
+    IF_ID.Ctrl_MEM_MemRead = MemRead;
+    IF_ID.Ctrl_WB_RegWrite = RegWrite;
+}
+
+void ID()
+{
+    switch (StageMode[STAGE_ID])
+        {
+            case MODE_STALL:
+                {
+#ifdef PRINT_MODE
+                    printf("STALL ID\n");
+#endif
+                    return;
+                }
+                break;
+            case MODE_BUBBLE:
+                {
+#ifdef PRINT_MODE
+                    printf("BUBBLE ID\n");
+#endif
+                    ID_EX.RegDst = R_zero;
+                    ID_EX.InstPC = 0;
+                    ID_EX.NextPC = 0;
+                    ID_EX.VRs1 = 0;
+                    ID_EX.VRs2 = 0;
+                    ID_EX.Imm = 0;
+
+                    ID_EX.Ctrl_EX_BranchCmp = BRANCHCMP_NOP;
+                    ID_EX.Ctrl_EX_ALUSrc = ALUSRC_NONE;
+                    ID_EX.Ctrl_EX_ALUOp = ALUOP_NOP;
+                    ID_EX.Ctrl_EX_Branch = BRANCH_NO;
+                    ID_EX.Ctrl_MEM_MemWrite = MEMWRITE_NO;
+                    ID_EX.Ctrl_MEM_MemRead = MEMREAD_NO;
+                    ID_EX.Ctrl_WB_RegWrite = REGWRITE_NO;
+
+                    return;
+                }
+                break;
+            default:
+                break;
+        }
+
+    // read IF_ID_old
+    unsigned int RegDst = IF_ID_old.RegDst;
+    unsigned int RegRs1 = IF_ID_old.RegRs1;
+    unsigned int RegRs2 = IF_ID_old.RegRs2;
+    REG InstPC = IF_ID_old.InstPC;
+    REG NextPC = IF_ID_old.NextPC;
+    unsigned int EXTBit = IF_ID_old.EXTBit;
+    unsigned int EXTSrc = IF_ID_old.EXTSrc;
+    unsigned char EXTOp = IF_ID_old.Ctrl_ID_EXTOp;
+    unsigned char BranchCmp = IF_ID_old.Ctrl_EX_BranchCmp;
+    unsigned char ALUSrc = IF_ID_old.Ctrl_EX_ALUSrc;
+    unsigned char ALUOp = IF_ID_old.Ctrl_EX_ALUOp;
+    unsigned char Branch = IF_ID_old.Ctrl_EX_Branch;
+    unsigned char MemWrite = IF_ID_old.Ctrl_MEM_MemWrite;
+    unsigned char MemRead = IF_ID_old.Ctrl_MEM_MemRead;
+    unsigned char RegWrite = IF_ID_old.Ctrl_WB_RegWrite;
+
+    long long Imm = 0;
+    REG VRs1 = 0, VRs2 = 0;
+
+    VRs1 = reg[RegRs1];
+    VRs2 = reg[RegRs2];
+
     if (EXTBit != 0)
         {
             switch (EXTOp)
                 {
                     case EXTOP_SIGNED:
                         {
-                            ID_EX.Imm = EXT_SIGNED_DWORD(EXTSrc, EXTBit);
+                            Imm = EXT_SIGNED_DWORD(EXTSrc, EXTBit);
                         }
                         break;
                     case EXTOP_UNSIGED:
                         {
-                            ID_EX.Imm = EXT_UNSIGNED_DWORD(EXTSrc, EXTBit);
+                            Imm = EXT_UNSIGNED_DWORD(EXTSrc, EXTBit);
                         }
                         break;
                     default:
@@ -1775,12 +1963,15 @@ void ID()
                 }
         }
     else
-        ID_EX.Imm = EXTSrc;
-    ID_EX.rd = rd;
+        Imm = EXTSrc;
+
+    // write ID_EX
+    ID_EX.RegDst = RegDst;
     ID_EX.InstPC = InstPC;
     ID_EX.NextPC = NextPC;
-    ID_EX.Reg_rs1 = reg[rs1];
-    ID_EX.Reg_rs2 = reg[rs2];
+    ID_EX.VRs1 = VRs1;
+    ID_EX.VRs2 = VRs2;
+    ID_EX.Imm = Imm;
 
     ID_EX.Ctrl_EX_BranchCmp = BranchCmp;
     ID_EX.Ctrl_EX_ALUSrc = ALUSrc;
@@ -1793,19 +1984,53 @@ void ID()
 
 void EX()
 {
-    // read ID_EX
-    unsigned int RegDst = ID_EX.rd;
-    ULL InstPC = ID_EX.InstPC;
-    REG NextPC = ID_EX.NextPC;
-    REG RegRs1 = ID_EX.Reg_rs1;
-    REG RegRs2 = ID_EX.Reg_rs2;
-    long long Imm = ID_EX.Imm;
-    unsigned char BranchCmp = ID_EX.Ctrl_EX_BranchCmp;
-    unsigned char ALUSrc = ID_EX.Ctrl_EX_ALUSrc;
-    unsigned char ALUOp = ID_EX.Ctrl_EX_ALUOp;
-    unsigned char Branch = ID_EX.Ctrl_EX_Branch;
+    switch (StageMode[STAGE_EX])
+        {
+            case MODE_STALL:
+                {
+#ifdef PRINT_MODE
+                    printf("STALL EX\n");
+#endif
+                    return;
+                }
+                break;
+            case MODE_BUBBLE:
+                {
+#ifdef PRINT_MODE
+                    printf("BUBBLE EX\n");
+#endif
+                    EX_MEM.RegDst = R_zero;
+                    EX_MEM.NextPC = 0;
+                    EX_MEM.ALU_out = 0;
+                    EX_MEM.VRs2 = 0;
 
-    ULL VA = 0, VB = 0;
+                    EX_MEM.Ctrl_MEM_MemWrite = MEMWRITE_NO;
+                    EX_MEM.Ctrl_MEM_MemRead = MEMREAD_NO;
+                    EX_MEM.Ctrl_WB_RegWrite = REGWRITE_NO;
+
+                    return;
+                }
+                break;
+            default:
+                break;
+        }
+
+    // read ID_EX_old
+    unsigned int RegDst = ID_EX_old.RegDst;
+    REG InstPC = ID_EX_old.InstPC;
+    REG NextPC = ID_EX_old.NextPC;
+    REG VRs1 = ID_EX_old.VRs1;
+    REG VRs2 = ID_EX_old.VRs2;
+    long long Imm = ID_EX_old.Imm;
+    unsigned char BranchCmp = ID_EX_old.Ctrl_EX_BranchCmp;
+    unsigned char ALUSrc = ID_EX_old.Ctrl_EX_ALUSrc;
+    unsigned char ALUOp = ID_EX_old.Ctrl_EX_ALUOp;
+    unsigned char Branch = ID_EX_old.Ctrl_EX_Branch;
+    unsigned char MemWrite = ID_EX_old.Ctrl_MEM_MemWrite;
+    unsigned char MemRead = ID_EX_old.Ctrl_MEM_MemRead;
+    unsigned char RegWrite = ID_EX_old.Ctrl_WB_RegWrite;
+
+    REG VA = 0, VB = 0;
     REG ALUOut = 0;
 
     // branch compare
@@ -1815,7 +2040,7 @@ void EX()
                 break;
             case BRANCHCMP_EQ:
                 {
-                    if (RegRs1 == RegRs2)
+                    if (VRs1 == VRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1823,7 +2048,7 @@ void EX()
                 break;
             case BRANCHCMP_NE:
                 {
-                    if (RegRs1 != RegRs2)
+                    if (VRs1 != VRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1831,7 +2056,7 @@ void EX()
                 break;
             case BRANCHCMP_LT:
                 {
-                    if ((long long)RegRs1 < (long long)RegRs2)
+                    if ((long long)VRs1 < (long long)VRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1839,7 +2064,7 @@ void EX()
                 break;
             case BRANCHCMP_GE:
                 {
-                    if ((long long)RegRs1 >= (long long)RegRs2)
+                    if ((long long)VRs1 >= (long long)VRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1847,7 +2072,7 @@ void EX()
                 break;
             case BRANCHCMP_LTU:
                 {
-                    if (RegRs1 < RegRs2)
+                    if (VRs1 < VRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1855,7 +2080,7 @@ void EX()
                 break;
             case BRANCHCMP_GEU:
                 {
-                    if (RegRs1 >= RegRs2)
+                    if (VRs1 >= VRs2)
                         {
                             Branch = BRANCH_YES;
                         }
@@ -1865,7 +2090,6 @@ void EX()
                 ERROR(__LINE__);
         }
 
-
     // choose ALU input number
     switch (ALUSrc)
         {
@@ -1873,13 +2097,13 @@ void EX()
                 break;
             case ALUSRC_RS1_RS2:
                 {
-                    VA = RegRs1;
-                    VB = RegRs2;
+                    VA = VRs1;
+                    VB = VRs2;
                 }
                 break;
             case ALUSRC_RS1_IMM:
                 {
-                    VA = RegRs1;
+                    VA = VRs1;
                     VB = (ULL)Imm;
                 }
                 break;
@@ -2162,12 +2386,12 @@ void EX()
         {
             case BRANCH_NO:
                 {
-                    PC = NextPC;
                 }
                 break;
             case BRANCH_YES:
                 {
                     PC = ALUOut;
+                    BranchFlag = BRANCH_YES;
                 }
                 break;
             default:
@@ -2175,25 +2399,55 @@ void EX()
         }
 
     // write EX_MEM
-    EX_MEM.rd = RegDst;
+    EX_MEM.RegDst = RegDst;
     EX_MEM.NextPC = NextPC;
     EX_MEM.ALU_out = ALUOut;
-    EX_MEM.Reg_rs2 = RegRs2;
+    EX_MEM.VRs2 = VRs2;
 
-    EX_MEM.Ctrl_MEM_MemWrite = ID_EX.Ctrl_MEM_MemWrite;
-    EX_MEM.Ctrl_MEM_MemRead = ID_EX.Ctrl_MEM_MemRead;
-    EX_MEM.Ctrl_WB_RegWrite = ID_EX.Ctrl_WB_RegWrite;
+    EX_MEM.Ctrl_MEM_MemWrite = MemWrite;
+    EX_MEM.Ctrl_MEM_MemRead = MemRead;
+    EX_MEM.Ctrl_WB_RegWrite = RegWrite;
 }
 
 void MEM()
 {
-    // read EX_MEM
-    unsigned int RegDst = EX_MEM.rd;
-    REG NextPC = EX_MEM.NextPC;
-    REG ALUOut = EX_MEM.ALU_out;
-    REG RegRs2 = EX_MEM.Reg_rs2;
-    unsigned char MemWrite = EX_MEM.Ctrl_MEM_MemWrite;
-    unsigned char MemRead = EX_MEM.Ctrl_MEM_MemRead;
+    switch (StageMode[STAGE_MEM])
+        {
+            case MODE_STALL:
+                {
+#ifdef PRINT_MODE
+                    printf("STALL MEM\n");
+#endif
+                    return;
+                }
+                break;
+            case MODE_BUBBLE:
+                {
+#ifdef PRINT_MODE
+                    printf("BUBBLE MEM\n");
+#endif
+                    MEM_WB.RegDst = R_zero;
+                    MEM_WB.NextPC = 0;
+                    MEM_WB.Mem_read = 0;
+                    MEM_WB.ALU_out = 0;
+
+                    MEM_WB.Ctrl_WB_RegWrite = REGWRITE_NO;
+
+                    return;
+                }
+                break;
+            default:
+                break;
+        }
+
+    // read EX_MEM_old
+    unsigned int RegDst = EX_MEM_old.RegDst;
+    REG NextPC = EX_MEM_old.NextPC;
+    REG ALUOut = EX_MEM_old.ALU_out;
+    REG VRs2 = EX_MEM_old.VRs2;
+    unsigned char MemWrite = EX_MEM_old.Ctrl_MEM_MemWrite;
+    unsigned char MemRead = EX_MEM_old.Ctrl_MEM_MemRead;
+    unsigned char RegWrite = EX_MEM_old.Ctrl_WB_RegWrite;
 
     REG VMemRead = 0;
 
@@ -2206,25 +2460,25 @@ void MEM()
                 break;
             case MEMWRITE_BYTE:
                 {
-                    unsigned char vWriteByte = (unsigned char)RegRs2;
+                    unsigned char vWriteByte = (unsigned char)VRs2;
                     WRITE_BYTE(ALUOut, vWriteByte);
                 }
                 break;
             case MEMWRITE_HWORD:
                 {
-                    unsigned short vWriteHword = (unsigned short)RegRs2;
+                    unsigned short vWriteHword = (unsigned short)VRs2;
                     WRITE_HWORD(ALUOut, vWriteHword);
                 }
                 break;
             case MEMWRITE_WORD:
                 {
-                    unsigned int vWriteWord = (unsigned int)RegRs2;
+                    unsigned int vWriteWord = (unsigned int)VRs2;
                     WRITE_WORD(ALUOut, vWriteWord);
                 }
                 break;
             case MEMWRITE_DWORD:
                 {
-                    WRITE_DWORD(ALUOut, RegRs2);
+                    WRITE_DWORD(ALUOut, VRs2);
                 }
                 break;
             default:
@@ -2283,22 +2537,44 @@ void MEM()
         }
 
     // write MEM_WB
-    MEM_WB.rd = RegDst;
+    MEM_WB.RegDst = RegDst;
     MEM_WB.NextPC = NextPC;
     MEM_WB.Mem_read = VMemRead;
     MEM_WB.ALU_out = ALUOut;
 
-    MEM_WB.Ctrl_WB_RegWrite = EX_MEM.Ctrl_WB_RegWrite;
+    MEM_WB.Ctrl_WB_RegWrite = RegWrite;
 }
 
 void WB()
 {
-    // read MEM_WB
-    unsigned int RegDst = MEM_WB.rd;
-    REG NextPC = MEM_WB.NextPC;
-    REG VMemRead = MEM_WB.Mem_read;
-    REG ALUOut = MEM_WB.ALU_out;
-    unsigned char RegWrite = MEM_WB.Ctrl_WB_RegWrite;
+    switch (StageMode[STAGE_WB])
+        {
+            case MODE_STALL:
+                {
+#ifdef PRINT_MODE
+                    printf("STALL WB\n");
+#endif
+                    return;
+                }
+                break;
+            case MODE_BUBBLE:
+                {
+#ifdef PRINT_MODE
+                    printf("BUBBLE WB\n");
+#endif
+                    return;
+                }
+                break;
+            default:
+                break;
+        }
+
+    // read MEM_WB_old
+    unsigned int RegDst = MEM_WB_old.RegDst;
+    REG NextPC = MEM_WB_old.NextPC;
+    REG VMemRead = MEM_WB_old.Mem_read;
+    REG ALUOut = MEM_WB_old.ALU_out;
+    unsigned char RegWrite = MEM_WB_old.Ctrl_WB_RegWrite;
 
     // write reg
     switch (RegWrite)
@@ -2327,6 +2603,6 @@ void WB()
                 ERROR(__LINE__);
         }
 
-
-    // write WB_IF
+    // update instruction count
+    InstCount++;
 }

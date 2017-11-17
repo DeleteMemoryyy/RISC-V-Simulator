@@ -2,7 +2,7 @@
 
 using namespace std;
 
-string fileName = "Test/qsort_mod";
+string fileName = "Test/n";
 
 int main()
 {

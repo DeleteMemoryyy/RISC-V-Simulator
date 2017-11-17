@@ -10,6 +10,7 @@
 #include <string>
 #include <time.h>
 
+// #define PRINT_MODE
 
 #define MEM_SIZE 1 << 24
 #define MEM_ST 1 << 17
@@ -50,6 +51,7 @@ const long long MASK_H = 0xffffffff00000000;
 const long long MASK_L = 0xffffffff;
 const long long MASK_SH = 0x3f;
 
+const char M_NAME[3][10] = {"LOAD", "STALL", "BUBBLE"};
 const char R_NAME[32][5] = {"zero", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",
                             "a1",   "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3", "s4", "s5",
                             "s6",   "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
@@ -64,12 +66,11 @@ extern int InstCount;
 extern int CycleCount;
 extern float CPI;
 
-extern IFID IF_ID;
-extern IDEX ID_EX;
-extern EXMEM EX_MEM;
-extern MEMWB MEM_WB;
-extern WBIF WB_IF;
-
+extern STAGEMODE StageMode[5],StageModeOld[5];
+extern IFID IF_ID,IF_ID_old;
+extern IDEX ID_EX,IF_EX_old;
+extern EXMEM EX_MEM,EX_MEM_old;
+extern MEMWB MEM_WB,MEM_WB_old;
 
 void load_memory();
 

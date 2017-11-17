@@ -257,13 +257,20 @@ int main()
                                          ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                              ImGuiWindowFlags_NoCollapse);
                             ImGui::Text(" ");
-                            ImGui::Text(" Last instruction:  %s", InstBuf);
-
                             ImGui::Text(" PC: 0x%llx", PC);
                             ImGui::SameLine(0, 40);
                             ImGui::Text(" EndPC: 0x%llx", endPC);
+                            ImGui::Text(" Last instruction:  %s", InstBuf);
+                            ImGui::Text(" Stage mode:");
+                            for (int i = 0; i < 5; ++i)
+                                {
+                                    ImGui::SameLine();
+                                    ImGui::Text(" %s", M_NAME[StageModeOld[i]]);
+                                }
                             ImGui::Text(" Instruction Count: %d", InstCount);
+                            ImGui::SameLine();
                             ImGui::Text(" Total Cycles: %d", CycleCount);
+                            ImGui::SameLine();
                             ImGui::Text(" CPI: %.3f", CPI);
                             ImGui::Text(" ");
 

@@ -3,70 +3,80 @@
 
 typedef unsigned long long REG;
 
+typedef unsigned char STAGEMODE;
+
 struct IFID
 {
-    unsigned int Inst;
+    unsigned int RegDst, RegRs1, RegRs2;
     REG InstPC;
     REG NextPC;
+    unsigned int EXTBit,EXTSrc;
 
-    unsigned char Ctrl_ID_Mode;
-    unsigned char Ctrl_ID_InstSize;
+    unsigned char Ctrl_ID_EXTOp;
+
+    unsigned char Ctrl_EX_BranchCmp;
+    unsigned char Ctrl_EX_ALUSrc;
+    unsigned char Ctrl_EX_ALUOp;
+    unsigned char Ctrl_EX_Branch;
+
+    unsigned char Ctrl_MEM_MemWrite;
+    unsigned char Ctrl_MEM_MemRead;
+
+    unsigned char Ctrl_WB_RegWrite;
 };
 
 
 struct IDEX
 {
-    unsigned int rd;
+    unsigned int RegDst;
     REG InstPC;
     REG NextPC;
+    REG VRs1,VRs2;
     long long Imm;
-    REG Reg_rs1, Reg_rs2;
 
-    unsigned char CTRL_EX_Mode;
     unsigned char Ctrl_EX_BranchCmp;
     unsigned char Ctrl_EX_ALUSrc;
     unsigned char Ctrl_EX_ALUOp;
-	unsigned char Ctrl_EX_Branch;
+    unsigned char Ctrl_EX_Branch;
 
     unsigned char Ctrl_MEM_MemWrite;
     unsigned char Ctrl_MEM_MemRead;
 
     unsigned char Ctrl_WB_RegWrite;
-
-
-} ;
+};
 
 struct EXMEM
 {
-    unsigned int rd;
+    unsigned int RegDst;
     REG NextPC;
     REG ALU_out;
-    REG Reg_rs2;
+    REG VRs2;
 
-    unsigned char Ctrl_MEM_Mode;
     unsigned char Ctrl_MEM_MemWrite;
     unsigned char Ctrl_MEM_MemRead;
 
     unsigned char Ctrl_WB_RegWrite;
-
-} ;
+};
 
 struct MEMWB
 {
-    unsigned int rd;
+    unsigned int RegDst;
     REG NextPC;
     REG Mem_read;
     REG ALU_out;
 
-    unsigned char Ctrl_WB_Mode;
     unsigned char Ctrl_WB_RegWrite;
-
-} ;
-
-struct WBIF
-{
-    unsigned char Ctrl_IF_Mode;
 };
+
+#define STAGE_IF 0
+#define STAGE_ID 1
+#define STAGE_EX 2
+#define STAGE_MEM 3
+#define STAGE_WB 4
+
+#define MODE_LOAD 0
+#define MODE_STALL 1
+#define MODE_BUBBLE 2
 
 #define INSTSIZE_16 0
 #define INSTSIZE_32 1
