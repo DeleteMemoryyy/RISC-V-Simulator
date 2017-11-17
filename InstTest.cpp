@@ -1141,6 +1141,27 @@ void testAll()
     printf("\n");
 
     // load/use Hazard
+    init();
+    reg[R_s0] = 0x30000;
+    WRITE_DWORD(0x30000 + 40, (ULL)(10));
+    WRITE_WORD(PC, 0x00558593);      // addi  a1, a1, 5
+    WRITE_WORD(PC + 4, 0x02842603);  // lw  a2, 40(s0)
+    WRITE_WORD(PC + 8, 0x00c58533);  // add  a0, a1, a2
+    cycle = 15;
+    while (cycle--)
+        {
+            simulate_one_step();
+            if (cycle > 3)
+                printf("Idf: %s\n", InstBuf);
+        }
+    printf("Ori: addi  a1, a1, 5\n");
+    printf("Ori: lw  a2, 40(s0)\n");
+    printf("Ori: add  a0, a1, a2\n");
+    printf("Exp Res: %lld\n", 15);
+    printf("Exe Res: %lld\n", reg[R_a0]);
+    printf("Exp PC: 0x%llx\n", 16 + 0x10100 + 12);
+    printf("Exe PC: 0x%llx\n", PC);
+    printf("\n");
 
     // address misprediction
     init();

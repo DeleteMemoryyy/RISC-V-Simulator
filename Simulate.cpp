@@ -11,6 +11,7 @@ int exit_flag = 0;
 unsigned char BranchFlag = BRANCH_NO;
 int ALUWait = 0;
 bool ALUWaitFinished = false;
+bool ALUWaitFinishThisCycle = false;
 // instruction string
 char InstBuf[100] = "";
 int InstCount = 0;
@@ -24,9 +25,6 @@ IDEX ID_EX, ID_EX_old;
 EXMEM EX_MEM, EX_MEM_old;
 MEMWB MEM_WB, MEM_WB_old;
 
-// last ALU operation
-static ALU_REC *LastALU = new ALU_REC, *ThisALU = new ALU_REC;
-
 void setup()
 {
     InstCount = 0;
@@ -37,6 +35,7 @@ void setup()
     exit_flag = 0;
     ALUWait = 0;
     ALUWaitFinished = false;
+    ALUWaitFinishThisCycle = false;
 
     StageMode[STAGE_IF] = MODE_LOAD;
     StageMode[STAGE_ID] = MODE_BUBBLE;
@@ -46,15 +45,6 @@ void setup()
 
     for (int i = 0; i < 5; ++i)
         StageModeOld[i] = MODE_BUBBLE;
-
-    LastALU->ALUOp = ALUOP_NOP;
-    LastALU->rd = R_zero;
-    LastALU->rs1 = R_zero;
-    LastALU->rs2 = R_zero;
-    ThisALU->ALUOp = ALUOP_NOP;
-    ThisALU->rd = R_zero;
-    ThisALU->rs1 = R_zero;
-    ThisALU->rs2 = R_zero;
 
     for (int i = 0; i < 32; ++i)
         reg[i] = 0;
@@ -104,6 +94,21 @@ bool simulate_one_step()
             StageMode[STAGE_ID] = MODE_STALL;
             StageMode[STAGE_EX] = MODE_STALL;
         }
+#ifdef BYPASS
+    if (StageMode[STAGE_ID] != MODE_BUBBLE && StageMode[STAGE_EX] == MODE_LOAD &&
+        ((IF_ID_old.RegRs1 != R_zero && IF_ID_old.RegRs1 == ID_EX_old.RegDst &&
+          (ID_EX_old.Ctrl_WB_RegWrite == REGWRITE_VALM ||
+           ((ALUWait > 0 || ALUWaitFinished || ALUWaitFinishThisCycle) &&
+            ID_EX_old.Ctrl_WB_RegWrite == REGWRITE_VALE))) ||
+         (IF_ID_old.RegRs2 != R_zero && IF_ID_old.RegRs2 == ID_EX_old.RegDst &&
+          (ID_EX_old.Ctrl_WB_RegWrite == REGWRITE_VALM ||
+           ((ALUWait > 0 || ALUWaitFinished || ALUWaitFinishThisCycle) &&
+            ID_EX_old.Ctrl_WB_RegWrite == REGWRITE_VALE)))))
+        {
+            StageMode[STAGE_IF] = MODE_STALL;
+            StageMode[STAGE_ID] = MODE_STALL;
+        }
+#else
     if (StageMode[STAGE_ID] != MODE_BUBBLE &&
         ((IF_ID_old.RegRs1 != R_zero &&
           ((StageMode[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs1 == ID_EX_old.RegDst) ||
@@ -118,6 +123,7 @@ bool simulate_one_step()
             StageMode[STAGE_IF] = MODE_STALL;
             StageMode[STAGE_ID] = MODE_STALL;
         }
+#endif
 
     // run
     IF();
@@ -140,7 +146,226 @@ bool simulate_one_step()
                 }
         }
 
-    // set bubble
+// set bubble
+#ifdef BYPASS
+    if (StageModeOld[STAGE_ID] != MODE_BUBBLE)
+        {
+            if (IF_ID_old.RegRs1 != R_zero)
+                {
+                    if (StageModeOld[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs1 == ID_EX_old.RegDst)
+                        {
+                            switch (ID_EX_old.Ctrl_WB_RegWrite)
+                                {
+                                    case REGWRITE_VALE:
+                                        {
+                                            if ((ALUWait > 0 || ALUWaitFinished ||
+                                                 ALUWaitFinishThisCycle))
+                                                {
+                                                    StageMode[STAGE_EX] = MODE_BUBBLE;
+                                                }
+                                            else
+                                                {
+
+                                                    ID_EX.VRs1 = EX_MEM.ALU_out;
+#ifdef PRINT_BYPASS
+                                                    printf("Bypass: ID_EX.VRs1 = EX_MEM.ALU_out\n");
+#endif
+                                                }
+                                        }
+                                        break;
+                                    case REGWRITE_VALM:
+                                        {
+                                            StageMode[STAGE_EX] = MODE_BUBBLE;
+                                        }
+                                        break;
+                                    case REGWRITE_VALP:
+                                        {
+                                            ID_EX.VRs1 = ID_EX_old.NextPC;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs1 = ID_EX_old.NextPC\n");
+#endif
+                                        }
+                                        break;
+                                    default:
+                                        ERROR(__LINE__);
+                                }
+                        }
+                    else if (StageModeOld[STAGE_MEM] == MODE_LOAD &&
+                             IF_ID_old.RegRs1 == EX_MEM_old.RegDst)
+                        {
+                            switch (EX_MEM_old.Ctrl_WB_RegWrite)
+                                {
+                                    case REGWRITE_VALE:
+                                        {
+                                            ID_EX.VRs1 = EX_MEM_old.ALU_out;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs1 = EX_MEM_old.ALU_out\n");
+#endif
+                                        }
+                                        break;
+                                    case REGWRITE_VALM:
+                                        {
+                                            ID_EX.VRs1 = MEM_WB.Mem_read;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs1 = MEM_WB.Mem_read\n");
+#endif
+                                        }
+                                        break;
+                                    case REGWRITE_VALP:
+                                        {
+                                            ID_EX.VRs1 = EX_MEM_old.NextPC;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs1 = EX_MEM_old.NextPC\n");
+#endif
+                                        }
+                                        break;
+                                    default:
+                                        ERROR(__LINE__);
+                                }
+                        }
+                    else if (StageModeOld[STAGE_WB] == MODE_LOAD &&
+                             IF_ID_old.RegRs1 == MEM_WB_old.RegDst)
+                        {
+                            switch (MEM_WB_old.Ctrl_WB_RegWrite)
+                                {
+                                    case REGWRITE_VALE:
+                                        {
+                                            ID_EX.VRs1 = MEM_WB_old.ALU_out;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs1 = MEM_WB_old.ALU_out\n");
+#endif
+                                        }
+                                        break;
+                                    case REGWRITE_VALM:
+                                        {
+                                            ID_EX.VRs1 = MEM_WB_old.Mem_read;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs1 = MEM_WB_old.Mem_read\n");
+#endif
+                                        }
+                                        break;
+                                    case REGWRITE_VALP:
+                                        {
+                                            ID_EX.VRs1 = MEM_WB_old.NextPC;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs1 = MEM_WB_old.NextPC\n");
+#endif
+                                        }
+                                        break;
+                                    default:
+                                        ERROR(__LINE__);
+                                }
+                        }
+                }
+            if (IF_ID_old.RegRs2 != R_zero)
+                {
+                    if (StageModeOld[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs2 == ID_EX_old.RegDst)
+                        {
+                            switch (ID_EX_old.Ctrl_WB_RegWrite)
+                                {
+                                    case REGWRITE_VALE:
+                                        {
+                                            if ((ALUWait > 0 || ALUWaitFinished ||
+                                                 ALUWaitFinishThisCycle))
+                                                {
+                                                    StageMode[STAGE_EX] = MODE_BUBBLE;
+                                                }
+                                            else
+                                                {
+
+                                                    ID_EX.VRs2 = EX_MEM.ALU_out;
+#ifdef PRINT_BYPASS
+                                                    printf("Bypass: ID_EX.VRs2 = EX_MEM.ALU_out\n");
+#endif
+                                                }
+                                        }
+                                        break;
+                                    case REGWRITE_VALM:
+                                        {
+                                            StageMode[STAGE_EX] = MODE_BUBBLE;
+                                        }
+                                        break;
+                                    case REGWRITE_VALP:
+                                        {
+                                            ID_EX.VRs2 = ID_EX_old.NextPC;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs2 = ID_EX_old.NextPC\n");
+#endif
+                                        }
+                                        break;
+                                    default:
+                                        ERROR(__LINE__);
+                                }
+                        }
+                    else if (StageModeOld[STAGE_MEM] == MODE_LOAD &&
+                             IF_ID_old.RegRs2 == EX_MEM_old.RegDst)
+                        {
+                            switch (EX_MEM_old.Ctrl_WB_RegWrite)
+                                {
+                                    case REGWRITE_VALE:
+                                        {
+                                            ID_EX.VRs2 = EX_MEM_old.ALU_out;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs2 = EX_MEM_old.ALU_out\n");
+#endif
+                                        }
+                                        break;
+                                    case REGWRITE_VALM:
+                                        {
+                                            ID_EX.VRs2 = MEM_WB.Mem_read;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs2 = MEM_WB.Mem_read\n");
+#endif
+                                        }
+                                        break;
+                                    case REGWRITE_VALP:
+                                        {
+                                            ID_EX.VRs2 = EX_MEM_old.NextPC;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs2 = EX_MEM_old.NextPC\n");
+#endif
+                                        }
+                                        break;
+                                    default:
+                                        ERROR(__LINE__);
+                                }
+                        }
+                    else if (StageModeOld[STAGE_WB] == MODE_LOAD &&
+                             IF_ID_old.RegRs2 == MEM_WB_old.RegDst)
+                        {
+                            switch (MEM_WB_old.Ctrl_WB_RegWrite)
+                                {
+                                    case REGWRITE_VALE:
+                                        {
+                                            ID_EX.VRs2 = MEM_WB_old.ALU_out;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs2 = MEM_WB_old.ALU_out\n");
+#endif
+                                        }
+                                        break;
+                                    case REGWRITE_VALM:
+                                        {
+                                            ID_EX.VRs2 = MEM_WB_old.Mem_read;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs2 = MEM_WB_old.Mem_read\n");
+#endif
+                                        }
+                                        break;
+                                    case REGWRITE_VALP:
+                                        {
+                                            ID_EX.VRs2 = MEM_WB_old.NextPC;
+#ifdef PRINT_BYPASS
+                                            printf("Bypass: ID_EX.VRs2 = MEM_WB_old.NextPC\n");
+#endif
+                                        }
+                                        break;
+                                    default:
+                                        ERROR(__LINE__);
+                                }
+                        }
+                }
+        }
+#else
     if (StageModeOld[STAGE_ID] != MODE_BUBBLE &&
         ((IF_ID_old.RegRs1 != R_zero &&
           ((StageModeOld[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs1 == ID_EX_old.RegDst) ||
@@ -154,6 +379,7 @@ bool simulate_one_step()
         {
             StageMode[STAGE_EX] = MODE_BUBBLE;
         }
+#endif
     if (BranchFlag == BRANCH_YES)  // branch
         {
             StageMode[STAGE_ID] = MODE_BUBBLE;
@@ -1868,15 +2094,12 @@ void IF()
                 }
         }
 
-    // record ALU operation
-    swap(LastALU, ThisALU);
-    ThisALU->ALUOp = ALUOp;
-    ThisALU->rd = rd;
-    ThisALU->rs1 = rs1;
-    ThisALU->rs2 = rs2;
+    // predict PC: no branch
+    // #ifdef PREDICT
 
-    // predicting PC: no branch
+    // #else
     PC = NextPC;
+    // #endif
 
     // write IF_ID
     IF_ID.RegDst = rd;
@@ -2003,8 +2226,10 @@ void EX()
     if (ALUWaitFinished)
         {
             ALUWaitFinished = false;
+            ALUWaitFinishThisCycle = true;
             return;
         }
+    ALUWaitFinishThisCycle = false;
     if (ALUWait > 0)
         {
             ALUWait--;
