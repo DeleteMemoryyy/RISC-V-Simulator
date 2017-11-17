@@ -256,7 +256,7 @@ int main()
                             ImGui::Begin("Running Status", NULL,
                                          ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                              ImGuiWindowFlags_NoCollapse);
-                            ImGui::Text(" ");
+                            // ImGui::Text(" ");
                             ImGui::Text(" PC: 0x%llx", PC);
                             ImGui::SameLine(0, 40);
                             ImGui::Text(" EndPC: 0x%llx", endPC);
@@ -272,9 +272,25 @@ int main()
                             ImGui::Text(" Total Cycles: %d", CycleCount);
                             ImGui::SameLine();
                             ImGui::Text(" CPI: %.3f", CPI);
-                            #ifdef PREDICT
+#ifdef BYPASS
+                            ImGui::Text(" Bypass: %d", BypassCount);
+                            ImGui::SameLine();
+                            ImGui::Text(" Load-use hazard: %d", LoadUseHazardCount);
+                            ImGui::SameLine();
+#else
+                            ImGui::Text(" Data hazard: %d", DataHazardCount);
+                            ImGui::SameLine();
+                            ImGui::Text(" Load-use hazard: %d", LoadUseHazardCount);
+                            ImGui::SameLine();
+#endif
+                            ImGui::Text(" Mispredicted: %d", MispredictedCount);
+#ifdef PREDICT
                             ImGui::Text(" Correct predictions: %d", PredictCorrectCount);
-                            #endif
+                            ImGui::SameLine();
+                            ImGui::Text(" Predictable: %d", PredictableCount);
+                            ImGui::SameLine();
+                            ImGui::Text(" Accuracy: %.3f", PredictiveAccuracy);
+#endif
                             ImGui::Text(" ");
 
                             ImGui::End();

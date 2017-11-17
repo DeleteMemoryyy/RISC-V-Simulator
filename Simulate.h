@@ -10,10 +10,6 @@
 #include <string>
 #include <time.h>
 
-// #define PRINT_MODE
-// #define PRINT_BYPASS
-#define BYPASS
-#define PREDICT
 #define BTB_SIZE 8
 
 #define MEM_SIZE 1 << 24
@@ -73,7 +69,13 @@ extern char InstBuf[100];
 extern int InstCount;
 extern int CycleCount;
 extern float CPI;
+extern int DataHazardCount;
+extern int LoadUseHazardCount;
+extern int BypassCount;
+extern int MispredictedCount;
+extern int PredictableCount;
 extern int PredictCorrectCount;
+extern float PredictiveAccuracy;
 
 extern STAGEMODE StageMode[5], StageModeOld[5];
 extern BTB btb[BTB_SIZE];
