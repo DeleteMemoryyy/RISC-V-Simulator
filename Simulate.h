@@ -13,7 +13,9 @@
 // #define PRINT_MODE
 // #define PRINT_BYPASS
 #define BYPASS
-// #define PREDICT
+#define PREDICT
+#define BTB_SIZE 8
+
 #define MEM_SIZE 1 << 24
 #define MEM_ST 1 << 17
 #define MEM_ED 0xfe0000
@@ -41,6 +43,14 @@
 #define WRITE_WORD(vaddr, value) (*((unsigned int *)(memory + V_TO_P((vaddr)))) = (value))
 #define WRITE_DWORD(vaddr, value) (*((ULL *)(memory + V_TO_P((vaddr)))) = (value))
 
+struct BTB
+{
+    ULL InstPC;
+    ULL PredictedPC;
+    bool valid;
+    bool status1, status2;
+};
+
 const long long MASK_H = 0xffffffff00000000;
 const long long MASK_L = 0xffffffff;
 const long long MASK_SH = 0x3f;
@@ -55,19 +65,23 @@ extern REG reg[32];
 extern ULL PC;
 extern ULL endPC;
 extern int exit_flag;
-extern unsigned char BranchFlag;
+extern bool Mispredicted;
 extern int ALUWait;
 extern bool ALUWaitFinished;
+extern bool ALUWaitFinishThisCycle;
+extern int btbReplaceIdx;
 extern char InstBuf[100];
 extern int InstCount;
 extern int CycleCount;
 extern float CPI;
+extern int PredictCorrectCount;
 
-extern STAGEMODE StageMode[5],StageModeOld[5];
-extern IFID IF_ID,IF_ID_old;
-extern IDEX ID_EX,IF_EX_old;
-extern EXMEM EX_MEM,EX_MEM_old;
-extern MEMWB MEM_WB,MEM_WB_old;
+extern STAGEMODE StageMode[5], StageModeOld[5];
+extern BTB btb[BTB_SIZE];
+extern IFID IF_ID, IF_ID_old;
+extern IDEX ID_EX, IF_EX_old;
+extern EXMEM EX_MEM, EX_MEM_old;
+extern MEMWB MEM_WB, MEM_WB_old;
 
 void load_memory();
 

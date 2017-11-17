@@ -8,18 +8,21 @@ REG reg[32] = {0};
 ULL PC = 0;
 ULL endPC = 0;
 int exit_flag = 0;
-unsigned char BranchFlag = BRANCH_NO;
+bool Mispredicted = false;
 int ALUWait = 0;
 bool ALUWaitFinished = false;
 bool ALUWaitFinishThisCycle = false;
+int btbReplaceIdx = 0;
 // instruction string
 char InstBuf[100] = "";
 int InstCount = 0;
 int CycleCount = 0;
+int PredictCorrectCount = 0;
 float CPI = 0.0f;
 
 // transmission
 STAGEMODE StageMode[5], StageModeOld[5];
+BTB btb[BTB_SIZE];
 IFID IF_ID, IF_ID_old;
 IDEX ID_EX, ID_EX_old;
 EXMEM EX_MEM, EX_MEM_old;
@@ -27,15 +30,18 @@ MEMWB MEM_WB, MEM_WB_old;
 
 void setup()
 {
-    InstCount = 0;
-    CycleCount = 0;
-    CPI = 0.0f;
     memset(InstBuf, 0, sizeof(InstBuf));
-    BranchFlag = BRANCH_NO;
+    Mispredicted = false;
     exit_flag = 0;
     ALUWait = 0;
     ALUWaitFinished = false;
     ALUWaitFinishThisCycle = false;
+    btbReplaceIdx = 0;
+
+    for (int i = 0; i < BTB_SIZE; ++i)
+        {
+            btb[i].valid = false;
+        }
 
     StageMode[STAGE_IF] = MODE_LOAD;
     StageMode[STAGE_ID] = MODE_BUBBLE;
@@ -56,6 +62,11 @@ void setup()
     endPC = mainAddr + mainSize - 3;
     reg[R_gp] = gp;
     reg[R_sp] = P_TO_V(MEM_ED);
+
+    InstCount = 0;
+    CycleCount = 0;
+    CPI = 0.0f;
+    PredictCorrectCount = 0;
 }
 
 // load code and data
@@ -85,7 +96,7 @@ bool simulate_one_step()
         }
 
     reg[0] = 0;  // register zero should alwarys be 0
-    BranchFlag = BRANCH_NO;
+    Mispredicted = false;
 
     // set stall
     if (ALUWait > 0)  // wait for division
@@ -380,7 +391,7 @@ bool simulate_one_step()
             StageMode[STAGE_EX] = MODE_BUBBLE;
         }
 #endif
-    if (BranchFlag == BRANCH_YES)  // branch
+    if (Mispredicted)  // mispredicted PC
         {
             StageMode[STAGE_ID] = MODE_BUBBLE;
             StageMode[STAGE_EX] = MODE_BUBBLE;
@@ -446,6 +457,7 @@ void IF()
                     IF_ID.Ctrl_EX_ALUSrc = ALUSRC_NONE;
                     IF_ID.Ctrl_EX_ALUOp = ALUOP_NOP;
                     IF_ID.Ctrl_EX_Branch = BRANCH_NO;
+                    IF_ID.Ctrl_EX_PredictedBranch = BRANCH_NO;
                     IF_ID.Ctrl_MEM_MemWrite = MEMWRITE_NO;
                     IF_ID.Ctrl_MEM_MemRead = MEMREAD_NO;
                     IF_ID.Ctrl_WB_RegWrite = REGWRITE_NO;
@@ -466,7 +478,7 @@ void IF()
     unsigned char ALUOp = ALUOP_NOP, ALUSrc = ALUSRC_NONE, BranchCmp = BRANCHCMP_NOP;
     unsigned char MemRead = MEMREAD_NO, MemWrite = MEMWRITE_NO;
     unsigned char RegWrite = REGWRITE_NO;
-    unsigned char Branch = BRANCH_NO;
+    unsigned char Branch = BRANCH_NO, PredictedBranch = BRANCH_NO;
 
     // instruction sections
     unsigned int rs1 = R_zero, rs2 = R_zero, rd = R_zero;
@@ -2094,12 +2106,26 @@ void IF()
                 }
         }
 
-    // predict PC: no branch
-    // #ifdef PREDICT
-
-    // #else
+    // predict PC
     PC = NextPC;
-    // #endif
+#ifdef PREDICT
+    // jal || B-type
+    if ((Branch == BRANCH_YES && ALUSrc == ALUSRC_PC_IMM) || BranchCmp != BRANCHCMP_NOP)
+        {
+            for (int i = 0; i < BTB_SIZE; ++i)
+                {
+                    if (btb[i].valid && InstPC == btb[i].InstPC)
+                        {
+                            if (Branch == BRANCH_YES || btb[i].status2)
+                                {
+                                    PC = btb[i].PredictedPC;
+                                    PredictedBranch = BRANCH_YES;
+                                }
+                            break;
+                        }
+                }
+        }
+#endif
 
     // write IF_ID
     IF_ID.RegDst = rd;
@@ -2115,6 +2141,7 @@ void IF()
     IF_ID.Ctrl_EX_ALUSrc = ALUSrc;
     IF_ID.Ctrl_EX_ALUOp = ALUOp;
     IF_ID.Ctrl_EX_Branch = Branch;
+    IF_ID.Ctrl_EX_PredictedBranch = PredictedBranch;
     IF_ID.Ctrl_MEM_MemWrite = MemWrite;
     IF_ID.Ctrl_MEM_MemRead = MemRead;
     IF_ID.Ctrl_WB_RegWrite = RegWrite;
@@ -2148,6 +2175,7 @@ void ID()
                     ID_EX.Ctrl_EX_ALUSrc = ALUSRC_NONE;
                     ID_EX.Ctrl_EX_ALUOp = ALUOP_NOP;
                     ID_EX.Ctrl_EX_Branch = BRANCH_NO;
+                    ID_EX.Ctrl_EX_PredictedBranch = BRANCH_NO;
                     ID_EX.Ctrl_MEM_MemWrite = MEMWRITE_NO;
                     ID_EX.Ctrl_MEM_MemRead = MEMREAD_NO;
                     ID_EX.Ctrl_WB_RegWrite = REGWRITE_NO;
@@ -2172,6 +2200,7 @@ void ID()
     unsigned char ALUSrc = IF_ID_old.Ctrl_EX_ALUSrc;
     unsigned char ALUOp = IF_ID_old.Ctrl_EX_ALUOp;
     unsigned char Branch = IF_ID_old.Ctrl_EX_Branch;
+    unsigned char PredictedBranch = IF_ID_old.Ctrl_EX_PredictedBranch;
     unsigned char MemWrite = IF_ID_old.Ctrl_MEM_MemWrite;
     unsigned char MemRead = IF_ID_old.Ctrl_MEM_MemRead;
     unsigned char RegWrite = IF_ID_old.Ctrl_WB_RegWrite;
@@ -2215,6 +2244,7 @@ void ID()
     ID_EX.Ctrl_EX_ALUSrc = ALUSrc;
     ID_EX.Ctrl_EX_ALUOp = ALUOp;
     ID_EX.Ctrl_EX_Branch = Branch;
+    ID_EX.Ctrl_EX_PredictedBranch = PredictedBranch;
     ID_EX.Ctrl_MEM_MemWrite = MemWrite;
     ID_EX.Ctrl_MEM_MemRead = MemRead;
     ID_EX.Ctrl_WB_RegWrite = RegWrite;
@@ -2279,6 +2309,7 @@ void EX()
     unsigned char ALUSrc = ID_EX_old.Ctrl_EX_ALUSrc;
     unsigned char ALUOp = ID_EX_old.Ctrl_EX_ALUOp;
     unsigned char Branch = ID_EX_old.Ctrl_EX_Branch;
+    unsigned char PredictedBranch = ID_EX_old.Ctrl_EX_PredictedBranch;
     unsigned char MemWrite = ID_EX_old.Ctrl_MEM_MemWrite;
     unsigned char MemRead = ID_EX_old.Ctrl_MEM_MemRead;
     unsigned char RegWrite = ID_EX_old.Ctrl_WB_RegWrite;
@@ -2653,12 +2684,90 @@ void EX()
         {
             case BRANCH_NO:
                 {
+#ifdef PREDICT
+                    if (BranchCmp != BRANCHCMP_NOP)
+                        {
+                            int existFlag = false;
+                            if (PredictedBranch == BRANCH_NO)  // successful prediction
+                                {
+                                    PredictCorrectCount++;
+                                    // printf("Predict succeed\n");
+                                }
+                            else
+                                {
+                                    Mispredicted = true;
+                                }
+                            for (int i = 0; i < BTB_SIZE; ++i)
+                                {
+                                    if (btb[i].valid && btb[i].InstPC == InstPC)
+                                        {
+                                            if (!btb[i].status1 && btb[i].status2)
+                                                {
+                                                    btb[i].status2 = false;
+                                                }
+                                            btb[i].status1 = false;
+                                            existFlag = true;
+                                            break;
+                                        }
+                                }
+                            if (!existFlag)
+                                {
+                                    Mispredicted = true;
+                                    btb[btbReplaceIdx].valid = true;
+                                    btb[btbReplaceIdx].InstPC = InstPC;
+                                    btb[btbReplaceIdx].PredictedPC = ALUOut;
+                                    btb[btbReplaceIdx].status1 = false;
+                                    btb[btbReplaceIdx].status2 = false;
+                                    btbReplaceIdx = (btbReplaceIdx + 1) % BTB_SIZE;
+                                }
+                            if (Mispredicted)
+                                PC = NextPC;
+                        }
+#endif
                 }
                 break;
             case BRANCH_YES:
                 {
+#ifdef PREDICT
+                    int existFlag = false;
+                    if (PredictedBranch == BRANCH_YES)  // successful prediction
+                        {
+                            PredictCorrectCount++;
+                            // printf("Predict succeed\n");
+                        }
+                    else
+                        {
+                            Mispredicted = true;
+                        }
+                    for (int i = 0; i < BTB_SIZE; ++i)
+                        {
+                            if (btb[i].valid && btb[i].InstPC == InstPC)
+                                {
+                                    if (btb[i].status1)  // update BTB status
+                                        {
+                                            btb[i].status2 = true;
+                                        }
+                                    btb[i].status1 = true;
+                                    existFlag = true;
+                                    break;
+                                }
+                        }
+                    if (!existFlag)
+                        {
+                            Mispredicted = true;
+                            btb[btbReplaceIdx].valid = true;
+                            btb[btbReplaceIdx].InstPC = InstPC;
+                            btb[btbReplaceIdx].PredictedPC = ALUOut;
+                            btb[btbReplaceIdx].status1 = true;
+                            btb[btbReplaceIdx].status2 = false;
+                            btbReplaceIdx = (btbReplaceIdx + 1) % BTB_SIZE;
+                        }
+                    if (Mispredicted)
+                        PC = ALUOut;
+#else
+                    Mispredicted = true;
                     PC = ALUOut;
-                    BranchFlag = BRANCH_YES;
+#endif
                 }
                 break;
             default:

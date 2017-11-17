@@ -2,7 +2,7 @@
 
 using namespace std;
 
-string fileName = "Test/1";
+string fileName = "Test/n";
 
 int main()
 {

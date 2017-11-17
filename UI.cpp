@@ -272,6 +272,9 @@ int main()
                             ImGui::Text(" Total Cycles: %d", CycleCount);
                             ImGui::SameLine();
                             ImGui::Text(" CPI: %.3f", CPI);
+                            #ifdef PREDICT
+                            ImGui::Text(" Correct predictions: %d", PredictCorrectCount);
+                            #endif
                             ImGui::Text(" ");
 
                             ImGui::End();

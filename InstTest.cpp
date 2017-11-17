@@ -11,9 +11,16 @@ static int init()
     StageMode[STAGE_MEM] = MODE_BUBBLE;
     StageMode[STAGE_WB] = MODE_BUBBLE;
 
-    BranchFlag = BRANCH_NO;
+    Mispredicted = false;
     ALUWait = 0;
     ALUWaitFinished = false;
+    ALUWaitFinishThisCycle = false;
+    btbReplaceIdx = 0;
+
+    for (int i = 0; i < BTB_SIZE; ++i)
+        {
+            btb[i].valid = false;
+        }
 
     PC = 0x10100;
 
@@ -27,6 +34,7 @@ static int init()
 void testAll()
 {
     int cycle = 0;
+    int btbIdx = 0;
 
     // RV32I U
     // LUI
@@ -1277,6 +1285,101 @@ void testAll()
     printf("Exe Res: %lld\n", reg[R_a6]);
     printf("Exp PC: 0x%llx\n", 32 + 0x10500 + 40);
     printf("Exe PC: 0x%llx\n", PC);
+    printf("\n");
+
+    // btb
+    init();
+    WRITE_WORD(PC, 0x00558593);            // addi  a1, a1, 5
+    WRITE_WORD(PC + 4, 0x00008567);        // jalr  a0, ra, 0
+    WRITE_WORD(PC + 8, 0x00758593);        // addi  a1, a1, 7
+    WRITE_WORD(PC + 12, 0x00a60613);       // addi  a2, a2, 10
+    WRITE_WORD(0x10500, 0x00458593);       // addi  a1, a1, 4
+    WRITE_WORD(0x10500 + 4, 0x00670713);   // addi  a4, a4, 6
+    WRITE_WORD(0x10500 + 8, 0x00c78793);   // addi  a5, a5, 12
+    WRITE_WORD(0x10500 + 12, 0x01280813);  // addi  a6, a6, 18
+    reg[R_ra] = 0x10500;
+    btb[0].valid = true;
+    btb[0].InstPC = PC + 4;
+    btb[0].PredictedPC = 0x10500;
+    btb[0].status1 = false;
+    btb[0].status2 = true;
+    cycle = 20;
+    while (cycle--)
+        {
+            simulate_one_step();
+            if (cycle > 3)
+                printf("Idf: %s\n", InstBuf);
+        }
+    printf("Ori: addi  a1, a1, %lld\n", 5);
+    printf("Ori: jalr  a0, ra, %lld\n", 0);
+    printf("Ori: addi  a1, a1, %lld\n", 4);
+    printf("Ori: addi  a4, a4, %lld\n", 6);
+    printf("Ori: addi  a5, a5, %lld\n", 12);
+    printf("Ori: addi  a6, a6, %lld\n", 18);
+    printf("Exp Res: 0x%llx\n", 0x10100 + 8);
+    printf("Exe Res: 0x%llx\n", reg[R_a0]);
+    printf("Exp Res: %lld\n", 9);
+    printf("Exe Res: %lld\n", reg[R_a1]);
+    printf("Exp Res: %lld\n", 0);
+    printf("Exe Res: %lld\n", reg[R_a2]);
+    printf("Exp Res: %lld\n", 6);
+    printf("Exe Res: %lld\n", reg[R_a4]);
+    printf("Exp Res: %lld\n", 12);
+    printf("Exe Res: %lld\n", reg[R_a5]);
+    printf("Exp Res: %lld\n", 18);
+    printf("Exe Res: %lld\n", reg[R_a6]);
+    printf("Exp PC: 0x%llx\n", 32 + 0x10500 + 40);
+    printf("Exe PC: 0x%llx\n", PC);
+    btbIdx = 0;
+    printf("Exp BTB: valid: 1, InstPC: 0x%llx, Predicted PC: 0x%llx, status1: 1, status2: 1\n",
+           0x10100 + 4, 0x10500);
+    printf("Exc BTB: valid: %d, InstPC: 0x%llx, Predicted PC:0x%llx, status1: %d, staus2: %d\n",
+           btb[btbIdx].valid, btb[btbIdx].InstPC, btb[btbIdx].PredictedPC, btb[btbIdx].status1,
+           btb[btbIdx].status2);
+    init();
+    WRITE_WORD(PC, 0x00558593);            // addi  a1, a1, 5
+    WRITE_WORD(PC + 4, 0x00008567);        // jalr  a0, ra, 0
+    WRITE_WORD(PC + 8, 0x00758593);        // addi  a1, a1, 7
+    WRITE_WORD(PC + 12, 0x00a60613);       // addi  a2, a2, 10
+    WRITE_WORD(0x10500, 0x00458593);       // addi  a1, a1, 4
+    WRITE_WORD(0x10500 + 4, 0x00670713);   // addi  a4, a4, 6
+    WRITE_WORD(0x10500 + 8, 0x00c78793);   // addi  a5, a5, 12
+    WRITE_WORD(0x10500 + 12, 0x01280813);  // addi  a6, a6, 18
+    reg[R_ra] = 0x10500;
+    cycle = 20;
+    while (cycle--)
+        {
+            simulate_one_step();
+            if (cycle > 3)
+                printf("Idf: %s\n", InstBuf);
+        }
+    printf("Ori: addi  a1, a1, %lld\n", 5);
+    printf("Ori: jalr  a0, ra, %lld\n", 0);
+    printf("Ori: addi  a1, a1, %lld\n", 4);
+    printf("Ori: addi  a4, a4, %lld\n", 6);
+    printf("Ori: addi  a5, a5, %lld\n", 12);
+    printf("Ori: addi  a6, a6, %lld\n", 18);
+    printf("Exp Res: 0x%llx\n", 0x10100 + 8);
+    printf("Exe Res: 0x%llx\n", reg[R_a0]);
+    printf("Exp Res: %lld\n", 9);
+    printf("Exe Res: %lld\n", reg[R_a1]);
+    printf("Exp Res: %lld\n", 0);
+    printf("Exe Res: %lld\n", reg[R_a2]);
+    printf("Exp Res: %lld\n", 6);
+    printf("Exe Res: %lld\n", reg[R_a4]);
+    printf("Exp Res: %lld\n", 12);
+    printf("Exe Res: %lld\n", reg[R_a5]);
+    printf("Exp Res: %lld\n", 18);
+    printf("Exe Res: %lld\n", reg[R_a6]);
+    printf("Exp PC: 0x%llx\n", 32 + 0x10500 + 40);
+    printf("Exe PC: 0x%llx\n", PC);
+    btbIdx = (btbReplaceIdx + BTB_SIZE - 1) % BTB_SIZE;
+    printf("Exp BTB: valid: 1, InstPC: 0x%llx, Predicted PC: 0x%llx, status1: 1, status2: 0\n",
+           0x10100 + 4, 0x10500);
+    // for (btbIdx = 0; btbIdx < BTB_SIZE; ++btbIdx)
+    printf("Exc BTB: valid: %d, InstPC: 0x%llx, Predicted PC:0x%llx, status1: %d, staus2: %d\n",
+           btb[btbIdx].valid, btb[btbIdx].InstPC, btb[btbIdx].PredictedPC, btb[btbIdx].status1,
+           btb[btbIdx].status2);
     printf("\n");
 }
 

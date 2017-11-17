@@ -18,6 +18,7 @@ struct IFID
     unsigned char Ctrl_EX_ALUSrc;
     unsigned char Ctrl_EX_ALUOp;
     unsigned char Ctrl_EX_Branch;
+    unsigned char Ctrl_EX_PredictedBranch;
 
     unsigned char Ctrl_MEM_MemWrite;
     unsigned char Ctrl_MEM_MemRead;
@@ -38,6 +39,7 @@ struct IDEX
     unsigned char Ctrl_EX_ALUSrc;
     unsigned char Ctrl_EX_ALUOp;
     unsigned char Ctrl_EX_Branch;
+    unsigned char Ctrl_EX_PredictedBranch;
 
     unsigned char Ctrl_MEM_MemWrite;
     unsigned char Ctrl_MEM_MemRead;
