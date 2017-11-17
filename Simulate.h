@@ -11,6 +11,8 @@
 #include <time.h>
 
 // #define PRINT_MODE
+// #define BYPASS
+#define PREDICT
 
 #define MEM_SIZE 1 << 24
 #define MEM_ST 1 << 17
@@ -38,14 +40,6 @@
 #define WRITE_HWORD(vaddr, value) (*((unsigned short *)(memory + V_TO_P((vaddr)))) = (value))
 #define WRITE_WORD(vaddr, value) (*((unsigned int *)(memory + V_TO_P((vaddr)))) = (value))
 #define WRITE_DWORD(vaddr, value) (*((ULL *)(memory + V_TO_P((vaddr)))) = (value))
-
-struct ALU_REC
-{
-    unsigned char ALUOp;
-    unsigned char rd;
-    unsigned char rs1;
-    unsigned char rs2;
-};
 
 const long long MASK_H = 0xffffffff00000000;
 const long long MASK_L = 0xffffffff;

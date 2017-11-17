@@ -800,9 +800,9 @@ Exe PC: 0x10114
 Idf: addi  a1, a1, 5
 Idf: addi  a2, a2, 10
 Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
@@ -814,13 +814,13 @@ Ori: add  a0, a1, a2
 Exp Res: 15
 Exe Res: 15
 Exp PC: 0x1011c
-Exe PC: 0x10130
+Exe PC: 0x1013c
 Idf: addi  a1, a1, 5
 Idf: addi  a2, a2, 10
 Idf: addi  zero, zero, 0
 Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
@@ -833,13 +833,13 @@ Ori: add  a0, a1, a2
 Exp Res: 15
 Exe Res: 15
 Exp PC: 0x10120
-Exe PC: 0x10134
+Exe PC: 0x1013c
 Idf: addi  a1, a1, 5
 Idf: addi  a2, a2, 10
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
+Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
@@ -853,7 +853,7 @@ Ori: add  a0, a1, a2
 Exp Res: 15
 Exe Res: 15
 Exp PC: 0x10124
-Exe PC: 0x10138
+Exe PC: 0x1013c
 
 Idf: jalr  a0, a1, 40
 Idf: addi  a1, a1, 5
@@ -912,7 +912,7 @@ Exe PC: 0x10310
 Idf: addi  a1, a1, 5
 Idf: jalr  a0, ra, 0
 Idf: addi  a1, a1, 7
-Idf: addi  a1, a1, 7
+Idf: addi  a2, a2, 10
 Idf: addi  a1, a1, 4
 Idf: addi  a4, a4, 6
 Idf: addi  a5, a5, 12
