@@ -10,8 +10,7 @@ ULL endPC = 0;
 int exit_flag = 0;
 bool Mispredicted = false;
 int ALUWait = 0;
-bool ALUWaitFinished = false;
-bool ALUWaitFinishThisCycle = false;
+bool wait_finish_flag = false;
 int btbReplaceIdx = 0;
 // instruction string
 char InstBuf[100] = "";
@@ -34,8 +33,7 @@ void setup()
     Mispredicted = false;
     exit_flag = 0;
     ALUWait = 0;
-    ALUWaitFinished = false;
-    ALUWaitFinishThisCycle = false;
+    wait_finish_flag = false;
     btbReplaceIdx = 0;
 
     for (int i = 0; i < BTB_SIZE; ++i)
@@ -97,6 +95,7 @@ bool simulate_one_step()
 
     reg[0] = 0;  // register zero should alwarys be 0
     Mispredicted = false;
+    wait_finish_flag = (ALUWait == 1) ? true : false;
 
     // set stall
     if (ALUWait > 0)  // wait for division
@@ -108,13 +107,9 @@ bool simulate_one_step()
 #ifdef BYPASS
     if (StageMode[STAGE_ID] != MODE_BUBBLE && StageMode[STAGE_EX] == MODE_LOAD &&
         ((IF_ID_old.RegRs1 != R_zero && IF_ID_old.RegRs1 == ID_EX_old.RegDst &&
-          (ID_EX_old.Ctrl_WB_RegWrite == REGWRITE_VALM ||
-           ((ALUWait > 0 || ALUWaitFinished || ALUWaitFinishThisCycle) &&
-            ID_EX_old.Ctrl_WB_RegWrite == REGWRITE_VALE))) ||
+          ID_EX_old.Ctrl_WB_RegWrite == REGWRITE_VALM) ||
          (IF_ID_old.RegRs2 != R_zero && IF_ID_old.RegRs2 == ID_EX_old.RegDst &&
-          (ID_EX_old.Ctrl_WB_RegWrite == REGWRITE_VALM ||
-           ((ALUWait > 0 || ALUWaitFinished || ALUWaitFinishThisCycle) &&
-            ID_EX_old.Ctrl_WB_RegWrite == REGWRITE_VALE)))))
+          ID_EX_old.Ctrl_WB_RegWrite == REGWRITE_VALM)))
         {
             StageMode[STAGE_IF] = MODE_STALL;
             StageMode[STAGE_ID] = MODE_STALL;
@@ -135,6 +130,10 @@ bool simulate_one_step()
             StageMode[STAGE_ID] = MODE_STALL;
         }
 #endif
+
+    // update ALUWait
+    if (ALUWait > 0)
+        ALUWait--;
 
     // run
     IF();
@@ -163,25 +162,17 @@ bool simulate_one_step()
         {
             if (IF_ID_old.RegRs1 != R_zero)
                 {
-                    if (StageModeOld[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs1 == ID_EX_old.RegDst)
+                    if ((StageModeOld[STAGE_EX] == MODE_LOAD || wait_finish_flag) &&
+                        IF_ID_old.RegRs1 == ID_EX_old.RegDst)
                         {
                             switch (ID_EX_old.Ctrl_WB_RegWrite)
                                 {
                                     case REGWRITE_VALE:
                                         {
-                                            if ((ALUWait > 0 || ALUWaitFinished ||
-                                                 ALUWaitFinishThisCycle))
-                                                {
-                                                    StageMode[STAGE_EX] = MODE_BUBBLE;
-                                                }
-                                            else
-                                                {
-
-                                                    ID_EX.VRs1 = EX_MEM.ALU_out;
+                                            ID_EX.VRs1 = EX_MEM.ALU_out;
 #ifdef PRINT_BYPASS
-                                                    printf("Bypass: ID_EX.VRs1 = EX_MEM.ALU_out\n");
+                                            printf("Bypass: ID_EX.VRs1 = EX_MEM.ALU_out\n");
 #endif
-                                                }
                                         }
                                         break;
                                     case REGWRITE_VALM:
@@ -270,112 +261,102 @@ bool simulate_one_step()
                 }
             if (IF_ID_old.RegRs2 != R_zero)
                 {
-                    if (StageModeOld[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs2 == ID_EX_old.RegDst)
+                    if ((StageModeOld[STAGE_EX] == MODE_LOAD || wait_finish_flag) &&
+                        IF_ID_old.RegRs2 == ID_EX_old.RegDst)
                         {
                             switch (ID_EX_old.Ctrl_WB_RegWrite)
                                 {
                                     case REGWRITE_VALE:
                                         {
-                                            if ((ALUWait > 0 || ALUWaitFinished ||
-                                                 ALUWaitFinishThisCycle))
-                                                {
-                                                    StageMode[STAGE_EX] = MODE_BUBBLE;
-                                                }
-                                            else
-                                                {
-
-                                                    ID_EX.VRs2 = EX_MEM.ALU_out;
+                                            ID_EX.VRs2 = EX_MEM.ALU_out;
 #ifdef PRINT_BYPASS
-                                                    printf("Bypass: ID_EX.VRs2 = EX_MEM.ALU_out\n");
-#endif
-                                                }
-                                        }
-                                        break;
-                                    case REGWRITE_VALM:
-                                        {
-                                            StageMode[STAGE_EX] = MODE_BUBBLE;
-                                        }
-                                        break;
-                                    case REGWRITE_VALP:
-                                        {
-                                            ID_EX.VRs2 = ID_EX_old.NextPC;
-#ifdef PRINT_BYPASS
-                                            printf("Bypass: ID_EX.VRs2 = ID_EX_old.NextPC\n");
+                                            printf("Bypass: ID_EX.VRs2 = EX_MEM.ALU_out\n");
 #endif
                                         }
-                                        break;
-                                    default:
-                                        ERROR(__LINE__);
-                                }
-                        }
-                    else if (StageModeOld[STAGE_MEM] == MODE_LOAD &&
-                             IF_ID_old.RegRs2 == EX_MEM_old.RegDst)
-                        {
-                            switch (EX_MEM_old.Ctrl_WB_RegWrite)
+                            break;
+                            case REGWRITE_VALM:
                                 {
-                                    case REGWRITE_VALE:
-                                        {
-                                            ID_EX.VRs2 = EX_MEM_old.ALU_out;
-#ifdef PRINT_BYPASS
-                                            printf("Bypass: ID_EX.VRs2 = EX_MEM_old.ALU_out\n");
-#endif
-                                        }
-                                        break;
-                                    case REGWRITE_VALM:
-                                        {
-                                            ID_EX.VRs2 = MEM_WB.Mem_read;
-#ifdef PRINT_BYPASS
-                                            printf("Bypass: ID_EX.VRs2 = MEM_WB.Mem_read\n");
-#endif
-                                        }
-                                        break;
-                                    case REGWRITE_VALP:
-                                        {
-                                            ID_EX.VRs2 = EX_MEM_old.NextPC;
-#ifdef PRINT_BYPASS
-                                            printf("Bypass: ID_EX.VRs2 = EX_MEM_old.NextPC\n");
-#endif
-                                        }
-                                        break;
-                                    default:
-                                        ERROR(__LINE__);
+                                    StageMode[STAGE_EX] = MODE_BUBBLE;
                                 }
-                        }
-                    else if (StageModeOld[STAGE_WB] == MODE_LOAD &&
-                             IF_ID_old.RegRs2 == MEM_WB_old.RegDst)
-                        {
-                            switch (MEM_WB_old.Ctrl_WB_RegWrite)
+                                break;
+                            case REGWRITE_VALP:
                                 {
-                                    case REGWRITE_VALE:
-                                        {
-                                            ID_EX.VRs2 = MEM_WB_old.ALU_out;
+                                    ID_EX.VRs2 = ID_EX_old.NextPC;
 #ifdef PRINT_BYPASS
-                                            printf("Bypass: ID_EX.VRs2 = MEM_WB_old.ALU_out\n");
+                                    printf("Bypass: ID_EX.VRs2 = ID_EX_old.NextPC\n");
 #endif
-                                        }
-                                        break;
-                                    case REGWRITE_VALM:
-                                        {
-                                            ID_EX.VRs2 = MEM_WB_old.Mem_read;
-#ifdef PRINT_BYPASS
-                                            printf("Bypass: ID_EX.VRs2 = MEM_WB_old.Mem_read\n");
-#endif
-                                        }
-                                        break;
-                                    case REGWRITE_VALP:
-                                        {
-                                            ID_EX.VRs2 = MEM_WB_old.NextPC;
-#ifdef PRINT_BYPASS
-                                            printf("Bypass: ID_EX.VRs2 = MEM_WB_old.NextPC\n");
-#endif
-                                        }
-                                        break;
-                                    default:
-                                        ERROR(__LINE__);
                                 }
+                                break;
+                            default:
+                                ERROR(__LINE__);
+                        }
+                }
+            else if (StageModeOld[STAGE_MEM] == MODE_LOAD && IF_ID_old.RegRs2 == EX_MEM_old.RegDst)
+                {
+                    switch (EX_MEM_old.Ctrl_WB_RegWrite)
+                        {
+                            case REGWRITE_VALE:
+                                {
+                                    ID_EX.VRs2 = EX_MEM_old.ALU_out;
+#ifdef PRINT_BYPASS
+                                    printf("Bypass: ID_EX.VRs2 = EX_MEM_old.ALU_out\n");
+#endif
+                                }
+                                break;
+                            case REGWRITE_VALM:
+                                {
+                                    ID_EX.VRs2 = MEM_WB.Mem_read;
+#ifdef PRINT_BYPASS
+                                    printf("Bypass: ID_EX.VRs2 = MEM_WB.Mem_read\n");
+#endif
+                                }
+                                break;
+                            case REGWRITE_VALP:
+                                {
+                                    ID_EX.VRs2 = EX_MEM_old.NextPC;
+#ifdef PRINT_BYPASS
+                                    printf("Bypass: ID_EX.VRs2 = EX_MEM_old.NextPC\n");
+#endif
+                                }
+                                break;
+                            default:
+                                ERROR(__LINE__);
+                        }
+                }
+            else if (StageModeOld[STAGE_WB] == MODE_LOAD && IF_ID_old.RegRs2 == MEM_WB_old.RegDst)
+                {
+                    switch (MEM_WB_old.Ctrl_WB_RegWrite)
+                        {
+                            case REGWRITE_VALE:
+                                {
+                                    ID_EX.VRs2 = MEM_WB_old.ALU_out;
+#ifdef PRINT_BYPASS
+                                    printf("Bypass: ID_EX.VRs2 = MEM_WB_old.ALU_out\n");
+#endif
+                                }
+                                break;
+                            case REGWRITE_VALM:
+                                {
+                                    ID_EX.VRs2 = MEM_WB_old.Mem_read;
+#ifdef PRINT_BYPASS
+                                    printf("Bypass: ID_EX.VRs2 = MEM_WB_old.Mem_read\n");
+#endif
+                                }
+                                break;
+                            case REGWRITE_VALP:
+                                {
+                                    ID_EX.VRs2 = MEM_WB_old.NextPC;
+#ifdef PRINT_BYPASS
+                                    printf("Bypass: ID_EX.VRs2 = MEM_WB_old.NextPC\n");
+#endif
+                                }
+                                break;
+                            default:
+                                ERROR(__LINE__);
                         }
                 }
         }
+}
 #else
     if (StageModeOld[STAGE_ID] != MODE_BUBBLE &&
         ((IF_ID_old.RegRs1 != R_zero &&
@@ -391,35 +372,36 @@ bool simulate_one_step()
             StageMode[STAGE_EX] = MODE_BUBBLE;
         }
 #endif
-    if (Mispredicted)  // mispredicted PC
-        {
-            StageMode[STAGE_ID] = MODE_BUBBLE;
-            StageMode[STAGE_EX] = MODE_BUBBLE;
-        }
-    if (ALUWait > 0)  // wait for division
-        {
-            StageMode[STAGE_MEM] = MODE_BUBBLE;
-        }
+if (Mispredicted)  // mispredicted PC
+    {
+        StageMode[STAGE_ID] = MODE_BUBBLE;
+        StageMode[STAGE_EX] = MODE_BUBBLE;
+    }
+if (ALUWait > 0)  // wait for division
+    {
+        StageMode[STAGE_MEM] = MODE_BUBBLE;
+    }
 
-    // update intermediate registers
-    if (StageModeOld[STAGE_IF] != MODE_STALL)
-        IF_ID_old = IF_ID;
-    if (StageModeOld[STAGE_ID] != MODE_STALL)
-        ID_EX_old = ID_EX;
-    if (StageModeOld[STAGE_EX] != MODE_STALL)
-        EX_MEM_old = EX_MEM;
-    if (StageModeOld[STAGE_MEM] != MODE_STALL)
-        MEM_WB_old = MEM_WB;
+// update intermediate registers
+if (StageModeOld[STAGE_IF] != MODE_STALL)
+    IF_ID_old = IF_ID;
+if (StageModeOld[STAGE_ID] != MODE_STALL)
+    ID_EX_old = ID_EX;
+if (StageModeOld[STAGE_EX] != MODE_STALL)
+    EX_MEM_old = EX_MEM;
+if (StageModeOld[STAGE_MEM] != MODE_STALL)
+    MEM_WB_old = MEM_WB;
 
-    CycleCount += 1;
+// update cycle conunt
+CycleCount += 1;
 
-    // calculate CPI
-    CPI = (float)CycleCount / (float)InstCount;
+// calculate CPI
+CPI = (float)CycleCount / (float)InstCount;
 
-    if (exit_flag != 0)
-        return false;
+if (exit_flag != 0)
+    return false;
 
-    return true;
+return true;
 }
 
 void ERROR(int line)
@@ -2252,21 +2234,6 @@ void ID()
 
 void EX()
 {
-    // update ALU wait count
-    if (ALUWaitFinished)
-        {
-            ALUWaitFinished = false;
-            ALUWaitFinishThisCycle = true;
-            return;
-        }
-    ALUWaitFinishThisCycle = false;
-    if (ALUWait > 0)
-        {
-            ALUWait--;
-            if (ALUWait == 0)
-                ALUWaitFinished = true;
-        }
-
     switch (StageMode[STAGE_EX])
         {
             case MODE_STALL:
@@ -2418,12 +2385,15 @@ void EX()
                 break;
             case ALUOP_MUL:
                 {
+                    if (ALUWait == 0)
+                        ALUWait = 1;
                     ALUOut = VA * VB;
                 }
                 break;
             case ALUOP_MULH:
                 {
-                    ALUWait = 1;
+                    if (ALUWait == 0)
+                        ALUWait = 1;
 
                     long long VT_1 = 0, VT_2 = 0, VT_3 = 0;
 
@@ -2461,7 +2431,8 @@ void EX()
                 break;
             case ALUOP_MULHU:
                 {
-                    ALUWait = 1;
+                    if (ALUWait == 0)
+                        ALUWait = 1;
 
                     ULL VA_H = ((VA & MASK_H) >> 32), VA_L = (VA & MASK_L),
                         VB_H = ((VB & MASK_H) >> 32), VB_L = (VB & MASK_L);
@@ -2475,7 +2446,8 @@ void EX()
                 break;
             case ALUOP_MULHSU:
                 {
-                    ALUWait = 1;
+                    if (ALUWait == 0)
+                        ALUWait = 1;
 
                     long long VT_1 = 0, VT_2 = 0, VT_3 = 0;
 
@@ -2506,7 +2478,8 @@ void EX()
                 {
                     if (VB != 0)
                         {
-                            ALUWait = 39;
+                            if (ALUWait == 0)
+                                ALUWait = 39;
                             ALUOut = (long long)VA / (long long)VB;
                         }
                     else
@@ -2519,7 +2492,8 @@ void EX()
                 {
                     if (VB != 0)
                         {
-                            ALUWait = 39;
+                            if (ALUWait == 0)
+                                ALUWait = 39;
                             ALUOut = VA / VB;
                         }
                     else
@@ -2532,7 +2506,8 @@ void EX()
                 {
                     if (VB != 0)
                         {
-                            ALUWait = 39;
+                            if (ALUWait == 0)
+                                ALUWait = 39;
                             ALUOut = (long long)VA % (long long)VB;
                         }
                     else
@@ -2545,7 +2520,8 @@ void EX()
                 {
                     if (VB != 0)
                         {
-                            ALUWait = 39;
+                            if (ALUWait == 0)
+                                ALUWait = 39;
                             ALUOut = VA % VB;
                         }
                     else
@@ -2613,7 +2589,8 @@ void EX()
                 {
                     if (VB != 0)
                         {
-                            ALUWait = 39;
+                            if (ALUWait == 0)
+                                ALUWait = 39;
                             ALUOut = EXT_SIGNED_DWORD((int)VA / (int)VB, 32);
                         }
                     else
@@ -2626,7 +2603,8 @@ void EX()
                 {
                     if (VB != 0)
                         {
-                            ALUWait = 39;
+                            if (ALUWait == 0)
+                                ALUWait = 39;
                             ALUOut = EXT_SIGNED_DWORD((unsigned int)VA / (unsigned int)VB, 32);
                         }
                     else
@@ -2639,7 +2617,8 @@ void EX()
                 {
                     if (VB != 0)
                         {
-                            ALUWait = 39;
+                            if (ALUWait == 0)
+                                ALUWait = 39;
                             ALUOut = EXT_SIGNED_DWORD((int)VA % (int)VB, 32);
                         }
                     else
@@ -2652,7 +2631,8 @@ void EX()
                 {
                     if (VB != 0)
                         {
-                            ALUWait = 39;
+                            if (ALUWait == 0)
+                                ALUWait = 39;
                             ALUOut = EXT_SIGNED_DWORD((unsigned int)VA % (unsigned int)VB, 32);
                         }
                     else
@@ -2678,6 +2658,20 @@ void EX()
             default:
                 ERROR(__LINE__);
         }
+
+    // if (ALUWait > 1)
+    //     {
+    //         EX_MEM.RegDst = R_zero;
+    //         EX_MEM.NextPC = 0;
+    //         EX_MEM.ALU_out = 0;
+    //         EX_MEM.VRs2 = 0;
+
+    //         EX_MEM.Ctrl_MEM_MemWrite = MEMWRITE_NO;
+    //         EX_MEM.Ctrl_MEM_MemRead = MEMREAD_NO;
+    //         EX_MEM.Ctrl_WB_RegWrite = REGWRITE_NO;
+
+    //         return;
+    //     }
 
     // update PC
     switch (Branch)

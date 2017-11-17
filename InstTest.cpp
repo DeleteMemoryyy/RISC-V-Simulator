@@ -13,8 +13,7 @@ static int init()
 
     Mispredicted = false;
     ALUWait = 0;
-    ALUWaitFinished = false;
-    ALUWaitFinishThisCycle = false;
+    wait_finish_flag = false;
     btbReplaceIdx = 0;
 
     for (int i = 0; i < BTB_SIZE; ++i)
