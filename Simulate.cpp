@@ -9,6 +9,8 @@ ULL PC = 0;
 ULL endPC = 0;
 int exit_flag = 0;
 unsigned char BranchFlag = BRANCH_NO;
+int ALUWait = 0;
+bool ALUWaitFinished = false;
 // instruction string
 char InstBuf[100] = "";
 int InstCount = 0;
@@ -23,7 +25,7 @@ EXMEM EX_MEM, EX_MEM_old;
 MEMWB MEM_WB, MEM_WB_old;
 
 // last ALU operation
-static ALU_REC *LastAlu = new ALU_REC, *ThisAlu = new ALU_REC;
+static ALU_REC *LastALU = new ALU_REC, *ThisALU = new ALU_REC;
 
 void setup()
 {
@@ -31,7 +33,10 @@ void setup()
     CycleCount = 0;
     CPI = 0.0f;
     memset(InstBuf, 0, sizeof(InstBuf));
+    BranchFlag = BRANCH_NO;
     exit_flag = 0;
+    ALUWait = 0;
+    ALUWaitFinished = false;
 
     StageMode[STAGE_IF] = MODE_LOAD;
     StageMode[STAGE_ID] = MODE_BUBBLE;
@@ -42,14 +47,14 @@ void setup()
     for (int i = 0; i < 5; ++i)
         StageModeOld[i] = MODE_BUBBLE;
 
-    LastAlu->ALUOp = ALUOP_NOP;
-    LastAlu->rd = R_zero;
-    LastAlu->rs1 = R_zero;
-    LastAlu->rs2 = R_zero;
-    ThisAlu->ALUOp = ALUOP_NOP;
-    ThisAlu->rd = R_zero;
-    ThisAlu->rs1 = R_zero;
-    ThisAlu->rs2 = R_zero;
+    LastALU->ALUOp = ALUOP_NOP;
+    LastALU->rd = R_zero;
+    LastALU->rs1 = R_zero;
+    LastALU->rs2 = R_zero;
+    ThisALU->ALUOp = ALUOP_NOP;
+    ThisALU->rd = R_zero;
+    ThisALU->rs1 = R_zero;
+    ThisALU->rs2 = R_zero;
 
     for (int i = 0; i < 32; ++i)
         reg[i] = 0;
@@ -75,7 +80,7 @@ void load_memory()
 
 bool simulate_one_step()
 {
-    if (PC == endPC)
+    if (ALUWait == 0 && PC == endPC)
         {
             StageMode[STAGE_IF] = MODE_BUBBLE;
             bool exit_this_cycle = true;
@@ -93,6 +98,12 @@ bool simulate_one_step()
     BranchFlag = BRANCH_NO;
 
     // set stall
+    if (ALUWait > 0)  // wait for division
+        {
+            StageMode[STAGE_IF] = MODE_STALL;
+            StageMode[STAGE_ID] = MODE_STALL;
+            StageMode[STAGE_EX] = MODE_STALL;
+        }
     if (StageMode[STAGE_ID] != MODE_BUBBLE &&
         ((IF_ID_old.RegRs1 != R_zero &&
           ((StageMode[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs1 == ID_EX_old.RegDst) ||
@@ -147,6 +158,10 @@ bool simulate_one_step()
         {
             StageMode[STAGE_ID] = MODE_BUBBLE;
             StageMode[STAGE_EX] = MODE_BUBBLE;
+        }
+    if (ALUWait > 0)  // wait for division
+        {
+            StageMode[STAGE_MEM] = MODE_BUBBLE;
         }
 
     // update intermediate registers
@@ -1854,11 +1869,11 @@ void IF()
         }
 
     // record ALU operation
-    swap(LastAlu, ThisAlu);
-    ThisAlu->ALUOp = ALUOp;
-    ThisAlu->rd = rd;
-    ThisAlu->rs1 = rs1;
-    ThisAlu->rs2 = rs2;
+    swap(LastALU, ThisALU);
+    ThisALU->ALUOp = ALUOp;
+    ThisALU->rd = rd;
+    ThisALU->rs1 = rs1;
+    ThisALU->rs2 = rs2;
 
     // predicting PC: no branch
     PC = NextPC;
@@ -1984,6 +1999,19 @@ void ID()
 
 void EX()
 {
+    // update ALU wait count
+    if (ALUWaitFinished)
+        {
+            ALUWaitFinished = false;
+            return;
+        }
+    if (ALUWait > 0)
+        {
+            ALUWait--;
+            if (ALUWait == 0)
+                ALUWaitFinished = true;
+        }
+
     switch (StageMode[STAGE_EX])
         {
             case MODE_STALL:
@@ -2139,6 +2167,8 @@ void EX()
                 break;
             case ALUOP_MULH:
                 {
+                    ALUWait = 1;
+
                     long long VT_1 = 0, VT_2 = 0, VT_3 = 0;
 
                     ULL VA_H = (((long long)VA & MASK_H) >> 32), VA_L = ((long long)VA & MASK_L),
@@ -2175,6 +2205,8 @@ void EX()
                 break;
             case ALUOP_MULHU:
                 {
+                    ALUWait = 1;
+
                     ULL VA_H = ((VA & MASK_H) >> 32), VA_L = (VA & MASK_L),
                         VB_H = ((VB & MASK_H) >> 32), VB_L = (VB & MASK_L);
                     long long VT_1 = VA_H * VB_L, VT_2 = VA_L * VB_H, VT_3 = VA_H * VB_H;
@@ -2187,6 +2219,8 @@ void EX()
                 break;
             case ALUOP_MULHSU:
                 {
+                    ALUWait = 1;
+
                     long long VT_1 = 0, VT_2 = 0, VT_3 = 0;
 
                     ULL VA_H = (((long long)VA & MASK_H) >> 32), VA_L = ((long long)VA & MASK_L),
@@ -2216,6 +2250,7 @@ void EX()
                 {
                     if (VB != 0)
                         {
+                            ALUWait = 39;
                             ALUOut = (long long)VA / (long long)VB;
                         }
                     else
@@ -2228,6 +2263,7 @@ void EX()
                 {
                     if (VB != 0)
                         {
+                            ALUWait = 39;
                             ALUOut = VA / VB;
                         }
                     else
@@ -2240,6 +2276,7 @@ void EX()
                 {
                     if (VB != 0)
                         {
+                            ALUWait = 39;
                             ALUOut = (long long)VA % (long long)VB;
                         }
                     else
@@ -2252,6 +2289,7 @@ void EX()
                 {
                     if (VB != 0)
                         {
+                            ALUWait = 39;
                             ALUOut = VA % VB;
                         }
                     else
@@ -2319,6 +2357,7 @@ void EX()
                 {
                     if (VB != 0)
                         {
+                            ALUWait = 39;
                             ALUOut = EXT_SIGNED_DWORD((int)VA / (int)VB, 32);
                         }
                     else
@@ -2331,6 +2370,7 @@ void EX()
                 {
                     if (VB != 0)
                         {
+                            ALUWait = 39;
                             ALUOut = EXT_SIGNED_DWORD((unsigned int)VA / (unsigned int)VB, 32);
                         }
                     else
@@ -2343,6 +2383,7 @@ void EX()
                 {
                     if (VB != 0)
                         {
+                            ALUWait = 39;
                             ALUOut = EXT_SIGNED_DWORD((int)VA % (int)VB, 32);
                         }
                     else
@@ -2355,6 +2396,7 @@ void EX()
                 {
                     if (VB != 0)
                         {
+                            ALUWait = 39;
                             ALUOut = EXT_SIGNED_DWORD((unsigned int)VA % (unsigned int)VB, 32);
                         }
                     else

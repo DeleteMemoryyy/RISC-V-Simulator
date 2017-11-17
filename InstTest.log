@@ -1,1000 +1,810 @@
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: lui  a0, 409600
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: lui  a0, 409600
 Exp Res: 409600
 Exe Res: 409600
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: auipc  a0, 409600
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: auipc  a0, 409600
 Exp Res: 475392
 Exe Res: 475392
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: jal  a0, 0x10128
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE ID
-BUBBLE EX
-BUBBLE WB
-BUBBLE EX
-BUBBLE MEM
 Ori: jal  a0, 0x10128
 Exp Res: 0x10104
 Exe Res: 0x10104
 Exp PC: 0x10130
 Exe PC: 0x10130
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: jalr  a0, a1, 40
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE ID
-BUBBLE EX
-BUBBLE WB
-BUBBLE EX
-BUBBLE MEM
 Ori: jalr  a0, a1, 40
 Exp Res: 0x10104
 Exe Res: 0x10104
 Exp PC: 0x10530
 Exe PC: 0x10530
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: jalr  a0, a1, 40
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE ID
-BUBBLE EX
-BUBBLE WB
-BUBBLE EX
-BUBBLE MEM
 Ori: jalr  a0, a1, 40
 Exp Res: 0x10104
 Exe Res: 0x10104
 Exp PC: 0x10530
 Exe PC: 0x10530
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: beq  a0, a1, 0x10124
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: beq  a0, a1, 0x10124
 Exp PC: 0x10114
 Exe PC: 0x10114
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: beq  a0, a1, 0x10124
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE ID
-BUBBLE EX
-BUBBLE WB
-BUBBLE EX
-BUBBLE MEM
 Exp PC: 0x1012c
 Exe PC: 0x1012c
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: bne  a0, a1, 0x10120
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: bne  a0, a1, 0x10120
 Exp PC: 0x10114
 Exe PC: 0x10114
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: bne  a0, a1, 0x10120
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE ID
-BUBBLE EX
-BUBBLE WB
-BUBBLE EX
-BUBBLE MEM
 Exp PC: 0x10128
 Exe PC: 0x10128
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: blt  a0, a1, 0x1011c
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: blt  a0, a1, 0x1011c
 Exp PC: 0x10114
 Exe PC: 0x10114
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: blt  a0, a1, 0x1011c
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE ID
-BUBBLE EX
-BUBBLE WB
-BUBBLE EX
-BUBBLE MEM
 Exp PC: 0x10124
 Exe PC: 0x10124
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: bge  a0, a1, 0x10118
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: bge  a0, a1, 0x10118
 Exp PC: 0x10114
 Exe PC: 0x10114
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: bge  a0, a1, 0x10118
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE ID
-BUBBLE EX
-BUBBLE WB
-BUBBLE EX
-BUBBLE MEM
 Exp PC: 0x10120
 Exe PC: 0x10120
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: bltu  a0, a1, 0x10114
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: bltu  a0, a1, 0x10114
 Exp PC: 0x10114
 Exe PC: 0x10114
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: bltu  a0, a1, 0x10114
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE ID
-BUBBLE EX
-BUBBLE WB
-BUBBLE EX
-BUBBLE MEM
 Exp PC: 0x1011c
 Exe PC: 0x1011c
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: bgeu  a0, a1, 0x10110
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: bgeu  a0, a1, 0x10110
 Exp PC: 0x10114
 Exe PC: 0x10114
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: bgeu  a0, a1, 0x10110
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE ID
-BUBBLE EX
-BUBBLE WB
-BUBBLE EX
-BUBBLE MEM
 Exp PC: 0x10118
 Exe PC: 0x10118
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: sb  a1, 40(a0)
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: sb  a1, 40(a0)
 Exp Res: 255
 Exe Res: 255
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: sh  a1, 40(a0)
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: sh  a1, 40(a0)
 Exp Res: 65535
 Exe Res: 65535
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: sw  a1, 40(a0)
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: sw  a1, 40(a0)
 Exp Res: -1
 Exe Res: -1
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: lb  a1, 40(a0)
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: lb  a1, 40(a0)
 Exp Res: -1
 Exe Res: -1
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: lh  a1, 40(a0)
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: lh  a1, 40(a0)
 Exp Res: -1
 Exe Res: -1
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: lw  a1, 40(a0)
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: lw  a1, 40(a0)
 Exp Res: -1
 Exe Res: -1
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: lbu  a1, 40(a0)
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: lbu  a1, 40(a0)
 Exp Res: 255
 Exe Res: 255
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: lhu  a1, 40(a0)
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: lhu  a1, 40(a0)
 Exp Res: 65535
 Exe Res: 65535
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a0, a1, 40
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: addi  a0, a1, 40
 Exp Res: 65575
 Exe Res: 65575
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: slti  a0, a1, 40
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: slti  a0, a1, 40
 Exp Res: 0
 Exe Res: 0
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: slti  a0, a1, 40
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Exp Res: 1
 Exe Res: 1
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: sltiu  a0, a1, 40
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: sltiu  a0, a1, 40
 Exp Res: 0
 Exe Res: 0
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: sltiu  a0, a1, 40
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Exp Res: 1
 Exe Res: 1
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: xori  a0, a1, 119
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: xori  a0, a1, 119
 Exp Res: 120
 Exe Res: 120
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: ori  a0, a1, 119
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: ori  a0, a1, 119
 Exp Res: 127
 Exe Res: 127
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: andi  a0, a1, 119
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: andi  a0, a1, 119
 Exp Res: 7
 Exe Res: 7
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: add  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: add  a0, a1, a2
 Exp Res: 134
 Exe Res: 134
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: sub  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: sub  a0, a1, a2
 Exp Res: -104
 Exe Res: -104
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: sll  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: sll  a0, a1, a2
 Exp Res: 15232
 Exe Res: 15232
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: slt  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: slt  a0, a1, a2
 Exp Res: 0
 Exe Res: 0
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: slt  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Exp Res: 1
 Exe Res: 1
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: sltu  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: sltu  a0, a1, a2
 Exp Res: 0
 Exe Res: 0
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: sltu  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Exp Res: 1
 Exe Res: 1
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: xor  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: xor  a0, a1, a2
 Exp Res: 120
 Exe Res: 120
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: srl  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: srl  a0, a1, a2
 Exp Res: 144115188075855871
 Exe Res: 144115188075855871
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: sra  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: sra  a0, a1, a2
 Exp Res: -1
 Exe Res: -1
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: or  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: or  a0, a1, a2
 Exp Res: 127
 Exe Res: 127
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: and  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
 Ori: and  a0, a1, a2
 Exp Res: 7
 Exe Res: 7
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: mul  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
 Ori: mul  a0, a1, a2
 Exp Res: 1785
 Exe Res: 1785
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: mul  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
 Exp Res: 20
 Exe Res: 20
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: mul  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
 Exp Res: -200
 Exe Res: -200
-Exp PC: 0x10114
-Exe PC: 0x10114
+Exp PC: 0x10118
+Exe PC: 0x10118
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: div  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Ori: div  a0, a1, a2
 Exp Res: 7
 Exe Res: 7
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: div  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Exp Res: 582
 Exe Res: 582
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: div  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Exp Res: -25
 Exe Res: -25
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: divu  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Ori: divu  a0, a1, a2
 Exp Res: 7
 Exe Res: 7
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: divu  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Exp Res: 0
 Exe Res: 0
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: divu  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Exp Res: 2635249153387078776
 Exe Res: 2635249153387078776
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: rem  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Ori: rem  a0, a1, a2
 Exp Res: 14
 Exe Res: 14
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: rem  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Exp Res: -7
 Exe Res: -7
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: rem  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Exp Res: -5
 Exe Res: -5
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: remu  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Ori: remu  a0, a1, a2
 Exp Res: 14
 Exe Res: 14
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: remu  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Exp Res: -5245
 Exe Res: -5245
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: remu  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
-BUBBLE MEM
-BUBBLE WB
-BUBBLE WB
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Exp Res: 4
 Exe Res: 4
 Exp PC: 0x10114
 Exe PC: 0x10114
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a1, a1, 5
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a2, a2, 10
-BUBBLE MEM
-BUBBLE WB
 Idf: add  a0, a1, a2
-STALL IF
-STALL ID
-BUBBLE WB
 Idf: add  a0, a1, a2
-STALL IF
-STALL ID
-BUBBLE EX
 Idf: add  a0, a1, a2
-STALL IF
-STALL ID
-BUBBLE EX
-BUBBLE MEM
 Idf: add  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  zero, zero, 0
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  zero, zero, 0
-BUBBLE WB
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
@@ -1005,34 +815,14 @@ Exp Res: 15
 Exe Res: 15
 Exp PC: 0x1011c
 Exe PC: 0x10130
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a1, a1, 5
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a2, a2, 10
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  zero, zero, 0
-BUBBLE WB
 Idf: add  a0, a1, a2
-STALL IF
-STALL ID
 Idf: add  a0, a1, a2
-STALL IF
-STALL ID
-BUBBLE EX
 Idf: add  a0, a1, a2
-BUBBLE EX
-BUBBLE MEM
 Idf: addi  zero, zero, 0
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  zero, zero, 0
-BUBBLE WB
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
@@ -1044,29 +834,14 @@ Exp Res: 15
 Exe Res: 15
 Exp PC: 0x10120
 Exe PC: 0x10134
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a1, a1, 5
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a2, a2, 10
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  zero, zero, 0
-BUBBLE WB
 Idf: addi  zero, zero, 0
 Idf: add  a0, a1, a2
-STALL IF
-STALL ID
 Idf: add  a0, a1, a2
-BUBBLE EX
 Idf: addi  zero, zero, 0
-BUBBLE MEM
 Idf: addi  zero, zero, 0
-BUBBLE WB
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
@@ -1080,29 +855,12 @@ Exe Res: 15
 Exp PC: 0x10124
 Exe PC: 0x10138
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: jalr  a0, a1, 40
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a1, a1, 5
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a2, a2, 10
-BUBBLE ID
-BUBBLE EX
-BUBBLE WB
 Idf: addi  a4, a4, 6
-BUBBLE EX
-BUBBLE MEM
 Idf: addi  a5, a5, 12
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a6, a6, 18
-BUBBLE WB
 Ori: jalr  a0, a1, 40
 Ori: addi  a4, a4, 6
 Ori: addi  a5, a5, 12
@@ -1124,29 +882,12 @@ Exe Res: 18
 Exp PC: 0x10544
 Exe PC: 0x10544
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: jal  a0, 0x102f4
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a1, a1, 5
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a2, a2, 10
-BUBBLE ID
-BUBBLE EX
-BUBBLE WB
 Idf: addi  a4, a4, 6
-BUBBLE EX
-BUBBLE MEM
 Idf: addi  a5, a5, 12
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a6, a6, 18
-BUBBLE WB
 Ori: jal  a0, 0x102f4
 Ori: addi  a4, a4, 6
 Ori: addi  a5, a5, 12
@@ -1168,32 +909,13 @@ Exe Res: 18
 Exp PC: 0x10310
 Exe PC: 0x10310
 
-BUBBLE ID
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a1, a1, 5
-BUBBLE EX
-BUBBLE MEM
-BUBBLE WB
 Idf: jalr  a0, ra, 0
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a1, a1, 7
-STALL IF
-STALL ID
-BUBBLE WB
 Idf: addi  a1, a1, 7
-BUBBLE ID
-BUBBLE EX
 Idf: addi  a1, a1, 4
-BUBBLE EX
-BUBBLE MEM
 Idf: addi  a4, a4, 6
-BUBBLE MEM
-BUBBLE WB
 Idf: addi  a5, a5, 12
-BUBBLE WB
 Idf: addi  a6, a6, 18
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0

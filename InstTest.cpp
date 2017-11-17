@@ -11,6 +11,10 @@ static int init()
     StageMode[STAGE_MEM] = MODE_BUBBLE;
     StageMode[STAGE_WB] = MODE_BUBBLE;
 
+    BranchFlag = BRANCH_NO;
+    ALUWait = 0;
+    ALUWaitFinished = false;
+
     PC = 0x10100;
 
     for (int i = 0; i < 1000; ++i)
@@ -835,7 +839,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c58533);
     reg[R_a1] = 0xf;
     reg[R_a2] = 0x77;
-    cycle = 5;
+    cycle = 6;
     while (cycle--)
         {
             simulate_one_step();
@@ -849,7 +853,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c58533);
     reg[R_a1] = -2;
     reg[R_a2] = -10;
-    cycle = 5;
+    cycle = 6;
     while (cycle--)
         {
             simulate_one_step();
@@ -862,7 +866,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c58533);
     reg[R_a1] = -10;
     reg[R_a2] = 20;
-    cycle = 5;
+    cycle = 6;
     while (cycle--)
         {
             simulate_one_step();
@@ -871,7 +875,7 @@ void testAll()
         }
     printf("Exp Res: %lld\n", (long long)(-10) * (long long)20);
     printf("Exe Res: %lld\n", reg[R_a0]);
-    printf("Exp PC: 0x%llx\n", 16 + 0x10100 + 4);
+    printf("Exp PC: 0x%llx\n", 20 + 0x10100 + 4);
     printf("Exe PC: 0x%llx\n", PC);
     printf("\n");
 
@@ -886,7 +890,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5c533);
     reg[R_a1] = 0x77;
     reg[R_a2] = 0xf;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
@@ -900,7 +904,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5c533);
     reg[R_a1] = -5245;
     reg[R_a2] = -9;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
@@ -913,7 +917,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5c533);
     reg[R_a1] = -180;
     reg[R_a2] = 7;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
@@ -931,7 +935,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5d533);
     reg[R_a1] = 0x77;
     reg[R_a2] = 0xf;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
@@ -945,7 +949,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5d533);
     reg[R_a1] = -5245;
     reg[R_a2] = -9;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
@@ -958,7 +962,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5d533);
     reg[R_a1] = -180;
     reg[R_a2] = 7;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
@@ -976,7 +980,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5e533);
     reg[R_a1] = 0x77;
     reg[R_a2] = 0xf;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
@@ -990,7 +994,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5e533);
     reg[R_a1] = -5245;
     reg[R_a2] = -9;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
@@ -1003,7 +1007,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5e533);
     reg[R_a1] = -180;
     reg[R_a2] = 7;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
@@ -1021,7 +1025,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5f533);
     reg[R_a1] = 0x77;
     reg[R_a2] = 0xf;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
@@ -1035,7 +1039,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5f533);
     reg[R_a1] = -5245;
     reg[R_a2] = -9;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
@@ -1048,7 +1052,7 @@ void testAll()
     WRITE_WORD(PC, 0x02c5f533);
     reg[R_a1] = -180;
     reg[R_a2] = 7;
-    cycle = 5;
+    cycle = 44;
     while (cycle--)
         {
             simulate_one_step();
