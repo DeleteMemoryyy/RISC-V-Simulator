@@ -400,11 +400,13 @@ bool simulate_one_step()
 #else
     if (StageModeOld[STAGE_ID] != MODE_BUBBLE &&
         ((IF_ID_old.RegRs1 != R_zero &&
-          ((StageModeOld[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs1 == ID_EX_old.RegDst) ||
+          (((StageModeOld[STAGE_EX] == MODE_LOAD || wait_finish_flag) &&
+            IF_ID_old.RegRs1 == ID_EX_old.RegDst) ||
            (StageModeOld[STAGE_MEM] == MODE_LOAD && IF_ID_old.RegRs1 == EX_MEM_old.RegDst) ||
            (StageModeOld[STAGE_WB] == MODE_LOAD && IF_ID_old.RegRs1 == MEM_WB_old.RegDst))) ||
          (IF_ID_old.RegRs2 != R_zero &&
-          ((StageModeOld[STAGE_EX] == MODE_LOAD && IF_ID_old.RegRs2 == ID_EX_old.RegDst) ||
+          (((StageModeOld[STAGE_EX] == MODE_LOAD || wait_finish_flag) &&
+            IF_ID_old.RegRs2 == ID_EX_old.RegDst) ||
            (StageModeOld[STAGE_MEM] == MODE_LOAD && IF_ID_old.RegRs2 == EX_MEM_old.RegDst) ||
            (StageModeOld[STAGE_WB] == MODE_LOAD &&
             IF_ID_old.RegRs2 == MEM_WB_old.RegDst)))))  // data hazard

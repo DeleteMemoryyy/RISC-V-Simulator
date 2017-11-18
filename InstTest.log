@@ -36,7 +36,7 @@ Exe PC: 0x10530
 Idf: beq  a0, a1, 0x10124
 Ori: beq  a0, a1, 0x10124
 Exp PC: 0x10114
-Exe PC: 0x1010c
+Exe PC: 0x10114
 Idf: beq  a0, a1, 0x10124
 Exp PC: 0x1012c
 Exe PC: 0x1012c
@@ -44,7 +44,7 @@ Exe PC: 0x1012c
 Idf: bne  a0, a1, 0x10120
 Ori: bne  a0, a1, 0x10120
 Exp PC: 0x10114
-Exe PC: 0x1010c
+Exe PC: 0x10114
 Idf: bne  a0, a1, 0x10120
 Exp PC: 0x10128
 Exe PC: 0x10128
@@ -52,7 +52,7 @@ Exe PC: 0x10128
 Idf: blt  a0, a1, 0x1011c
 Ori: blt  a0, a1, 0x1011c
 Exp PC: 0x10114
-Exe PC: 0x1010c
+Exe PC: 0x10114
 Idf: blt  a0, a1, 0x1011c
 Exp PC: 0x10124
 Exe PC: 0x10124
@@ -60,7 +60,7 @@ Exe PC: 0x10124
 Idf: bge  a0, a1, 0x10118
 Ori: bge  a0, a1, 0x10118
 Exp PC: 0x10114
-Exe PC: 0x1010c
+Exe PC: 0x10114
 Idf: bge  a0, a1, 0x10118
 Exp PC: 0x10120
 Exe PC: 0x10120
@@ -68,7 +68,7 @@ Exe PC: 0x10120
 Idf: bltu  a0, a1, 0x10114
 Ori: bltu  a0, a1, 0x10114
 Exp PC: 0x10114
-Exe PC: 0x1010c
+Exe PC: 0x10114
 Idf: bltu  a0, a1, 0x10114
 Exp PC: 0x1011c
 Exe PC: 0x1011c
@@ -76,7 +76,7 @@ Exe PC: 0x1011c
 Idf: bgeu  a0, a1, 0x10110
 Ori: bgeu  a0, a1, 0x10110
 Exp PC: 0x10114
-Exe PC: 0x1010c
+Exe PC: 0x10114
 Idf: bgeu  a0, a1, 0x10110
 Exp PC: 0x10118
 Exe PC: 0x10118
@@ -800,9 +800,9 @@ Exe PC: 0x10114
 Idf: addi  a1, a1, 5
 Idf: addi  a2, a2, 10
 Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
@@ -814,13 +814,13 @@ Ori: add  a0, a1, a2
 Exp Res: 15
 Exe Res: 15
 Exp PC: 0x1011c
-Exe PC: 0x10130
+Exe PC: 0x1013c
 Idf: addi  a1, a1, 5
 Idf: addi  a2, a2, 10
 Idf: addi  zero, zero, 0
 Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
@@ -833,13 +833,13 @@ Ori: add  a0, a1, a2
 Exp Res: 15
 Exe Res: 15
 Exp PC: 0x10120
-Exe PC: 0x10134
+Exe PC: 0x1013c
 Idf: addi  a1, a1, 5
 Idf: addi  a2, a2, 10
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
+Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
@@ -853,14 +853,14 @@ Ori: add  a0, a1, a2
 Exp Res: 15
 Exe Res: 15
 Exp PC: 0x10124
-Exe PC: 0x10138
+Exe PC: 0x1013c
 
 Idf: addi  a1, a1, 5
 Idf: lw  a2, 40(s0)
 Idf: add  a0, a1, a2
 Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
-Idf: add  a0, a1, a2
+Idf: addi  zero, zero, 0
+Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
 Idf: addi  zero, zero, 0
@@ -872,7 +872,7 @@ Ori: add  a0, a1, a2
 Exp Res: 15
 Exe Res: 15
 Exp PC: 0x1011c
-Exe PC: 0x10130
+Exe PC: 0x10138
 
 Idf: jalr  a0, a1, 40
 Idf: addi  a1, a1, 5
@@ -931,7 +931,7 @@ Exe PC: 0x10310
 Idf: addi  a1, a1, 5
 Idf: jalr  a0, ra, 0
 Idf: addi  a1, a1, 7
-Idf: addi  a1, a1, 7
+Idf: addi  a2, a2, 10
 Idf: addi  a1, a1, 4
 Idf: addi  a4, a4, 6
 Idf: addi  a5, a5, 12
@@ -968,7 +968,7 @@ Exe PC: 0x10540
 Idf: addi  a1, a1, 5
 Idf: jalr  a0, ra, 0
 Idf: addi  a1, a1, 7
-Idf: addi  a1, a1, 7
+Idf: addi  a2, a2, 10
 Idf: addi  a1, a1, 4
 Idf: addi  a4, a4, 6
 Idf: addi  a5, a5, 12
@@ -1006,7 +1006,7 @@ Exc BTB: valid: 1, InstPC: 0x10104, Predicted PC:0x10500, status1: 1, staus2: 1
 Idf: addi  a1, a1, 5
 Idf: jalr  a0, ra, 0
 Idf: addi  a1, a1, 7
-Idf: addi  a1, a1, 7
+Idf: addi  a2, a2, 10
 Idf: addi  a1, a1, 4
 Idf: addi  a4, a4, 6
 Idf: addi  a5, a5, 12
