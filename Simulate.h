@@ -3,6 +3,7 @@
 
 #include "Read_Elf.h"
 #include "Reg_Def.h"
+#include "Def.h"
 #include <iostream>
 #include <math.h>
 #include <stdio.h>
@@ -12,20 +13,12 @@
 
 #define BTB_SIZE 8
 
-#define MEM_SIZE 1 << 24
-#define MEM_ST 1 << 17
-#define MEM_ED 0xfe0000
-
-#define V_TO_P(add) ((add) + (MEM_ST) - (cVadr))
-#define P_TO_V(add) ((add) + (cVadr) - (MEM_ST))
 #define RVC_TO_R(r) ((r) + 8)
 #define HINT(cond)                                                                                 \
     {                                                                                              \
         if ((cond))                                                                                \
             break;                                                                                 \
     }
-#define GET_BITS(i, s, e) ((((unsigned int)i) << (31 - (e))) >> (31 - (e) + (s)))
-#define GET_BIT(i, b) (((i) & (1 << (b))) >> (b))
 #define EXT_SIGNED_WORD(src, bit) ((((int)(src)) << (32 - (bit))) >> (32 - (bit)))
 #define EXT_SIGNED_DWORD(src, bit) ((((long long int)(src)) << (64 - (bit))) >> (64 - (bit)))
 #define EXT_UNSIGNED_WORD(src, bit) ((((unsigned int)(src)) << (32 - (bit))) >> (32 - (bit)))

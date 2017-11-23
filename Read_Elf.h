@@ -1,13 +1,12 @@
 #ifndef READ_ELF_H_
 #define READ_ELF_H_
 
+#include "Def.h"
 #include <cstdio>
 #include <cstring>
 #include <string>
 
 using namespace std;
-
-typedef unsigned long long ULL;
 
 typedef struct
 {

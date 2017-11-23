@@ -1,6 +1,7 @@
 #ifndef STORAGE_H_
 #define STORAGE_H_
 
+#include "Def.h"
 #include <stido.h>
 
 #define MEM_SIZE 1 << 24
@@ -11,50 +12,19 @@
 #define P_TO_V(add) ((add) + (cVadr) - (MEM_ST))
 
 
-typedef unsigned long long TYPEADDR;
+typedef unsigned int TYPEADDR;
 typedef enum { WRITE_THROUGH, WRITE_BACK } HIT_WRITTING_POLICY;
 typedef enum { WRITE_ALLOCATE, NO_WRITE_ALLOCATE } MISS_WRITTING_POLICH;
 typedef enum { STORAGEOP_READ, STORAGEOP_WRITE } STORAGE_OP;
 
-
-
-
-class Line
-{
-    int tag;
-    char *data;
-    Line(int block_size)
-    {
-        data = new char[block_size];
-    }
-    ~Line()
-    {
-        if (data != NULL)
-            delete[] data;
-    }
-};
-class Set
-{
-    Line *lines;
-    int line_num;
-    Set(int _line_num, int block_size) : _line_num(line_num)
-    {
-        lines = new (Line(block_size))[line_num];
-    }
-    ~Set()
-    {
-        if (lines != NULL)
-            delete[] lines;
-    }
-};
-
 class Storage
 {
   public:
-    virtual void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, bool &hit,
-                         int &time) = 0;
+    virtual void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time) = 0;
 
   private:
+    char *data;
+
     // settings
     int size;
     int hit_latency;
@@ -68,24 +38,28 @@ class Storage
 class Memory : public Storage
 {
   public:
-    void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &hit, int &time);
-
-  private:
-    char *data;
+    void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time);
 };
 
 class Cache : public Storage
 {
   public:
-    void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &hit, int &time);
+    void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time);
 
   private:
-    Set *sets;
+    bool *valid;
+    bool *dirty;
+    int *tag;
+    int *lastUsedTime;
+    int timeStamp;
     Storage *next_level;
 
     // settings
     int set_num;
     int associativity;
+    int block_size;
+    int e_set_num;
+    int e_block_size;
     HIT_WRITTING_POLICY hit_writting_policy;
     MISS_WRITTING_POLICH miss_writting_policy;
 

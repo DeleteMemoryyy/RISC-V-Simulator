@@ -1,9 +1,7 @@
 #ifndef REG_DEF_H_
 #define REG_DEF_H_
 
-typedef unsigned long long REG;
-
-typedef unsigned char STAGEMODE;
+#include "Def.h"
 
 struct IFID
 {
