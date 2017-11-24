@@ -63,7 +63,7 @@ void setup()
     load_memory();
 
     PC = mainAddr;
-    endPC = mainAddr + mainSize - 3;
+    endPC = ((mainAddr + mainSize - 3) / 16) * 16;
     reg[R_gp] = gp;
     reg[R_sp] = P_TO_V(MEM_ED);
 
