@@ -89,7 +89,7 @@ bool simulate_one_step()
     WB();
 
     // calculate CPI
-    CPI = (float)CycleCount / (float)InstCount;
+    CPI = (float)CycleCount / (float)(InstCount - 1);
 
     // update register
     reg[0] = 0;  // register zero should alwarys be 0

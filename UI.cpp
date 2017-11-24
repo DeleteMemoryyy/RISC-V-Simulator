@@ -262,7 +262,7 @@ int main()
                             ImGui::Text(" PC: 0x%llx", PC);
                             ImGui::SameLine(0, 40);
                             ImGui::Text(" EndPC: 0x%llx", endPC);
-                            ImGui::Text(" Instruction Count: %d", InstCount);
+                            ImGui::Text(" Instruction Count: %d", InstCount - 1);
                             ImGui::Text(" Total Cycles: %d", CycleCount);
                             ImGui::Text(" CPI: %.3f", CPI);
                             ImGui::Text(" ");
