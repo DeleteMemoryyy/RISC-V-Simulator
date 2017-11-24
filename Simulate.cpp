@@ -60,6 +60,7 @@ void setup()
     WB_IF.PC = mainAddr;
     WB_IF.Ctrl_IF_Branch = BRANCH_NO;
 
+    PC = mainAddr;
     endPC = ((mainAddr + mainSize - 3) / 16) * 16;
 
     reg[R_gp] = gp;
