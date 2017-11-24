@@ -485,6 +485,12 @@ void read_elf_phdr()
                         break;
                     case 7:
                         fprintf(elf, "RWX");
+                        if (elf64_phdr.p_type == 1)
+                            {
+                                cOffset = (ULL)elf64_phdr.p_offset;
+                                cSize = (ULL)elf64_phdr.p_filesz;
+                                cVadr = (ULL)elf64_phdr.p_vaddr;
+                            }
                         break;
                     default:
                         fprintf(elf, "U");
@@ -523,6 +529,11 @@ void read_elf_symtable()
             fread(&elf64_sym, 1, sizeof(elf64_sym), file);
 
             fprintf(elf, "  Name: %s", (char *)(strtab + (unsigned int)elf64_sym.st_name));
+
+            if (strcmp((char *)(strtab + (unsigned int)elf64_sym.st_name), "_gp") == 0)
+                {
+                    gp = elf64_sym.st_value;
+                }
 
             if (strcmp((char *)(strtab + (unsigned int)elf64_sym.st_name), "__global_pointer$") ==
                 0)
