@@ -1,10 +1,11 @@
 #ifndef READ_ELF_H_
 #define READ_ELF_H_
 
-#include "Def.h"
 #include <cstdio>
 #include <cstring>
 #include <string>
+
+typedef unsigned long long ULL;
 
 using namespace std;
 
@@ -171,7 +172,7 @@ extern ULL dVadr;   // virtual address of data segment
 
 extern ULL gp;  // global pointer
 extern ULL entry;   // entry address of program
-extern ULL mainAddr;    // virtual address of main function 
+extern ULL mainAddr;    // virtual address of main function
 extern ULL mainSize;    // size of main function code
 extern ULL textSize;    // size of .text section
 extern ULL dataAddr;    // virtual address of .data section

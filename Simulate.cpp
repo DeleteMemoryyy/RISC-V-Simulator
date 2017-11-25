@@ -24,6 +24,15 @@ int MispredictedCount = 0;
 int PredictableCount = 0;
 int PredictCorrectCount = 0;
 float PredictiveAccuracy = 0.0f;
+#if defined(CACHE_L3)
+
+Cache *l1 = new Cache(6, 8, 6, WRITE_BACK, WRITE_ALLOCATE, 1, 0);
+Cache *l2 = new Cache(9, 8, 6, WRITE_BACK, WRITE_ALLOCATE, 8, 0);
+Cache *l3 = new Cache(14, 8, 6, WRITE_BACK, WRITE_ALLOCATE, 20, 0);
+Memory *cached_memory = new Memory(100, 0);
+char dummy[100];
+
+#endif
 
 // transmission
 STAGEMODE StageMode[5], StageModeOld[5];
@@ -58,12 +67,22 @@ void setup()
 
     for (int i = 0; i < 32; ++i)
         reg[i] = 0;
-    memset(memory, 0, MEM_SIZE);
 
     load_memory();
 
+#ifdef CACHE_L3
+    CacheClear();
+    l1->SetNextLevel(l2);
+    l2->SetNextLevel(l3);
+    l3->SetNextLevel(cached_memory);
+    // l1->Print();
+    // l2->Print();
+    // l3->Print();
+    // cached_memory->Print();
+#endif
+
     PC = mainAddr;
-    endPC = mainAddr + mainSize - 3;
+    endPC = ((mainAddr + mainSize - 3) / 16) * 16;
     reg[R_gp] = gp;
     reg[R_sp] = P_TO_V(MEM_ED);
 
@@ -83,10 +102,22 @@ void setup()
 void load_memory()
 {
     memset(memory, 0, sizeof(char) * MEM_SIZE);
+#ifdef CACHE_L3
+    CacheClear();
+#endif
+    // char *cBuf = new char[cSize + 1], *dBuf = new char[dSize + 1];
     fseek(file, cOffset, SEEK_SET);
+    // fread(cBuf, 1, cSize, file);
     fread(&memory[V_TO_P(cVadr)], 1, cSize, file);
     fseek(file, dOffset, SEEK_SET);
+    // fread(dBuf, 1, dSize, file);
     fread(&memory[V_TO_P(dVadr)], 1, dSize, file);
+    // for (int i = 0; i < cSize; ++i)
+    //     WRITE_BYTE(cVadr + i, cBuf[i])
+    // for (int i = 0; i < dSize; ++i)
+    //     WRITE_BYTE(dVadr + i, dBuf[i])
+    // delete[] cBuf;
+    // delete[] dBuf;
 }
 
 bool simulate_one_step()
@@ -523,6 +554,9 @@ void IF()
 
     // fetch instructor
     Inst = READ_WORD(InstPC);
+#ifdef CACHE_L3
+    // CachedRead(InstPC);
+#endif
 
     if ((Inst & 0x3) != 0x3)
         {
@@ -2941,6 +2975,17 @@ void MEM()
                 ERROR(__LINE__);
         }
 
+#ifdef CACHE_L3
+    if (MemRead != MEMREAD_NO)
+        {
+            CachedRead(ALUOut);
+        }
+    if (MemWrite != MEMWRITE_NO)
+        {
+            CachedWrite(ALUOut);
+        }
+#endif
+
     // write MEM_WB
     MEM_WB.RegDst = RegDst;
     MEM_WB.NextPC = NextPC;
@@ -3011,3 +3056,26 @@ void WB()
     // update instruction count
     InstCount++;
 }
+
+#ifdef CACHE_L3
+
+void CachedRead(ULL vaddr)
+{
+    // printf("paddr :0x%x\n", V_TO_P(vaddr));
+    int t_time = 0;
+    l1->Handler(V_TO_P(vaddr), 1, dummy, STORAGEOP_READ, t_time);
+}
+
+void CachedWrite(ULL vaddr)
+{
+    // printf("paddr :0x%x\n", V_TO_P(vaddr));
+    int t_time = 0;
+    l1->Handler(V_TO_P(vaddr), 1, dummy, STORAGEOP_WRITE, t_time);
+}
+
+void CacheClear()
+{
+    l1->Clear();
+}
+
+#endif

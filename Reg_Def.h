@@ -3,6 +3,7 @@
 
 #include "Def.h"
 
+typedef unsigned long long REG;
 struct IFID
 {
     unsigned int RegDst, RegRs1, RegRs2;

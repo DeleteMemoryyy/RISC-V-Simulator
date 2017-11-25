@@ -1,0 +1,168 @@
+ELF Header:
+ magic number:  0x7f 0x45 0x4c 0x46 0x2 0x1 0x1 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+ Class:  ELFCLASS64
+ Data:  ELFDATA2LSB
+ Version:  0x1
+ OS/ABI:  UNIX Syetem V
+ ABI Version:   0x0
+ Type:  ET_EXEC
+ Machine:  
+ Version:  1
+ Entry point address:  0x10000
+ Start of program headers:  64 bytes into file
+ Start of section headers:  52896 bytes into file
+ Flags:  0x0
+ Size of this header:  64 Bytes
+ Size of program headers:  56 Bytes
+ Number of program headers:  1
+ Size of section headers:  64 Bytes
+ Number of section headers:  22
+ Section header string table index:  19
+
+
+Section Headers:
+[  0]  Name:   Type: SHT_NULL  Address: 0x0  Offest: 0  Size: 0  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 0
+[  1]  Name: .text  Type: SHT_PROGBITS  Address: 0x10000  Offest: 4096  Size: 2400  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 4
+[  2]  Name: .rodata  Type: SHT_PROGBITS  Address: 0x10960  Offest: 6496  Size: 8  Entsize: 1  Flags:   Link: 0  Info: 0  Align: 8
+[  3]  Name: .init_array  Type:   Address: 0x10968  Offest: 6504  Size: 8  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 8
+[  4]  Name: .fini_array  Type:   Address: 0x10970  Offest: 6512  Size: 8  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 8
+[  5]  Name: .eh_frame  Type: SHT_PROGBITS  Address: 0x10978  Offest: 6520  Size: 1088  Entsize: 0  Flags: SHF_ALLOC  Link: 0  Info: 0  Align: 8
+[  6]  Name: .jcr  Type: SHT_PROGBITS  Address: 0x10db8  Offest: 7608  Size: 8  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 8
+[  7]  Name: .data  Type: SHT_PROGBITS  Address: 0x10dc0  Offest: 7616  Size: 1888  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 8
+[  8]  Name: .sdata  Type: SHT_PROGBITS  Address: 0x11520  Offest: 9504  Size: 24  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 8
+[  9]  Name: .sbss  Type: SHT_NOBITS  Address: 0x11538  Offest: 9528  Size: 8  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 8
+[ 10]  Name: .bss  Type: SHT_NOBITS  Address: 0x11540  Offest: 9528  Size: 72  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 8
+[ 11]  Name: .comment  Type: SHT_PROGBITS  Address: 0x0  Offest: 9528  Size: 17  Entsize: 1  Flags:   Link: 0  Info: 0  Align: 1
+[ 12]  Name: .debug_info  Type: SHT_PROGBITS  Address: 0x0  Offest: 9545  Size: 18034  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 1
+[ 13]  Name: .debug_abbrev  Type: SHT_PROGBITS  Address: 0x0  Offest: 27579  Size: 3624  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 1
+[ 14]  Name: .debug_loc  Type: SHT_PROGBITS  Address: 0x0  Offest: 31203  Size: 5437  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 1
+[ 15]  Name: .debug_aranges  Type: SHT_PROGBITS  Address: 0x0  Offest: 36640  Size: 416  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 1
+[ 16]  Name: .debug_line  Type: SHT_PROGBITS  Address: 0x0  Offest: 37056  Size: 8629  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 1
+[ 17]  Name: .debug_str  Type: SHT_PROGBITS  Address: 0x0  Offest: 45685  Size: 3027  Entsize: 1  Flags:   Link: 0  Info: 0  Align: 1
+[ 18]  Name: .debug_ranges  Type: SHT_PROGBITS  Address: 0x0  Offest: 48712  Size: 128  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 1
+[ 19]  Name: .shstrtab  Type: SHT_STRTAB  Address: 0x0  Offest: 48840  Size: 202  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 1
+[ 20]  Name: .symtab  Type: SHT_SYMTAB  Address: 0x0  Offest: 49048  Size: 2784  Entsize: 24  Flags:   Link: 21  Info: 53  Align: 8
+[ 21]  Name: .strtab  Type: SHT_STRTAB  Address: 0x0  Offest: 51832  Size: 1062  Entsize: 0  Flags:   Link: 0  Info: 0  Align: 1
+
+
+Program Headers:
+[  0]  Type: PT_LOAD  Flags: RWX  Offset: 4096  VirtAddr: 0x10000  PhysAddr: 0x10000  FileSiz: 5432  MemSiz: 5512  Align: 4096
+
+
+Symbol Table:
+[  0]  Name:   Bind: STB_LOCAL  Type: STT_NOTYPE  NDX: 0  Size: 0  Value: 0x0
+[  1]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 1  Size: 0  Value: 0x10000
+[  2]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 2  Size: 0  Value: 0x10960
+[  3]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 3  Size: 0  Value: 0x10968
+[  4]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 4  Size: 0  Value: 0x10970
+[  5]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 5  Size: 0  Value: 0x10978
+[  6]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 6  Size: 0  Value: 0x10db8
+[  7]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 7  Size: 0  Value: 0x10dc0
+[  8]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 8  Size: 0  Value: 0x11520
+[  9]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 9  Size: 0  Value: 0x11538
+[ 10]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 10  Size: 0  Value: 0x11540
+[ 11]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 11  Size: 0  Value: 0x0
+[ 12]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 12  Size: 0  Value: 0x0
+[ 13]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 13  Size: 0  Value: 0x0
+[ 14]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 14  Size: 0  Value: 0x0
+[ 15]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 15  Size: 0  Value: 0x0
+[ 16]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 16  Size: 0  Value: 0x0
+[ 17]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 17  Size: 0  Value: 0x0
+[ 18]  Name:   Bind: STB_LOCAL  Type: STT_SECTION  NDX: 18  Size: 0  Value: 0x0
+[ 19]  Name: crtstuff.c  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 20]  Name: __EH_FRAME_BEGIN__  Bind: STB_LOCAL  Type: STT_OBJECT  NDX: 5  Size: 0  Value: 0x10978
+[ 21]  Name: __JCR_LIST__  Bind: STB_LOCAL  Type: STT_OBJECT  NDX: 6  Size: 0  Value: 0x10db8
+[ 22]  Name: deregister_tm_clones  Bind: STB_LOCAL  Type: STT_FUNC  NDX: 1  Size: 0  Value: 0x1004c
+[ 23]  Name: register_tm_clones  Bind: STB_LOCAL  Type: STT_FUNC  NDX: 1  Size: 0  Value: 0x10078
+[ 24]  Name: __do_global_dtors_aux  Bind: STB_LOCAL  Type: STT_FUNC  NDX: 1  Size: 0  Value: 0x100b0
+[ 25]  Name: completed.4929  Bind: STB_LOCAL  Type: STT_OBJECT  NDX: 10  Size: 1  Value: 0x11540
+[ 26]  Name: __do_global_dtors_aux_fini_array_entry  Bind: STB_LOCAL  Type: STT_OBJECT  NDX: 4  Size: 0  Value: 0x10970
+[ 27]  Name: frame_dummy  Bind: STB_LOCAL  Type: STT_FUNC  NDX: 1  Size: 0  Value: 0x100f4
+[ 28]  Name: object.4934  Bind: STB_LOCAL  Type: STT_OBJECT  NDX: 10  Size: 48  Value: 0x11548
+[ 29]  Name: __frame_dummy_init_array_entry  Bind: STB_LOCAL  Type: STT_OBJECT  NDX: 3  Size: 0  Value: 0x10968
+[ 30]  Name: 3.cpp  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 31]  Name: crtstuff.c  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 32]  Name: __FRAME_END__  Bind: STB_LOCAL  Type: STT_OBJECT  NDX: 5  Size: 0  Value: 0x109b0
+[ 33]  Name: __JCR_END__  Bind: STB_LOCAL  Type: STT_OBJECT  NDX: 6  Size: 0  Value: 0x10db8
+[ 34]  Name: atexit.c  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 35]  Name: exit.c  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 36]  Name: fini.c  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 37]  Name: impure.c  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 38]  Name: impure_data  Bind: STB_LOCAL  Type: STT_OBJECT  NDX: 7  Size: 1864  Value: 0x10dd8
+[ 39]  Name: init.c  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 40]  Name: __atexit.c  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 41]  Name: __call_atexit.c  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 42]  Name: syscalls.c  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 43]  Name: heap_end.2381  Bind: STB_LOCAL  Type: STT_OBJECT  NDX: 9  Size: 8  Value: 0x11538
+[ 44]  Name: t0.2343  Bind: STB_LOCAL  Type: STT_OBJECT  NDX: 10  Size: 16  Value: 0x11578
+[ 45]  Name: errno.c  Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 46]  Name:   Bind: STB_LOCAL  Type: STT_FILE  NDX: -15  Size: 0  Value: 0x0
+[ 47]  Name: __fini_array_end  Bind: STB_LOCAL  Type: STT_NOTYPE  NDX: 4  Size: 0  Value: 0x10978
+[ 48]  Name: __fini_array_start  Bind: STB_LOCAL  Type: STT_NOTYPE  NDX: 4  Size: 0  Value: 0x10970
+[ 49]  Name: __init_array_end  Bind: STB_LOCAL  Type: STT_NOTYPE  NDX: 3  Size: 0  Value: 0x10970
+[ 50]  Name: __preinit_array_end  Bind: STB_LOCAL  Type: STT_NOTYPE  NDX: 3  Size: 0  Value: 0x10968
+[ 51]  Name: __init_array_start  Bind: STB_LOCAL  Type: STT_NOTYPE  NDX: 3  Size: 0  Value: 0x10968
+[ 52]  Name: __preinit_array_start  Bind: STB_LOCAL  Type: STT_NOTYPE  NDX: 3  Size: 0  Value: 0x10968
+[ 53]  Name: fstatat  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 20  Value: 0x10674
+[ 54]  Name: sysconf  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 28  Value: 0x108d0
+[ 55]  Name: _fdata  Bind: STB_GLOBAL  Type: STT_NOTYPE  NDX: 7  Size: 0  Value: 0x10dc0
+[ 56]  Name: utime  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 8  Value: 0x108a8
+[ 57]  Name: faccessat  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 20  Value: 0x106a4
+[ 58]  Name: __errno  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 8  Value: 0x10958
+[ 59]  Name: times  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 144  Value: 0x107e8
+[ 60]  Name: _etext  Bind: STB_GLOBAL  Type: STT_NOTYPE  NDX: 2  Size: 0  Value: 0x10968
+[ 61]  Name: _gp  Bind: STB_GLOBAL  Type: STT_NOTYPE  NDX: -15  Size: 0  Value: 0x11d20
+[ 62]  Name: execve  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 36  Value: 0x10714
+[ 63]  Name: getpid  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 8  Value: 0x1075c
+[ 64]  Name: __TMC_END__  Bind: STB_GLOBAL  Type: STT_OBJECT  NDX: 8  Size: 0  Value: 0x11520
+[ 65]  Name: malloc  Bind: STB_WEAK  Type: STT_NOTYPE  NDX: 0  Size: 0  Value: 0x0
+[ 66]  Name: isatty  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 60  Value: 0x107ac
+[ 67]  Name: _bss_start  Bind: STB_GLOBAL  Type: STT_NOTYPE  NDX: 10  Size: 0  Value: 0x11540
+[ 68]  Name: __dso_handle  Bind: STB_GLOBAL  Type: STT_OBJECT  NDX: 8  Size: 0  Value: 0x11520
+[ 69]  Name: lseek  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 20  Value: 0x105e4
+[ 70]  Name: _global_impure_ptr  Bind: STB_GLOBAL  Type: STT_OBJECT  NDX: 8  Size: 8  Value: 0x11528
+[ 71]  Name: chown  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 8  Value: 0x108b0
+[ 72]  Name: __libc_init_array  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 160  Value: 0x1025c
+[ 73]  Name: chmod  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 8  Value: 0x108b8
+[ 74]  Name: _init  Bind: STB_GLOBAL  Type: STT_NOTYPE  NDX: 1  Size: 0  Value: 0x10048
+[ 75]  Name: __libc_fini_array  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 92  Value: 0x10200
+[ 76]  Name: write  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 20  Value: 0x1060c
+[ 77]  Name: fstat  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 28  Value: 0x10620
+[ 78]  Name: kill  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 36  Value: 0x10764
+[ 79]  Name: __deregister_frame_info  Bind: STB_WEAK  Type: STT_NOTYPE  NDX: 0  Size: 0  Value: 0x0
+[ 80]  Name: chdir  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 8  Value: 0x108c0
+[ 81]  Name: _ITM_registerTMCloneTable  Bind: STB_WEAK  Type: STT_NOTYPE  NDX: 0  Size: 0  Value: 0x0
+[ 82]  Name: wait  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 36  Value: 0x10788
+[ 83]  Name: __call_exitprocs  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 396  Value: 0x103fc
+[ 84]  Name: _ftext  Bind: STB_GLOBAL  Type: STT_NOTYPE  NDX: 1  Size: 0  Value: 0x10000
+[ 85]  Name: _start  Bind: STB_GLOBAL  Type: STT_NOTYPE  NDX: 1  Size: 0  Value: 0x10000
+[ 86]  Name: lstat  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 28  Value: 0x10658
+[ 87]  Name: read  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 20  Value: 0x105f8
+[ 88]  Name: __register_exitproc  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 256  Value: 0x102fc
+[ 89]  Name: unlink  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 32  Value: 0x106f4
+[ 90]  Name: fork  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 36  Value: 0x10738
+[ 91]  Name: __syscall_error  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 48  Value: 0x10588
+[ 92]  Name: _ITM_deregisterTMCloneTable  Bind: STB_WEAK  Type: STT_NOTYPE  NDX: 0  Size: 0  Value: 0x0
+[ 93]  Name: sbrk  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 80  Value: 0x108ec
+[ 94]  Name: gettimeofday  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 32  Value: 0x10878
+[ 95]  Name: main  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 124  Value: 0x10140
+[ 96]  Name: getcwd  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 8  Value: 0x108c8
+[ 97]  Name: _fini  Bind: STB_GLOBAL  Type: STT_NOTYPE  NDX: 1  Size: 0  Value: 0x10048
+[ 98]  Name: atexit  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 20  Value: 0x101bc
+[ 99]  Name: result  Bind: STB_GLOBAL  Type: STT_OBJECT  NDX: 7  Size: 20  Value: 0x10dc0
+[100]  Name: _impure_ptr  Bind: STB_GLOBAL  Type: STT_OBJECT  NDX: 8  Size: 8  Value: 0x11530
+[101]  Name: ftime  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 16  Value: 0x10898
+[102]  Name: stat  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 28  Value: 0x1063c
+[103]  Name: access  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 28  Value: 0x10688
+[104]  Name: _edata  Bind: STB_GLOBAL  Type: STT_NOTYPE  NDX: 7  Size: 0  Value: 0x11520
+[105]  Name: _end  Bind: STB_GLOBAL  Type: STT_NOTYPE  NDX: 10  Size: 0  Value: 0x11588
+[106]  Name: link  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 28  Value: 0x106d8
+[107]  Name: exit  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 48  Value: 0x101d0
+[108]  Name: openat  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 20  Value: 0x105d0
+[109]  Name: _exit  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 28  Value: 0x1093c
+[110]  Name: open  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 24  Value: 0x105b8
+[111]  Name: _Jv_RegisterClasses  Bind: STB_WEAK  Type: STT_NOTYPE  NDX: 0  Size: 0  Value: 0x0
+[112]  Name: _fbss  Bind: STB_GLOBAL  Type: STT_NOTYPE  NDX: 9  Size: 0  Value: 0x11538
+[113]  Name: __register_frame_info  Bind: STB_WEAK  Type: STT_NOTYPE  NDX: 0  Size: 0  Value: 0x0
+[114]  Name: close  Bind: STB_GLOBAL  Type: STT_FUNC  NDX: 1  Size: 32  Value: 0x106b8
+[115]  Name: free  Bind: STB_WEAK  Type: STT_NOTYPE  NDX: 0  Size: 0  Value: 0x0

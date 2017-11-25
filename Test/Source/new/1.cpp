@@ -2,13 +2,13 @@
 int a=0,b=1,c=2;
 int main()
 {
-	a=a+2;	// a = 2
-	b=b+3;	// b = 4
-	c=c+4;	// c = 6
-
-	a=a+b;	// a = 6
-	b=b+c;	// b = 10
-	c=c+a;	// c = 12
+	a=a+2;
+	b=b+3;
+	c=c+4;
+	
+	a=a+b;
+	b=b+c;
+	c=c+a;
 	return 0;
 }
 

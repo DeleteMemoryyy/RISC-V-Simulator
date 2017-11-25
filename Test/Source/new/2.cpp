@@ -2,14 +2,14 @@
 int a=0,b=1,c=2;
 int main()
 {
-	a=a+b;	// a = 1
-	a=a+2;	// a = 3
+	a=a+b;
+	a=a+2;
 	
-	b=b+a;	// b = 4
-	b=b+3;	// b = 7
+	b=b+a;
+	b=b+3;
 	
-	c=c+a;	// c = 5
-	c=c+4;	// c = 9
+	c=c+a;
+	c=c+4;
 	return 0;
 }
 

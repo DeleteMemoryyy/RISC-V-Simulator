@@ -3,7 +3,7 @@
 
 #include "Read_Elf.h"
 #include "Reg_Def.h"
-#include "Def.h"
+#include "Storage.h"
 #include <iostream>
 #include <math.h>
 #include <stdio.h>
@@ -11,8 +11,18 @@
 #include <string>
 #include <time.h>
 
-#define BTB_SIZE 8
 
+#define BTB_SIZE 8
+#define V_TO_P(add) ((add) + (MEM_ST) - (cVadr))
+#define P_TO_V(add) ((add) + (cVadr) - (MEM_ST))
+#define READ_BYTE(vaddr) (*((unsigned char *)(memory + V_TO_P((vaddr)))))
+#define READ_HWORD(vaddr) (*((unsigned short *)(memory + V_TO_P((vaddr)))))
+#define READ_WORD(vaddr) (*((unsigned int *)(memory + V_TO_P((vaddr)))))
+#define READ_DWORD(vaddr) (*((ULL *)(memory + V_TO_P((vaddr)))))
+#define WRITE_BYTE(vaddr, value) (*((unsigned char *)(memory + V_TO_P((vaddr)))) = (value))
+#define WRITE_HWORD(vaddr, value) (*((unsigned short *)(memory + V_TO_P((vaddr)))) = (value))
+#define WRITE_WORD(vaddr, value) (*((unsigned int *)(memory + V_TO_P((vaddr)))) = (value))
+#define WRITE_DWORD(vaddr, value) (*((ULL *)(memory + V_TO_P((vaddr)))) = (value))
 #define RVC_TO_R(r) ((r) + 8)
 #define HINT(cond)                                                                                 \
     {                                                                                              \
@@ -23,14 +33,8 @@
 #define EXT_SIGNED_DWORD(src, bit) ((((long long int)(src)) << (64 - (bit))) >> (64 - (bit)))
 #define EXT_UNSIGNED_WORD(src, bit) ((((unsigned int)(src)) << (32 - (bit))) >> (32 - (bit)))
 #define EXT_UNSIGNED_DWORD(src, bit) ((((ULL)(src)) << (64 - (bit))) >> (64 - (bit)))
-#define READ_BYTE(vaddr) (*((unsigned char *)(memory + V_TO_P((vaddr)))))
-#define READ_HWORD(vaddr) (*((unsigned short *)(memory + V_TO_P((vaddr)))))
-#define READ_WORD(vaddr) (*((unsigned int *)(memory + V_TO_P((vaddr)))))
-#define READ_DWORD(vaddr) (*((ULL *)(memory + V_TO_P((vaddr)))))
-#define WRITE_BYTE(vaddr, value) (*((unsigned char *)(memory + V_TO_P((vaddr)))) = (value))
-#define WRITE_HWORD(vaddr, value) (*((unsigned short *)(memory + V_TO_P((vaddr)))) = (value))
-#define WRITE_WORD(vaddr, value) (*((unsigned int *)(memory + V_TO_P((vaddr)))) = (value))
-#define WRITE_DWORD(vaddr, value) (*((ULL *)(memory + V_TO_P((vaddr)))) = (value))
+
+typedef unsigned char STAGEMODE;
 
 struct BTB
 {
@@ -94,5 +98,15 @@ void EX();
 void MEM();
 
 void WB();
+
+extern Cache *l1;
+extern Cache *l2;
+extern Cache *l3;
+extern Memory *cached_memory;
+extern char dummy[100];
+
+void CachedRead(ULL vaddr);
+void CachedWrite(ULL vaddr);
+void CacheClear();
 
 #endif
