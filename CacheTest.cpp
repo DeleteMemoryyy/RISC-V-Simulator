@@ -24,8 +24,8 @@ int main(int argc, char **argv)
     while (simulate_one_step())
         ;
     printf("Instruction Count: %d\t Total Cycles: %d\t CPI: %.3f\n", InstCount,
-           CycleCount + l1->access_time,
-           (float)(CycleCount + l1->access_time) / (float)(InstCount));
+           CycleCount + l1->access_time - l1->access_count,
+           (float)(CycleCount + l1->access_time - l1->access_count) / (float)(InstCount));
     l1->Print();
     l2->Print();
     l3->Print();

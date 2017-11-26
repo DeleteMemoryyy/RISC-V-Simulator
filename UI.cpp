@@ -270,10 +270,12 @@ int main()
                             ImGui::Text(" Instruction Count: %d", InstCount);
                             ImGui::SameLine();
 #ifdef CACHE_L3
-                            ImGui::Text(" Total Cycles: %d", CycleCount + l1->access_time);
+                            ImGui::Text(" Total Cycles: %d",
+                                        CycleCount + l1->access_time - l1->access_count);
                             ImGui::SameLine();
                             ImGui::Text(" CPI: %.3f",
-                                        (float)(CycleCount + l1->access_time) / (float)(InstCount));
+                                        (float)(CycleCount + l1->access_time - l1->access_count) /
+                                            (float)(InstCount));
 #else
                             ImGui::Text(" Total Cycles: %d", CycleCount);
                             ImGui::SameLine();

@@ -15,8 +15,8 @@
 #define GET_BIT(i, b) (((i) & (1 << (b))) >> (b))
 
 typedef unsigned int TYPEADDR;
-typedef enum { WRITE_THROUGH, WRITE_BACK } HIT_WRITTING_POLICY;
-typedef enum { WRITE_ALLOCATE, NO_WRITE_ALLOCATE } MISS_WRITTING_POLICH;
+typedef enum { WRITE_THROUGH, WRITE_BACK } HIT_WRITING_POLICY;
+typedef enum { WRITE_ALLOCATE, NO_WRITE_ALLOCATE } MISS_WRITING_POLICH;
 typedef enum { STORAGEOP_READ, STORAGEOP_WRITE } STORAGE_OP;
 
 const char HWP_NAME[2][50] = {"WRITE THROUGH", "WRITE BACK"};
@@ -77,8 +77,8 @@ class Cache : public Storage
     int block_size;
     int e_set_num;
     int e_block_size;
-    HIT_WRITTING_POLICY hit_writting_policy;
-    MISS_WRITTING_POLICH miss_writting_policy;
+    HIT_WRITING_POLICY hit_writing_policy;
+    MISS_WRITING_POLICH miss_writing_policy;
 
   public:
     // statistics
@@ -87,7 +87,7 @@ class Cache : public Storage
     int replace_count;
 
     Cache(int _e_set_num, int _associativity, int _e_block_size,
-          HIT_WRITTING_POLICY _hit_writting_policy, MISS_WRITTING_POLICH _miss_writting_policy,
+          HIT_WRITING_POLICY _hit_writing_policy, MISS_WRITING_POLICH _miss_writing_policy,
           int _hit_latency, int _bus_latency);
     ~Cache();
     void SetNextLevel(Storage *_next_level)

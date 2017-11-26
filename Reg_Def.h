@@ -1,9 +1,8 @@
 #ifndef REG_DEF_H_
 #define REG_DEF_H_
 
-#include "Def.h"
-
 typedef unsigned long long REG;
+
 struct IFID
 {
     unsigned int RegDst, RegRs1, RegRs2;

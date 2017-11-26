@@ -5,7 +5,8 @@ Memory::Memory(int _hit_latency, int _bus_latency)
     hit_latency = _hit_latency;
     bus_latency = _bus_latency;
     size = CACHED_MEM_SIZE;
-    data = new char[CACHED_MEM_SIZE];
+    // data = new char[CACHED_MEM_SIZE];
+    data = NULL;
     access_count = 0;
     access_time = 0;
 }
@@ -59,10 +60,10 @@ void Memory::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int
 }
 
 Cache::Cache(int _e_set_num, int _associativity, int _e_block_size,
-             HIT_WRITTING_POLICY _hit_writting_policy, MISS_WRITTING_POLICH _miss_writting_policy,
+             HIT_WRITING_POLICY _hit_writing_policy, MISS_WRITING_POLICH _miss_writing_policy,
              int _hit_latency, int _bus_latency)
     : associativity(_associativity), e_set_num(_e_set_num), e_block_size(_e_block_size),
-      hit_writting_policy(_hit_writting_policy), miss_writting_policy(_miss_writting_policy)
+      hit_writing_policy(_hit_writing_policy), miss_writing_policy(_miss_writing_policy)
 {
     hit_latency = _hit_latency;
     bus_latency = _bus_latency;
@@ -126,11 +127,12 @@ void Cache::Clear()
 void Cache::Print()
 {
     printf("Cache status:\n");
+    printf("    e_size: %d\t size: 0x%x\n", (int)log2(size), size);
     printf("    e_set_num: %d\t associativity: %d\t e_block_size: %d\n", e_set_num, associativity,
            e_block_size);
     printf("    hit_latency: %d\t bus_latency: %d\n", hit_latency, bus_latency);
-    printf("    hit_writting_policy: %s\t miss_writting_policy: %s\n",
-           HWP_NAME[hit_writting_policy], MWP_NAME[miss_writting_policy]);
+    printf("    hit_writing_policy: %s\t miss_writing_policy: %s\n",
+           HWP_NAME[hit_writing_policy], MWP_NAME[miss_writing_policy]);
     printf("    access_count: %d\t hit_count: %d\t miss_count: %d\t replace_count: %d\n",
            access_count, hit_count, miss_count, replace_count);
     printf("    miss_rate: %.3f\n", GetMissRate());
@@ -170,7 +172,7 @@ void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int 
                         {
                             // memcpy(data + hit_line * block_size + offset, content, bytes);
                             dirty[hit_line] = true;
-                            if (next_level != NULL && hit_writting_policy == WRITE_THROUGH)
+                            if (next_level != NULL && hit_writing_policy == WRITE_THROUGH)
                                 next_level->Handler(addr, bytes, data + hit_line * block_size,
                                                     STORAGEOP_WRITE, t_time);
                         }
@@ -182,7 +184,7 @@ void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int 
         }
     else
         {
-            if (op == STORAGEOP_WRITE && miss_writting_policy == NO_WRITE_ALLOCATE)
+            if (op == STORAGEOP_WRITE && miss_writing_policy == NO_WRITE_ALLOCATE)
                 {
                     next_level->Handler(addr, bytes, content, STORAGEOP_WRITE, t_time);
                 }
@@ -206,7 +208,7 @@ void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int 
                                         hit_line = i;
                                     }
                             assert(hit_line != -1);
-                            if (hit_writting_policy == WRITE_BACK && dirty[hit_line])  // write back
+                            if (hit_writing_policy == WRITE_BACK && dirty[hit_line])  // write back
                                 {
                                     next_level->Handler(
                                         ((tag[hit_line] << (e_block_size + e_set_num)) |
@@ -232,7 +234,7 @@ void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int 
                                 {
                                     // memcpy(data + hit_line * block_size, content + offset, bytes);
                                     dirty[hit_line] = true;
-                                    if (next_level != NULL && hit_writting_policy == WRITE_THROUGH)
+                                    if (next_level != NULL && hit_writing_policy == WRITE_THROUGH)
                                         next_level->Handler(addr, bytes,
                                                             data + hit_line * block_size,
                                                             STORAGEOP_WRITE, t_time);
