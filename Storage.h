@@ -68,6 +68,7 @@ class Cache : public Storage
     bool *dirty;
     int *tag;
     int *lastUsedTime;
+    int *bypassTable;
     int timeStamp;
     Storage *next_level;
 
@@ -79,12 +80,18 @@ class Cache : public Storage
     int e_block_size;
     HIT_WRITING_POLICY hit_writing_policy;
     MISS_WRITING_POLICH miss_writing_policy;
+    int bypass_policy;
+    int bypass_table_size;
+    int bypass_idx;
+    int prefetch_policy;
 
   public:
     // statistics
     int hit_count;
     int miss_count;
     int replace_count;
+    int bypass_count;
+    int prefetch_count;
 
     Cache(int _e_set_num, int _associativity, int _e_block_size,
           HIT_WRITING_POLICY _hit_writing_policy, MISS_WRITING_POLICH _miss_writing_policy,
@@ -104,6 +111,10 @@ class Cache : public Storage
     {
         return (float)miss_count / (float)access_count;
     }
+    void EnableBypass(int _bypass_table_size);
+    bool BypassDecide(int tag);
+    bool PrefetchDecide();
+    void Prefetch();
     void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time);
 };
 

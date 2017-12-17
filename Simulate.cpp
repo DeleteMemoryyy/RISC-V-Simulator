@@ -71,10 +71,10 @@ void setup()
     load_memory();
 
 #ifdef CACHE_L3
-    CacheClear();
     l1->SetNextLevel(l2);
     l2->SetNextLevel(l3);
     l3->SetNextLevel(cached_memory);
+    CacheClear();
     // l1->Print();
     // l2->Print();
     // l3->Print();

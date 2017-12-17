@@ -81,8 +81,13 @@ Cache::Cache(int _e_set_num, int _associativity, int _e_block_size,
     hit_count = 0;
     miss_count = 0;
     replace_count = 0;
+    bypass_count = 0;
+    prefetch_count = 0;
     access_count = 0;
     access_time = 0;
+
+    bypass_policy = 0;
+    prefetch_policy = 0;
 }
 
 Cache::~Cache()
@@ -131,12 +136,41 @@ void Cache::Print()
     printf("    e_set_num: %d\t associativity: %d\t e_block_size: %d\n", e_set_num, associativity,
            e_block_size);
     printf("    hit_latency: %d\t bus_latency: %d\n", hit_latency, bus_latency);
-    printf("    hit_writing_policy: %s\t miss_writing_policy: %s\n",
-           HWP_NAME[hit_writing_policy], MWP_NAME[miss_writing_policy]);
-    printf("    access_count: %d\t hit_count: %d\t miss_count: %d\t replace_count: %d\n",
-           access_count, hit_count, miss_count, replace_count);
-    printf("    miss_rate: %.3f\n", GetMissRate());
+    printf("    hit_writing_policy: %s\t miss_writing_policy: %s\t bypass_policy: %d\n",
+           HWP_NAME[hit_writing_policy], MWP_NAME[miss_writing_policy], bypass_policy);
+    printf("    access_count: %d\t hit_count: %d\t miss_count: %d\t replace_count: %d\t "
+           "bypass_count %d\n",
+           access_count, hit_count, miss_count, replace_count, bypass_count);
+    printf("    miss_rate: %.4f\n", GetMissRate());
     printf("    access_time %d\n", access_time);
+}
+
+void Cache::EnableBypass(int _bypass_table_size)
+{
+    bypass_policy = 1;
+    bypass_idx = 0;
+    bypass_table_size = _bypass_table_size;
+    bypassTable = new int[bypass_table_size];
+    for (int i = 0; i < bypass_table_size; ++i)
+        bypassTable[i] = -1;
+}
+
+bool Cache::BypassDecide(int tag)
+{
+    if (bypass_policy == 0)
+        return false;
+    for (int i = 0; i < bypass_table_size; ++i)
+        if (tag == bypassTable[i])
+            return true;
+    return false;
+}
+
+bool Cache::PrefetchDecide()
+{
+}
+
+void Cache::Prefetch()
+{
 }
 
 void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time)
@@ -182,7 +216,7 @@ void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int 
             t_time += hit_latency;
             lastUsedTime[hit_line] = timeStamp;
         }
-    else
+    else  // miss
         {
             if (op == STORAGEOP_WRITE && miss_writing_policy == NO_WRITE_ALLOCATE)
                 {
@@ -196,6 +230,7 @@ void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int 
                                 hit_line = i;
                                 break;
                             }
+                    bool bypass_flag = false;
                     if (hit_line == -1)  // no invalid line
                         {
                             hit_line = set_idx * associativity;
@@ -208,38 +243,63 @@ void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int 
                                         hit_line = i;
                                     }
                             assert(hit_line != -1);
-                            if (hit_writing_policy == WRITE_BACK && dirty[hit_line])  // write back
+                            if (!BypassDecide(tag[hit_line]))
                                 {
-                                    next_level->Handler(
-                                        ((tag[hit_line] << (e_block_size + e_set_num)) |
-                                         (set_idx << e_block_size)),
-                                        block_size, data + hit_line * block_size, STORAGEOP_WRITE,
-                                        t_time);
+                                    if (hit_writing_policy == WRITE_BACK &&
+                                        dirty[hit_line])  // write back
+                                        {
+                                            next_level->Handler(
+                                                ((tag[hit_line] << (e_block_size + e_set_num)) |
+                                                 (set_idx << e_block_size)),
+                                                block_size, data + hit_line * block_size,
+                                                STORAGEOP_WRITE, t_time);
+                                        }
+                                    if (bypass_policy != 0)
+                                        {
+                                            bypassTable[bypass_idx] = tag[hit_line];
+                                            bypass_idx = (bypass_idx + 1) % bypass_table_size;
+                                        }
+                                    replace_count += 1;
                                 }
-                            replace_count += 1;
+                            else
+                                {
+                                    next_level->Handler(addr, bytes, content, op, t_time);
+                                    bypass_flag = true;
+                                    bypass_count += 1;
+                                }
                         }
-                    valid[hit_line] = true;
-                    dirty[hit_line] = false;
-                    tag[hit_line] = request_tag;
-                    next_level->Handler(addr, block_size, data + hit_line * block_size,
-                                        STORAGEOP_READ, t_time);
-                    switch (op)
+                    if (!bypass_flag)
                         {
-                            case STORAGEOP_READ:
+                            valid[hit_line] = true;
+                            dirty[hit_line] = false;
+                            tag[hit_line] = request_tag;
+                            next_level->Handler(addr, block_size, data + hit_line * block_size,
+                                                STORAGEOP_READ, t_time);
+
+                            if (PrefetchDecide())
+                                Prefetch();
+
+                            switch (op)
                                 {
-                                    // memcpy(content, data + hit_line * block_size offset, bytes);
+                                    case STORAGEOP_READ:
+                                        {
+                                            // memcpy(content, data + hit_line * block_size
+                                            // offset, bytes);
+                                        }
+                                        break;
+                                    case STORAGEOP_WRITE:
+                                        {
+                                            // memcpy(data + hit_line * block_size, content
+                                            // + offset, bytes);
+                                            dirty[hit_line] = true;
+                                            if (next_level != NULL &&
+                                                hit_writing_policy == WRITE_THROUGH)
+                                                next_level->Handler(addr, bytes,
+                                                                    data + hit_line * block_size,
+                                                                    STORAGEOP_WRITE, t_time);
+                                        }
+                                        break;
                                 }
-                                break;
-                            case STORAGEOP_WRITE:
-                                {
-                                    // memcpy(data + hit_line * block_size, content + offset, bytes);
-                                    dirty[hit_line] = true;
-                                    if (next_level != NULL && hit_writing_policy == WRITE_THROUGH)
-                                        next_level->Handler(addr, bytes,
-                                                            data + hit_line * block_size,
-                                                            STORAGEOP_WRITE, t_time);
-                                }
-                                break;
                         }
                     t_time += bus_latency + hit_latency;
                     lastUsedTime[hit_line] = timeStamp;

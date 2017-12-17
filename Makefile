@@ -44,8 +44,12 @@ InstTest: $(INSTTEST_OBJS)
 	$(CXX) -o InstTest $(INSTTEST_OBJS) $(CXXFLAGS) $(LIBS)
 
 Storage:
-	$(CXX) -o Storage.o -c Storage.cpp
+	$(CXX) -o Storage.o -c Storage.cpp -Wall -Wformat -g
 	$(CXX) -o StorageTest StorageTest.cpp Storage.o -Wall -Wformat -g
+
+CacheOP:
+	$(CXX) -o Storage.o -c Storage.cpp -Wall -Wformat -g
+	$(CXX) -o CacheOptimize CacheOptimize.cpp Storage.o -Wall -Wformat -g
 
 clean:
 	rm *.o UI_LIB/*.o $(EXE) ui_test CacheTest InstTest StorageTest
