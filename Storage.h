@@ -39,7 +39,8 @@ class Storage
 
     Storage(){};
     virtual ~Storage(){};
-    virtual void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time) = 0;
+    virtual void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time,
+                         bool invisible = false) = 0;
     virtual Storage *GetNextLevel()
     {
         return NULL;
@@ -58,7 +59,8 @@ class Memory : public Storage
     }
     void Clear();
     void Print();
-    void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time);
+    void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time,
+                 bool invisible = false);
 };
 
 class Cache : public Storage
@@ -69,6 +71,8 @@ class Cache : public Storage
     int *tag;
     int *lastUsedTime;
     int *bypassTable;
+    int *prefetchTable;
+    int *PLRUTree;
     int timeStamp;
     Storage *next_level;
 
@@ -84,6 +88,10 @@ class Cache : public Storage
     int bypass_table_size;
     int bypass_idx;
     int prefetch_policy;
+    int prefetch_least_steps;
+    int prefetch_table_size;
+    int prefetch_times;
+    int prefetch_idx;
 
   public:
     // statistics
@@ -92,6 +100,7 @@ class Cache : public Storage
     int replace_count;
     int bypass_count;
     int prefetch_count;
+
 
     Cache(int _e_set_num, int _associativity, int _e_block_size,
           HIT_WRITING_POLICY _hit_writing_policy, MISS_WRITING_POLICH _miss_writing_policy,
@@ -113,9 +122,11 @@ class Cache : public Storage
     }
     void EnableBypass(int _bypass_table_size);
     bool BypassDecide(int tag);
-    bool PrefetchDecide();
-    void Prefetch();
-    void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time);
+    void EnablePrefetch(int _prefetch_table_size, int _least_steps);
+    int PrefetchDecide(int line);
+    // void Prefetch();
+    void Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time,
+                 bool invisible = false);
 };
 
 #endif

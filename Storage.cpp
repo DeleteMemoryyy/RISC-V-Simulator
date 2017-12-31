@@ -35,26 +35,26 @@ void Memory::Clear()
     access_time = 0;
 }
 
-void Memory::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time)
+void Memory::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time,
+                     bool invisible)
 {
     int t_time = bus_latency + hit_latency;
-    // assert((addr >= 0) && (addr < CACHED_MEM_SIZE) && (addr + bytes >= 0) &&
-    //        (addr + bytes < CACHED_MEM_SIZE));
     switch (op)
         {
             case STORAGEOP_READ:
                 {
-                    // memcpy(content, data + addr, bytes);
                 }
                 break;
             case STORAGEOP_WRITE:
                 {
-                    // memcpy(data + addr, content, bytes);
                 }
                 break;
         }
-    access_count += 1;
-    access_time += t_time;
+    if (!invisible)
+        {
+            access_count += 1;
+            access_time += t_time;
+        }
 
     time += t_time;
 }
@@ -92,8 +92,6 @@ Cache::Cache(int _e_set_num, int _associativity, int _e_block_size,
 
 Cache::~Cache()
 {
-    // if (next_level != NULL)
-    //     delete next_level;
     if (valid != NULL)
         delete[] valid;
     if (dirty != NULL)
@@ -139,8 +137,8 @@ void Cache::Print()
     printf("    hit_writing_policy: %s\t miss_writing_policy: %s\t bypass_policy: %d\n",
            HWP_NAME[hit_writing_policy], MWP_NAME[miss_writing_policy], bypass_policy);
     printf("    access_count: %d\t hit_count: %d\t miss_count: %d\t replace_count: %d\t "
-           "bypass_count %d\n",
-           access_count, hit_count, miss_count, replace_count, bypass_count);
+           "bypass_count %d\t prefetch_count %d\n",
+           access_count, hit_count, miss_count, replace_count, bypass_count, prefetch_count);
     printf("    miss_rate: %.4f\n", GetMissRate());
     printf("    access_time %d\n", access_time);
 }
@@ -165,24 +163,79 @@ bool Cache::BypassDecide(int tag)
     return false;
 }
 
-bool Cache::PrefetchDecide()
+void Cache::EnablePrefetch(int _prefetch_table_size, int _least_steps)
 {
+    prefetch_policy = 2;
+    prefetch_table_size = _prefetch_table_size;
+    prefetchTable = new int[prefetch_table_size];
+    for (int i = 0; i < prefetch_table_size; ++i)
+        prefetchTable[i] = -1;
+    prefetch_least_steps = _least_steps;
+    if (prefetch_least_steps < 2)
+        prefetch_least_steps = 2;
 }
 
-void Cache::Prefetch()
+int Cache::PrefetchDecide(int line)
 {
+    if (prefetch_policy == 0)
+        return 0;
+    int max_step = 1, max_step_length = 0;
+
+    for (int i = 0; i < prefetch_table_size; ++i)
+        {
+            if (prefetchTable[i] == -1 || prefetchTable[i] >= line)
+                continue;
+            int dis = line - prefetchTable[i], next = line - dis - dis, step = 1;
+
+            while (true)
+                {
+                    bool exist = false;
+                    for (int j = 0; j < prefetch_table_size; ++j)
+                        {
+                            if (prefetchTable[i] != -1 && prefetchTable[j] == next)
+                                {
+                                    next -= dis;
+                                    step++;
+                                    exist = true;
+                                    break;
+                                }
+                        }
+                    if (!exist)
+                        break;
+                }
+
+            if (step > max_step)
+                {
+                    max_step = step;
+                    max_step_length = dis;
+                }
+        }
+
+    if (max_step >= prefetch_least_steps)
+        {
+            int prefetch_times = (max_step >= 3) ? 3 : max_step;
+            int cur_line = line;
+            char dummy_buf[5];
+            for (int j = 0; j < prefetch_times; ++j)
+                {
+                    cur_line += max_step_length;
+                    int t = 0;
+                    Handler((cur_line << e_block_size), 1, dummy_buf, STORAGEOP_READ, t, true);
+                }
+            prefetch_count += 1;
+            return prefetch_times;
+        }
+    return 0;
 }
 
-void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time)
+// void Cache::Prefetch(int line, int interval)
+// {
+// }
+
+void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int &time,
+                    bool invisible)
 {
     timeStamp += 1;
-    // int offset = GET_BITS(addr, 0, e_block_size - 1);
-    // if (offset + bytes > block_size)
-    //     {
-    //         printf("align error!\t offset: %d\t bytes: %d\t block_size: %d\n", offset, bytes,
-    //                block_size);
-    //     }
-    // assert(offset + bytes <= block_size);
     int set_idx = GET_BITS(addr, e_block_size, e_block_size + e_set_num - 1);
     int request_tag = GET_BITS(addr, e_block_size + e_set_num, 31);
     int hit_line = -1;
@@ -199,28 +252,30 @@ void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int 
                 {
                     case STORAGEOP_READ:
                         {
-                            // memcpy(content, data + hit_line * block_size + offset, bytes);
                         }
                         break;
                     case STORAGEOP_WRITE:
                         {
-                            // memcpy(data + hit_line * block_size + offset, content, bytes);
                             dirty[hit_line] = true;
                             if (next_level != NULL && hit_writing_policy == WRITE_THROUGH)
                                 next_level->Handler(addr, bytes, data + hit_line * block_size,
-                                                    STORAGEOP_WRITE, t_time);
+                                                    STORAGEOP_WRITE, t_time, invisible);
                         }
                         break;
                 }
-            hit_count += 1;
             t_time += hit_latency;
             lastUsedTime[hit_line] = timeStamp;
+
+            if (!invisible)
+                {
+                    hit_count += 1;
+                }
         }
     else  // miss
         {
             if (op == STORAGEOP_WRITE && miss_writing_policy == NO_WRITE_ALLOCATE)
                 {
-                    next_level->Handler(addr, bytes, content, STORAGEOP_WRITE, t_time);
+                    next_level->Handler(addr, bytes, content, STORAGEOP_WRITE, t_time, invisible);
                 }
             else
                 {
@@ -252,62 +307,75 @@ void Cache::Handler(TYPEADDR addr, int bytes, char *content, STORAGE_OP op, int 
                                                 ((tag[hit_line] << (e_block_size + e_set_num)) |
                                                  (set_idx << e_block_size)),
                                                 block_size, data + hit_line * block_size,
-                                                STORAGEOP_WRITE, t_time);
+                                                STORAGEOP_WRITE, t_time, invisible);
                                         }
                                     if (bypass_policy != 0)
                                         {
                                             bypassTable[bypass_idx] = tag[hit_line];
                                             bypass_idx = (bypass_idx + 1) % bypass_table_size;
                                         }
-                                    replace_count += 1;
+                                    if (!invisible)
+                                        {
+                                            replace_count += 1;
+                                        }
                                 }
                             else
                                 {
-                                    next_level->Handler(addr, bytes, content, op, t_time);
+                                    next_level->Handler(addr, bytes, content, op, t_time,
+                                                        invisible);
                                     bypass_flag = true;
-                                    bypass_count += 1;
+                                    if (!invisible)
+                                        {
+                                            bypass_count += 1;
+                                        }
                                 }
                         }
+
                     if (!bypass_flag)
                         {
                             valid[hit_line] = true;
                             dirty[hit_line] = false;
                             tag[hit_line] = request_tag;
                             next_level->Handler(addr, block_size, data + hit_line * block_size,
-                                                STORAGEOP_READ, t_time);
+                                                STORAGEOP_READ, t_time, invisible);
 
-                            if (PrefetchDecide())
-                                Prefetch();
+                            if (!invisible && prefetch_policy != 0)
+                                {
+                                    int line = ((unsigned)addr) >> e_block_size;
+                                    PrefetchDecide(line);
+                                    prefetchTable[prefetch_idx] = line;
+                                    prefetch_idx = (prefetch_idx + 1) % prefetch_table_size;
+                                }
+
 
                             switch (op)
                                 {
                                     case STORAGEOP_READ:
                                         {
-                                            // memcpy(content, data + hit_line * block_size
-                                            // offset, bytes);
                                         }
                                         break;
                                     case STORAGEOP_WRITE:
                                         {
-                                            // memcpy(data + hit_line * block_size, content
-                                            // + offset, bytes);
                                             dirty[hit_line] = true;
                                             if (next_level != NULL &&
                                                 hit_writing_policy == WRITE_THROUGH)
-                                                next_level->Handler(addr, bytes,
-                                                                    data + hit_line * block_size,
-                                                                    STORAGEOP_WRITE, t_time);
+                                                next_level->Handler(
+                                                    addr, bytes, data + hit_line * block_size,
+                                                    STORAGEOP_WRITE, t_time, invisible);
                                         }
                                         break;
                                 }
+                            t_time += hit_latency;
                         }
-                    t_time += bus_latency + hit_latency;
                     lastUsedTime[hit_line] = timeStamp;
                 }
-            miss_count += 1;
+            if (!invisible)
+                miss_count += 1;
         }
-    access_count += 1;
-    access_time += t_time;
-
+    if (!invisible)
+        {
+            access_count += 1;
+            access_time += t_time;
+        }
     time += t_time;
 }
