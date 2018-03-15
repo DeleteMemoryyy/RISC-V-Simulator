@@ -5,9 +5,9 @@
 #include <cstring>
 #include <string>
 
-using namespace std;
-
 typedef unsigned long long ULL;
+
+using namespace std;
 
 typedef struct
 {
