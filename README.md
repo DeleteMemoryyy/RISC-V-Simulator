@@ -1,8 +1,8 @@
 # RISC-V-Simulator
 
-**https://github.com/DeleteMemoryyy/RISC-V-Simulator**   		[![Build Status](https://travis-ci.org/DeleteMemoryyy/RISC-V-Simulator.svg?branch=master)](https://travis-ci.org/DeleteMemoryyy/RISC-V-Simulator)
+[![Build Status](https://travis-ci.org/DeleteMemoryyy/RISC-V-Simulator.svg?branch=master)](https://travis-ci.org/DeleteMemoryyy/RISC-V-Simulator)
 
-#### 程序编译运行环境：
+#### 程序编译运行环境
 
 - Ubuntu 64-bit 16.04 
 - 模拟器使用 g++ 5.4.0 编译，其中需要使用的 risc-v 可执行文件由 riscv64-gcc 7.1.1 编译
@@ -47,4 +47,5 @@
   - #### 右方展示出了常用的内存段和用户定义的全局变量，可以点击来方便地查看变量情况
 
 - 目前目录中 risc-v 可执行文件有 test 和 benchmark 两个，其 C++ 源码由相应 .cpp 文件给出。文件的 ELF 信息保存在 elf.log 中，每次打开会刷新掉原来的文件
+
 
