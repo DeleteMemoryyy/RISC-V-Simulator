@@ -11,18 +11,28 @@ static ULL elfSize = 0;
 
 static void error_callback(int error, const char *description)
 {
-    fprintf(stderr, "Error %d: %s\n", error, description);
+    // fprintf(stderr, "Error %d: %s\n", error, description);
 }
 
 int main()
 {
     // Setup window
     glfwSetErrorCallback(error_callback);
+    const char *glsl_version = "#version 130";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     if (!glfwInit())
         return 1;
     GLFWwindow *window = glfwCreateWindow(1280, 720, "Risc-V Simulator", NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);  // Enable vsync
+    bool err = gl3wInit() != 0;
+    if (err)
+        {
+            fprintf(stderr, "Failed to initialize OpenGL loader!\n");
+            return 1;
+        }
+
     glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
 
     bool load_from_file = true;
@@ -35,21 +45,41 @@ int main()
 
     ULL memAddr = 0;
 
-    // Setup ImGui binding
-    ImGui_ImplGlfwGL2_Init(window, true);
+    // Setup Dear ImGui binding
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
 
-    // Load Fonts
-    // ImGuiIO& io = ImGui::GetIO();
-    // io.Fonts->AddFontDefault();
-    // io.Fonts->AddFontFromFileTTF("UI_LIB/extra_fonts/Cousine-Regular.ttf", 15.0f);
-    // io.Fonts->AddFontFromFileTTF("UI_LIB/extra_fonts/DroidSans.ttf", 16.0f);
-    // io.Fonts->AddFontFromFileTTF("UI_LIB/extra_fonts/Roboto-Medium.ttf", 16.0f);
-    // io.Fonts->AddFontFromFileTTF("UI_LIB/extra_fonts/ProggyTiny.ttf", 10.0f);
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    // Setup style
+    ImGui::StyleColorsDark();
+    // ImGui::StyleColorsLight();
+    // ImGui::StyleColorsClassic();
+
+    // Setup font
+    char path[256];
+    char *ch;
+    readlink("/proc/self/exe", path, 256);
+    ch = strrchr(path, '/');
+    if (ch != NULL)
+        {
+            sprintf(ch + 1, "%s", "UI_LIB/fonts/Yahei_Segoe.ttf");
+            ImFont *font =
+                io.Fonts->AddFontFromFileTTF(path, 16.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+            IM_ASSERT(font != NULL);
+            io.FontDefault = font;
+        }
 
     while (!glfwWindowShouldClose(window))
         {
             glfwPollEvents();
-            ImGui_ImplGlfwGL2_NewFrame();
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
 
             switch (dState)
                 {
@@ -816,13 +846,25 @@ int main()
                         break;
                 }
 
+            // Rendering
             ImGui::Render();
+            int display_w, display_h;
+            glfwMakeContextCurrent(window);
+            glfwGetFramebufferSize(window, &display_w, &display_h);
+            glViewport(0, 0, display_w, display_h);
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            glfwMakeContextCurrent(window);
             glfwSwapBuffers(window);
         }
 
 
     // Cleanup
-    ImGui_ImplGlfwGL2_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
 }

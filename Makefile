@@ -4,7 +4,9 @@ EXE = riscv-simulator
 OBJS = UI.o Simulate.o Read_Elf.o
 DEBUG_OBJS = debug.o Simulate.o Read_Elf.o
 INSTTEST_OBJS = InstTest.o Simulate.o Read_Elf.o
-IMGUI = UI_LIB/imgui_impl_glfw.o UI_LIB/imgui.o UI_LIB/imgui_demo.o UI_LIB/imgui_draw.o
+LIBPATH = UI_LIB/
+IMGUI = $(LIBPATH)imgui_impl_glfw.o $(LIBPATH)imgui_impl_opengl3.o $(LIBPATH)imgui.o $(LIBPATH)imgui_demo.o $(LIBPATH)imgui_draw.o $(LIBPATH)imgui_widgets.o $(LIBPATH)gl3w.o
+
 UNAME_S := $(shell uname -s)
 ECHO_MESSAGE = "Linux"
 
@@ -14,8 +16,12 @@ CXXDEFINES += -DPREDICT	# enable dynamic PC prediction
 # CXXDEFINES += -DPRINT_MODE	# print stage mode status
 # CXXDEFINES += -DPRINT_BYPASS	# print bypass info
 LIBS = -lGL `pkg-config --static --libs glfw3`
-CXXFLAGS = -I UI_LIB/ -I UI_LIB/glfw/include/ `pkg-config --cflags glfw3`
-CXXFLAGS += -Wall -Wformat -g
+CXXFLAGS = -Wall -Wformat
+CXXFLAGS += -g
+CXXFLAGS += -I$(LIBPATH)
+CXXFLAGS += -I$(LIBPATH)libs/gl3w
+CXXFLAGS += -I$(LIBPATH)libs/glfw/include
+CXXFLAGS += `pkg-config --cflags glfw3`
 CXXFLAGS += $(CXXDEFINES)
 
 all:$(EXE)

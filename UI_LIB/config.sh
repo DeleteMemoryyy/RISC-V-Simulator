@@ -5,7 +5,7 @@ PKG_EXSITED=-I/usr/local/include
 
 if [ "$PKG_CONFIG" != "$PKG_EXSITED" ]
 then
-    echo "  install glfw"
+    echo "  Installing glfw"
     sudo apt-get build-dep glfw
     sudo apt-get install cmake xorg-dev libglu1-mesa-dev
     unzip glfw-3.2.1.zip -d glfw-3.2.1
@@ -16,5 +16,5 @@ then
     cd ..
     sudo rm -rf glfw-3.2.1
 else
-    echo "  glfw exsited"
+    echo "  Glfw has already exsited"
 fi
