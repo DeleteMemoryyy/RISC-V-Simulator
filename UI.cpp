@@ -68,8 +68,8 @@ int main()
     if (ch != NULL)
         {
             sprintf(ch + 1, "%s", "UI_LIB/fonts/Yahei_Segoe.ttf");
-            ImFont *font =
-                io.Fonts->AddFontFromFileTTF(path, 16.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+            ImFont *font = io.Fonts->AddFontFromFileTTF(
+                path, 16.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
             IM_ASSERT(font != NULL);
             io.FontDefault = font;
         }
@@ -89,8 +89,7 @@ int main()
                             ImGui::SetNextWindowSize(ImVec2(450, 200), ImGuiSetCond_Once);
                             ImGui::SetNextWindowPos(ImVec2(20, 5), ImGuiSetCond_Once);
                             ImGui::Begin("Control", NULL,
-                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                             ImGuiWindowFlags_NoCollapse);
+                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
                             ImGui::Text(" ");
                             ImGui::Text("   No file loaded");
 
@@ -209,8 +208,7 @@ int main()
                             ImGui::SetNextWindowSize(ImVec2(450, 200), ImGuiSetCond_Once);
                             ImGui::SetNextWindowPos(ImVec2(20, 5), ImGuiSetCond_Once);
                             ImGui::Begin("Control", NULL,
-                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                             ImGuiWindowFlags_NoCollapse);
+                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
                             ImGui::Text(" ");
                             ImGui::Text("   Current file: %s", curFileName.c_str());
 
@@ -284,8 +282,7 @@ int main()
                             ImGui::SetNextWindowSize(ImVec2(450, 150), ImGuiSetCond_Once);
                             ImGui::SetNextWindowPos(ImVec2(20, 210), ImGuiSetCond_Once);
                             ImGui::Begin("Running Status", NULL,
-                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                             ImGuiWindowFlags_NoCollapse);
+                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
                             // ImGui::Text(" ");
                             ImGui::Text(" PC: 0x%llx", PC);
                             ImGui::SameLine(0, 40);
@@ -329,20 +326,19 @@ int main()
                             ImGui::SetNextWindowSize(ImVec2(450, 340), ImGuiSetCond_Once);
                             ImGui::SetNextWindowPos(ImVec2(20, 365), ImGuiSetCond_Once);
                             ImGui::Begin("Register", NULL,
-                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                             ImGuiWindowFlags_NoCollapse);
+                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
                             ImGui::Text(" ");
 
                             static int selected_fish = 1;
                             const char *names[] = {"Hex", "Decimal", "Unsigned"};
                             if (ImGui::Button("Select Format"))
-                                ImGui::OpenPopup("select");
+                                ImGui::OpenPopup("select format");
                             ImGui::SameLine();
                             ImGui::Text("%s", names[selected_fish]);
-                            if (ImGui::BeginPopup("select"))
+                            if (ImGui::BeginPopup("select format"))
                                 {
-                                    ImGui::Text("Scale");
-                                    ImGui::Separator();
+                                    // ImGui::Text("Select Format");
+                                    // ImGui::Separator();
                                     for (int i = 0; i < IM_ARRAYSIZE(names); i++)
                                         if (ImGui::Selectable(names[i]))
                                             selected_fish = i;
@@ -389,8 +385,7 @@ int main()
                             ImGui::SetNextWindowSize(ImVec2(600, 680), ImGuiSetCond_Once);
                             ImGui::SetNextWindowPos(ImVec2(540, 5), ImGuiSetCond_Once);
                             ImGui::Begin("Memory", NULL,
-                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                             ImGuiWindowFlags_NoCollapse);
+                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
                             ImGui::Text(" ");
 
@@ -816,7 +811,7 @@ int main()
 
                             if (show_elf)
                                 {
-                                    ImGui::SetNextWindowSize(ImVec2(800, 400), ImGuiSetCond_Once);
+                                    ImGui::SetNextWindowSize(ImVec2(800, 485), ImGuiSetCond_Once);
                                     ImGui::SetNextWindowPos(ImVec2(480, 5), ImGuiSetCond_Once);
                                     ImGui::Begin("ELF", &load_from_file, ImGuiWindowFlags_NoResize);
                                     ImGui::InputTextMultiline(
